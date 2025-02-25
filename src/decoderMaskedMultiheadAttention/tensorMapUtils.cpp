@@ -1,4 +1,3 @@
-
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/tensorMapUtils.h"
 #include "suggestify/kernels/kvCacheUtils.h"
 
@@ -13,6 +12,12 @@ namespace
 
 using suggestify::common::CUDADriverWrapper;
 
+/// <summary>
+/// Determines the number of bytes per element based on the specified data type.
+/// </summary>
+/// <param name="dataType">The data type for which to determine the byte size.</param>
+/// <returns>The number of bytes per element for the given data type.</returns>
+/// <exception cref="std::runtime_error">Thrown if the data type is unsupported.</exception>
 uint32_t getElemBytes(CUtensorMapDataType_enum dataType)
 {
     switch (dataType)
@@ -34,6 +39,17 @@ uint32_t getElemBytes(CUtensorMapDataType_enum dataType)
     throw std::runtime_error("unsupported data type");
 }
 
+/// <summary>
+/// Creates a tensor map for a paged key-value cache.
+/// </summary>
+/// <param name="driver">The shared pointer to the CUDA driver wrapper responsible for managing the CUDA context.</param>
+/// <param name="addr">The address of the key-value cache data.</param>
+/// <param name="dataType">The data type of the cache.</param>
+/// <param name="headElems">The number of head elements in the cache.</param>
+/// <param name="nbKHeads">The number of key heads in the cache.</param>
+/// <param name="tokensPerPage">The number of tokens per page in the cache.</param>
+/// <param name="nbTokensPerTile">The number of tokens per tile (optional, defaults to 64).</param>
+/// <returns>A tensor map for the paged key-value cache.</returns>
 CUtensorMap makeTensorMapForPagedKVCache(std::shared_ptr<CUDADriverWrapper> const& driver, void const* addr,
     CUtensorMapDataType_enum dataType, uint32_t headElems, uint32_t nbKHeads, uint32_t tokensPerPage,
     uint32_t nbTokensPerTile = 64)
@@ -65,6 +81,19 @@ CUtensorMap makeTensorMapForPagedKVCache(std::shared_ptr<CUDADriverWrapper> cons
     return tensorMap;
 }
 
+/// <summary>
+/// Creates a tensor map for a contiguous key-value cache.
+/// </summary>
+/// <param name="driver">The shared pointer to the CUDA driver wrapper responsible for managing the CUDA context.</param>
+/// <param name="addr">The address of the key-value cache data.</param>
+/// <param name="dataType">The data type of the cache.</param>
+/// <param name="headElems">The number of head elements in the cache.</param>
+/// <param name="nbKHeads">The number of key heads in the cache.</param>
+/// <param name="maxCacheLen">The maximum length of the cache.</param>
+/// <param name="beamWidth">The beam width for the cache.</param>
+/// <param name="batchSize">The batch size for the cache.</param>
+/// <param name="nbTokensPerTile">The number of tokens per tile (optional, defaults to 64).</param>
+/// <returns>A tensor map for the contiguous key-value cache.</returns>
 CUtensorMap makeTensorMapForContiguousKVCache(std::shared_ptr<CUDADriverWrapper> const& driver, void const* addr,
     CUtensorMapDataType_enum dataType, uint32_t headElems, uint32_t nbKHeads, uint32_t maxCacheLen, uint32_t beamWidth,
     uint32_t batchSize, uint32_t nbTokensPerTile = 64)
@@ -96,8 +125,15 @@ CUtensorMap makeTensorMapForContiguousKVCache(std::shared_ptr<CUDADriverWrapper>
     return tensorMap;
 }
 
-} // namespace
-
+/// <summary>
+/// Template function to create a tensor map for a given key-value cache buffer.
+/// Based on the type of the key-value cache buffer (either KVBlockArray or KVLinearBuffer), it selects the appropriate map creation function.
+/// </summary>
+/// <typeparam name="KVCacheBuffer">The type of the key-value cache buffer (either KVBlockArray or KVLinearBuffer).</typeparam>
+/// <param name="driver">The shared pointer to the CUDA driver wrapper responsible for managing the CUDA context.</param>
+/// <param name="xqaParams">The XQA parameters that define the cache structure.</param>
+/// <param name="kv_cache_buffer">The key-value cache buffer to create a tensor map for.</param>
+/// <returns>A tensor map corresponding to the provided key-value cache buffer.</returns>
 template <typename KVCacheBuffer>
 CUtensorMap makeTensorMapForKVCache(
     std::shared_ptr<CUDADriverWrapper> const& driver, XQAParams const& xqaParams, KVCacheBuffer const& kv_cache_buffer)
@@ -116,6 +152,7 @@ CUtensorMap makeTensorMapForKVCache(
     }
 }
 
+// Explicit template instantiations for different KVCacheBuffer types
 template CUtensorMap makeTensorMapForKVCache(
     std::shared_ptr<CUDADriverWrapper> const&, XQAParams const&, KVBlockArray const&);
 template CUtensorMap makeTensorMapForKVCache(
