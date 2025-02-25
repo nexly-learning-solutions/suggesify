@@ -13,15 +13,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Checkout the code from the repository
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # Set up Java 18 environment using Temurin
     - name: Set up Java 18
       uses: actions/setup-java@v4
       with:
         java-version: '18'
-        distribution: 'adoptopenjdk'
+        distribution: 'temurin'
 
+    # Cache Maven dependencies to speed up builds
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/*.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    # Run Maven build (clean, install)
     - name: Build with Maven
       working-directory: ./java
-      run: mvn clean install
+      run: mvn clean install --no-transfer-progress
+
+    # Optionally, run tests after the build step
+    - name: Run tests
+      working-directory: ./java
+      run: mvn test
