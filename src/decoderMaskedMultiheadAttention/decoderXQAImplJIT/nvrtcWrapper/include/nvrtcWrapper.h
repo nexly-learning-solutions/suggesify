@@ -22,9 +22,9 @@ extern "C"
     typedef enum
     {
         // sm >= 80
-        TLLM_XQA_JIT_HMMA = 0,
+        XQA_JIT_HMMA = 0,
         // sm == 90
-        TLLM_XQA_JIT_QGMMA = 1
+        XQA_JIT_QGMMA = 1
     } tllmXqaJitKernelType;
 
     typedef struct
@@ -52,9 +52,9 @@ extern "C"
 
     typedef enum
     {
-        TLLM_XQA_JIT_SUCCESS = 0,
-        TLLM_XQA_JIT_INVALID_INPUT = 1,
-        TLLM_XQA_JIT_INTERNAL_ERROR = 2,
+        XQA_JIT_SUCCESS = 0,
+        XQA_JIT_INVALID_INPUT = 1,
+        XQA_JIT_INTERNAL_ERROR = 2,
     } tllmXqaJitStatus;
 
     // context must outlive prog.

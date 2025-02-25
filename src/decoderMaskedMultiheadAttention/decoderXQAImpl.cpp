@@ -34,7 +34,7 @@ std::unique_ptr<DecoderXQAImpl> DecoderXQAImpl::create(DecoderXQARunner* runner,
     case ImplType::kJIT: return std::unique_ptr<DecoderXQAImpl>(new DecoderXQAImplJIT(runner));
     }
     // Shouldn't reach here.
-    TLLM_THROW("Unknown DecoderXQAImpl::ImplType");
+    THROW("Unknown DecoderXQAImpl::ImplType");
 }
 
 } // namespace kernels

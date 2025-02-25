@@ -15,7 +15,7 @@ namespace jit
 template <typename T>
 T readFromBuffer(uint8_t const*& buffer, size_t& remaining_buffer_size)
 {
-    TLLM_CHECK(sizeof(T) <= remaining_buffer_size);
+    CHECK(sizeof(T) <= remaining_buffer_size);
 
     T result = *reinterpret_cast<T const*>(buffer);
     buffer += sizeof(T);
@@ -26,7 +26,7 @@ T readFromBuffer(uint8_t const*& buffer, size_t& remaining_buffer_size)
 template <typename T>
 void writeToBuffer(T output, uint8_t*& buffer, size_t& remaining_buffer_size)
 {
-    TLLM_CHECK(sizeof(T) <= remaining_buffer_size);
+    CHECK(sizeof(T) <= remaining_buffer_size);
 
     *reinterpret_cast<T*>(buffer) = output;
     buffer += sizeof(T);

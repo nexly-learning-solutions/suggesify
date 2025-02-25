@@ -61,9 +61,9 @@ static inline void set_alpha(uint32_t& alpha, float norm, Data_type dtype)
 FusedMHARunnerV2::FusedMHARunnerV2(MHARunnerFixedParams fixedParams)
     : mFixedParams(fixedParams)
 {
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         (mSM == kSM_80 || mSM == kSM_86 || mSM == kSM_89 || mSM == kSM_90), "Unsupported architecture");
-    TLLM_CHECK_WITH_INFO((mFixedParams.dataType == DATA_TYPE_FP16 || mFixedParams.dataType == DATA_TYPE_BF16
+    CHECK_WITH_INFO((mFixedParams.dataType == DATA_TYPE_FP16 || mFixedParams.dataType == DATA_TYPE_BF16
                              || mFixedParams.dataType == DATA_TYPE_E4M3),
         "Unsupported data type");
     xmmaKernel = getXMMAKernelsV2(mFixedParams.dataType, mSM);
@@ -90,7 +90,7 @@ void FusedMHARunnerV2::setupKernelParams(MHARunnerParams runnerParams)
     mKernelParams.sliding_window_size = runnerParams.slidingWindowSize;
     mKernelParams.d = mFixedParams.headSize;
     mKernelParams.dv = mFixedParams.headSizeV;
-    TLLM_CHECK_WITH_INFO(mFixedParams.numQHeads % mFixedParams.numKvHeads == 0,
+    CHECK_WITH_INFO(mFixedParams.numQHeads % mFixedParams.numKvHeads == 0,
         "number of Query heads should be multiple of KV heads !");
     mKernelParams.h = mFixedParams.numQHeads;
     mKernelParams.h_kv = mFixedParams.numKvHeads;
@@ -190,7 +190,7 @@ void FusedMHARunnerV2::setupLaunchParams(MHARunnerParams runnerParams)
     mLaunchParams.device_l2_cache_size = mDeviceL2CacheSize;
     mLaunchParams.total_device_memory = mTotalDeviceMemory;
 
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         (mFixedParams.headSize == 128 || mFixedParams.headSize == 256) || !mFixedParams.attnLogitSoftcappingScale,
         "FMHA only supports head_size = 128 or 256 with attention logit softcapping scale currently.");
     mLaunchParams.enableAttnLogitSoftcapping = mFixedParams.attnLogitSoftcappingScale != 0.f;
@@ -204,7 +204,7 @@ void FusedMHARunnerV2::setupLaunchParams(MHARunnerParams runnerParams)
     mLaunchParams.total_kv_seqlen
         = mFixedParams.isSPadded ? runnerParams.b * runnerParams.kvSeqLen : runnerParams.totalKvSeqLen;
 
-    TLLM_CHECK_WITH_INFO(mFixedParams.headSize > 0, "Head size should be greater than 0.");
+    CHECK_WITH_INFO(mFixedParams.headSize > 0, "Head size should be greater than 0.");
     mLaunchParams.padded_d = (mFixedParams.headSize & (mFixedParams.headSize - 1)) == 0
         ? mFixedParams.headSize
         : pow(2, int(log2(mFixedParams.headSize)) + 1);
@@ -232,7 +232,7 @@ void FusedMHARunnerV2::setupLaunchParams(MHARunnerParams runnerParams)
     }
     else if (isSm70)
     {
-        TLLM_CHECK_WITH_INFO(false, "Unsupported architecture");
+        CHECK_WITH_INFO(false, "Unsupported architecture");
     }
     else if (isSm90 && !separateQKvInput && paddingOrCausalMask
         && (mFixedParams.headSize == 32 || mFixedParams.headSize == 64) && runnerParams.qSeqLen <= 256)
@@ -472,7 +472,7 @@ void FusedMHARunnerV2::setSeparateQKvTmaDescriptors(MHARunnerParams runnerParams
         box_size_kv[1] = std::min(tokens_per_block, kv_step);
         box_size_kv[0] = mLaunchParams.padded_d / d_groups;
 
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             tokens_per_block % 2 == 0, "FMHA with paged kv cache needs tokens_per_block to be power of 2 !");
         mKernelParams.blocks_per_tma_load = std::max(1, int32_t(kv_step / tokens_per_block));
         mKernelParams.blocks_per_tma_load_log2 = log2(mKernelParams.blocks_per_tma_load);
@@ -500,7 +500,7 @@ void FusedMHARunnerV2::run(MHARunnerParams runnerParams)
         case AttentionInputLayout::PACKED_QKV: setPackedQkvTmaDescriptors(runnerParams); break;
         case AttentionInputLayout::Q_CONTIGUOUS_KV:
         case AttentionInputLayout::Q_PAGED_KV: setSeparateQKvTmaDescriptors(runnerParams); break;
-        default: TLLM_CHECK_WITH_INFO(false, "Unsupported attention input layout.");
+        default: CHECK_WITH_INFO(false, "Unsupported attention input layout.");
         }
     }
     if (mFixedParams.attentionInputLayout == AttentionInputLayout::Q_PAGED_KV
@@ -508,7 +508,7 @@ void FusedMHARunnerV2::run(MHARunnerParams runnerParams)
     {
         uint32_t q_step = 0, kv_step = 0;
         xmmaKernel->getStepSize(q_step, kv_step, mKernelParams, mLaunchParams);
-        TLLM_CHECK_WITH_INFO(mKernelParams.sliding_window_size % kv_step == 0,
+        CHECK_WITH_INFO(mKernelParams.sliding_window_size % kv_step == 0,
             "The sliding window size doesn't work with paged context fmha kv_step_size = %d.", kv_step);
     }
 
@@ -561,7 +561,7 @@ bool FusedMHARunnerV2::isFmhaSupported()
 
     if (!foundKernels)
     {
-        TLLM_LOG_WARNING("Fall back to unfused MHA for %s in sm_%d.", mFixedParams.convertToStrOutput().c_str(), mSM);
+        LOG_WARNING("Fall back to unfused MHA for %s in sm_%d.", mFixedParams.convertToStrOutput().c_str(), mSM);
     }
 
     return foundKernels;

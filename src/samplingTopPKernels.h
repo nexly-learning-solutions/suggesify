@@ -48,24 +48,24 @@ struct TopPSamplingKernelParams
 
     void checkParams() const
     {
-        TLLM_CHECK(batchSize > 0);
-        TLLM_CHECK(maxBatchSize > 0);
-        TLLM_CHECK(maxBatchSize >= batchSize);
-        TLLM_CHECK(vocabSizePadded > 0);
-        TLLM_CHECK(probs);
-        TLLM_CHECK(outputIds || outputIdsPtrs);
-        TLLM_CHECK(workspace);
-        TLLM_CHECK((curandState != nullptr) || (randomVals != nullptr));
-        TLLM_CHECK(((curandState != nullptr) & (randomVals != nullptr)) == 0);
-        TLLM_CHECK(topPs);
+        CHECK(batchSize > 0);
+        CHECK(maxBatchSize > 0);
+        CHECK(maxBatchSize >= batchSize);
+        CHECK(vocabSizePadded > 0);
+        CHECK(probs);
+        CHECK(outputIds || outputIdsPtrs);
+        CHECK(workspace);
+        CHECK((curandState != nullptr) || (randomVals != nullptr));
+        CHECK(((curandState != nullptr) & (randomVals != nullptr)) == 0);
+        CHECK(topPs);
 
         if (outputIds)
         {
-            TLLM_CHECK(maxSeqLen > 0);
+            CHECK(maxSeqLen > 0);
         }
 
-        TLLM_CHECK(((finishedOutput == nullptr) ^ (endIds == nullptr)) == 0);
-        TLLM_CHECK((skipOutputIdCurrentStep && outputIdCurrentStep && returnAllSelectedTokens)
+        CHECK(((finishedOutput == nullptr) ^ (endIds == nullptr)) == 0);
+        CHECK((skipOutputIdCurrentStep && outputIdCurrentStep && returnAllSelectedTokens)
             || (skipOutputIdCurrentStep == nullptr && outputIdCurrentStep == nullptr));
     }
 };

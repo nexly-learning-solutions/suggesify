@@ -66,16 +66,16 @@ public:
                 }
                 else
                 {
-                    TLLM_CU_CHECK(mDriver->cuModuleLoadData(&hmod, kernelMeta.mCubin));
+                    CU_CHECK(mDriver->cuModuleLoadData(&hmod, kernelMeta.mCubin));
                     mModules.insert(std::make_pair(kernelMeta.mCubin, hmod));
                 }
 
                 FusedMultiHeadAttentionKernelInfo funcInfo;
                 funcInfo.mMetaInfoIndex = i;
-                TLLM_CU_CHECK(mDriver->cuModuleGetFunction(&funcInfo.mDeviceFunction, hmod, kernelMeta.mFuncName));
+                CU_CHECK(mDriver->cuModuleGetFunction(&funcInfo.mDeviceFunction, hmod, kernelMeta.mFuncName));
                 if (kernelMeta.mSharedMemBytes >= 48 * 1024)
                 {
-                    TLLM_CU_CHECK(mDriver->cuFuncSetAttribute(funcInfo.mDeviceFunction,
+                    CU_CHECK(mDriver->cuFuncSetAttribute(funcInfo.mDeviceFunction,
                         CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES, kernelMeta.mSharedMemBytes));
                 }
                 mFunctions.insert(std::make_pair(hashID(kernelMeta), funcInfo));
@@ -99,7 +99,7 @@ public:
         const CUfunction func = findIter->second.mDeviceFunction;
 
         void* kernelParams[] = {&params, nullptr};
-        TLLM_CU_CHECK(mDriver->cuLaunchKernel(func, params.h, params.b, 1, kernelMeta.mThreadsPerCTA, 1, 1,
+        CU_CHECK(mDriver->cuLaunchKernel(func, params.h, params.b, 1, kernelMeta.mThreadsPerCTA, 1, 1,
             kernelMeta.mSharedMemBytes, stream, kernelParams, nullptr));
     }
 
@@ -236,7 +236,7 @@ public:
         bool forceUnroll = useForceUnroll(params, launch_params);
         auto const findIter = mFunctions.find(hashFromParams(params, launch_params));
 
-        TLLM_CHECK_WITH_INFO(findIter != mFunctions.end(),
+        CHECK_WITH_INFO(findIter != mFunctions.end(),
             "FMHA kernels are not found (kernel meta info: s=%d d=%d dv=%d %d %d %d %d %d %d %d %d %d %d) !",
             launch_params.kernel_s, params.d, params.dv, launch_params.interleaved, forceUnroll,
             launch_params.force_fp32_acc, launch_params.flash_attention, launch_params.warp_specialization,
@@ -251,7 +251,7 @@ public:
 
         if (!forceUnroll)
         {
-            TLLM_CU_CHECK(mDriver->cuLaunchKernel(func, params.h, params.b, 1, kernelMeta.mThreadsPerCTA, 1, 1,
+            CU_CHECK(mDriver->cuLaunchKernel(func, params.h, params.b, 1, kernelMeta.mThreadsPerCTA, 1, 1,
                 kernelMeta.mSharedMemBytes, stream, kernelParams, nullptr));
         }
         else if (mSM == kSM_90 && launch_params.flash_attention && launch_params.warp_specialization)
@@ -292,13 +292,13 @@ public:
                 }
             }
 
-            TLLM_CU_CHECK(mDriver->cuLaunchKernel(func, block_size.x, block_size.y, block_size.z,
+            CU_CHECK(mDriver->cuLaunchKernel(func, block_size.x, block_size.y, block_size.z,
                 kernelMeta.mThreadsPerCTA, 1, 1, kernelMeta.mSharedMemBytes, stream, kernelParams, nullptr));
         }
         else
         {
             int unroll = kernelMeta.mS / kernelMeta.mUnrollStep;
-            TLLM_CHECK_WITH_INFO(kernelMeta.mS == kernelMeta.mUnrollStep * unroll, "Wrong launching sequence length");
+            CHECK_WITH_INFO(kernelMeta.mS == kernelMeta.mUnrollStep * unroll, "Wrong launching sequence length");
             if (launch_params.flash_attention)
             {
                 unroll = (params.s + kernelMeta.mUnrollStep - 1) / kernelMeta.mUnrollStep;
@@ -306,7 +306,7 @@ public:
 
             if (mSM == kSM_90 && !launch_params.flash_attention)
             {
-                TLLM_CU_CHECK(mDriver->cuLaunchKernel(func, params.h, params.b, unroll, kernelMeta.mThreadsPerCTA, 1, 1,
+                CU_CHECK(mDriver->cuLaunchKernel(func, params.h, params.b, unroll, kernelMeta.mThreadsPerCTA, 1, 1,
                     kernelMeta.mSharedMemBytes, stream, kernelParams, nullptr));
             }
             else
@@ -315,7 +315,7 @@ public:
                 {
                     unroll *= (params.dv + 256 - 1) / 256;
                 }
-                TLLM_CU_CHECK(mDriver->cuLaunchKernel(func, unroll, params.h, params.b, kernelMeta.mThreadsPerCTA, 1, 1,
+                CU_CHECK(mDriver->cuLaunchKernel(func, unroll, params.h, params.b, kernelMeta.mThreadsPerCTA, 1, 1,
                     kernelMeta.mSharedMemBytes, stream, kernelParams, nullptr));
             }
         }
@@ -334,7 +334,7 @@ public:
         Launch_params const& launch_params) const override
     {
         auto const findIter = mFunctions.find(hashFromParams(params, launch_params));
-        TLLM_CHECK_WITH_INFO(findIter != mFunctions.end(),
+        CHECK_WITH_INFO(findIter != mFunctions.end(),
             "FMHA kernels are not found (kernel meta info: s=%d d=%d dv=%d %d %d %d %d %d %d %d %d %d) !",
             launch_params.kernel_s, params.d, params.dv, launch_params.interleaved, launch_params.force_fp32_acc,
             launch_params.flash_attention, launch_params.warp_specialization, !launch_params.useKernelWithoutAlibi,

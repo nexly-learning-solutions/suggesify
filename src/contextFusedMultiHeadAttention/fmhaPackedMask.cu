@@ -253,7 +253,7 @@ void invokeBuildPackedMask(PackedMaskParams<MaskInputDataType> const& params, cu
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false, "The attention mask type is not supported.");
+        CHECK_WITH_INFO(false, "The attention mask type is not supported.");
     }
     sync_check_cuda_error();
 }

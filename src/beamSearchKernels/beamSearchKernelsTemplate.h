@@ -426,7 +426,7 @@ __launch_bounds__(BLOCK_SIZE) __global__ void beamStage3Kernel(
     {                                                                                                                  \
         if (IS_FAST && nByteRuntimeSharedMemory > (48 << 10))                                                          \
         {                                                                                                              \
-            TLLM_CUDA_CHECK(cudaFuncSetAttribute(beamStage2Kernel<T, PBM, N_VOCAB_PART, IS_FAST>,                      \
+            CUDA_CHECK(cudaFuncSetAttribute(beamStage2Kernel<T, PBM, N_VOCAB_PART, IS_FAST>,                      \
                 cudaFuncAttributeMaxDynamicSharedMemorySize, nByteRuntimeSharedMemory));                               \
         }                                                                                                              \
         beamStage2Kernel<T, PBM, N_VOCAB_PART, IS_FAST>                                                                \
@@ -510,7 +510,7 @@ void beamSearchKernelLauncher(
         }
         else
         {
-            TLLM_LOG_TRACE("Use slow Beam Search stage 2 kernel due to large beam_width or vocab_size");
+            LOG_TRACE("Use slow Beam Search stage 2 kernel due to large beam_width or vocab_size");
             BEAM_STAGE2_KERNEL(128, false)
         }
         sync_check_cuda_error();
@@ -524,7 +524,7 @@ void beamSearchKernelLauncher(
     {
         if (nByteRuntimeSharedMemory > (48 << 10))
         {
-            TLLM_CUDA_CHECK(cudaFuncSetAttribute(beamStage3Kernel<T, PBM, nThreadStage3, true, IS_V2>,
+            CUDA_CHECK(cudaFuncSetAttribute(beamStage3Kernel<T, PBM, nThreadStage3, true, IS_V2>,
                 cudaFuncAttributeMaxDynamicSharedMemorySize, nByteRuntimeSharedMemory));
         }
         beamStage3Kernel<T, PBM, nThreadStage3, true, IS_V2>
@@ -534,7 +534,7 @@ void beamSearchKernelLauncher(
     {
         if (nByteStaticSharedMemory > (48 << 10))
         {
-            TLLM_CUDA_CHECK(cudaFuncSetAttribute(beamStage3Kernel<T, PBM, nThreadStage3, false, IS_V2>,
+            CUDA_CHECK(cudaFuncSetAttribute(beamStage3Kernel<T, PBM, nThreadStage3, false, IS_V2>,
                 cudaFuncAttributeMaxDynamicSharedMemorySize, nByteStaticSharedMemory));
         }
         beamStage3Kernel<T, PBM, nThreadStage3, false, IS_V2>

@@ -850,7 +850,7 @@ void kernelDispatchHeadSize(QKVPreprocessingParams<T, KVCacheBuffer> params, cud
         && params.max_input_seq_len > params.rotary_embedding_max_positions;
 
     constexpr int VEC_SIZE = Rotary_vec_t<T, Dh_MAX>::size;
-    TLLM_CHECK_WITH_INFO((params.position_embedding_type != PositionEmbeddingType::kROPE_GPT_NEOX
+    CHECK_WITH_INFO((params.position_embedding_type != PositionEmbeddingType::kROPE_GPT_NEOX
                              && params.position_embedding_type != PositionEmbeddingType::kLONG_ROPE
                              && params.position_embedding_type == PositionEmbeddingType::kROPE_M)
             || params.half_rotary_dim % VEC_SIZE == 0,
@@ -897,7 +897,7 @@ void kernelV1Dispatch(QKVPreprocessingParams<T, KVCacheBuffer> params, cudaStrea
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             false, "applyBiasRopeUpdateKVCache kernel doesn't support head size = %d", params.size_per_head);
     }
 }
@@ -953,7 +953,7 @@ void kernelV2DispatchHeadSize(QKVPreprocessingParams<T, KVCacheBuffer> params, c
     bool const add_bias = params.qkv_bias != nullptr;
     bool const store_packed_qkv = !params.separate_q_kv_output;
     int const vecs_per_head = (params.size_per_head * sizeof(T) / 16);
-    TLLM_CHECK_WITH_INFO(BLOCK_SIZE % vecs_per_head == 0, "Kernel block should be able to handle entire heads.");
+    CHECK_WITH_INFO(BLOCK_SIZE % vecs_per_head == 0, "Kernel block should be able to handle entire heads.");
     int const tokens_per_cuda_block = BLOCK_SIZE / vecs_per_head;
 
     if (add_bias)
@@ -1068,7 +1068,7 @@ void invokeUpdateKvCacheForCrossAttention(QKVPreprocessingParams<T, KVCacheBuffe
 {
     constexpr int VECS_PER_HEAD = (Dh * sizeof(T) / 16);
     constexpr int TOKENS_PER_CUDA_BLOCK = BLOCK_SIZE / VECS_PER_HEAD;
-    TLLM_CHECK_WITH_INFO(BLOCK_SIZE % VECS_PER_HEAD == 0, "Kernel block should be able to handle entire heads.");
+    CHECK_WITH_INFO(BLOCK_SIZE % VECS_PER_HEAD == 0, "Kernel block should be able to handle entire heads.");
 
     dim3 block(BLOCK_SIZE);
 
@@ -1095,9 +1095,9 @@ void invokeUpdateKvCacheForCrossAttention(QKVPreprocessingParams<T, KVCacheBuffe
 template <typename T, typename TCache, typename KVCacheBuffer>
 void invokeApplyBiasRopeUpdateKVCacheDispatch(QKVPreprocessingParams<T, KVCacheBuffer> params, cudaStream_t stream)
 {
-    TLLM_CHECK_WITH_INFO(params.size_per_head % 8 == 0, "Head size needs to be multiple of 8!");
-    TLLM_CHECK_WITH_INFO(params.rotary_embedding_dim % 8 == 0, "Rotary embedding dimension needs to be multiple of 8!");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(params.size_per_head % 8 == 0, "Head size needs to be multiple of 8!");
+    CHECK_WITH_INFO(params.rotary_embedding_dim % 8 == 0, "Rotary embedding dimension needs to be multiple of 8!");
+    CHECK_WITH_INFO(
         !(params.quantized_fp8_output && !params.separate_q_kv_output && params.quantized_qkv_output == nullptr)
             && !(params.quantized_fp8_output && params.separate_q_kv_output && params.q_output == nullptr),
         "Separate quantized buffer is not provided!");
@@ -1106,7 +1106,7 @@ void invokeApplyBiasRopeUpdateKVCacheDispatch(QKVPreprocessingParams<T, KVCacheB
 
     if (params.cross_attention)
     {
-        TLLM_CHECK_WITH_INFO((absolute_position_embedding && params.remove_padding && params.qkv_bias == nullptr),
+        CHECK_WITH_INFO((absolute_position_embedding && params.remove_padding && params.qkv_bias == nullptr),
             "Assume cross attention has learned_absolute position embedding, remove_padding is enabled and no bias");
         switch (params.size_per_head)
         {
@@ -1114,7 +1114,7 @@ void invokeApplyBiasRopeUpdateKVCacheDispatch(QKVPreprocessingParams<T, KVCacheB
         case 64: invokeUpdateKvCacheForCrossAttention<1024, 64, T, TCache, KVCacheBuffer>(params, stream); break;
         case 128: invokeUpdateKvCacheForCrossAttention<1024, 128, T, TCache, KVCacheBuffer>(params, stream); break;
         case 256: invokeUpdateKvCacheForCrossAttention<1024, 256, T, TCache, KVCacheBuffer>(params, stream); break;
-        default: TLLM_CHECK_WITH_INFO(false, "Not supported."); break;
+        default: CHECK_WITH_INFO(false, "Not supported."); break;
         }
         return;
     }
@@ -1219,7 +1219,7 @@ void invokeUpdateCyclicKvCacheAfterFmha(QKVPreprocessingParams<T, KVCacheBuffer>
     dim3 grid(std::min(64, int(divUp(params.cyclic_kv_cache_len, block.y))), params.kv_head_num, params.batch_size);
     if (params.max_kv_seq_len > params.cyclic_kv_cache_len && params.separate_q_kv_output)
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             (params.size_per_head * sizeof(TCache)) % 16 == 0 && (params.size_per_head * sizeof(TCache)) / 16 <= 32,
             "Head size is not supported.");
         updateCyclicKvCacheAfterFmha<T, TCache, KVCacheBuffer><<<grid, block, 0, stream>>>(params);

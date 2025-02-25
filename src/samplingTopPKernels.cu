@@ -382,7 +382,7 @@ template size_t getTopPWorkspaceSize<half>(SizeType32 batchSize, SizeType32 voca
 template <typename T>
 void invokeBatchTopPSampling(TopPSamplingKernelParams<T> const& params, cudaStream_t stream)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     params.checkParams();
 
@@ -429,7 +429,7 @@ void invokeBatchTopPSampling(TopPSamplingKernelParams<T> const& params, cudaStre
         params.skipOutputIdCurrentStep);
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template void invokeBatchTopPSampling(TopPSamplingKernelParams<float> const& params, cudaStream_t stream);

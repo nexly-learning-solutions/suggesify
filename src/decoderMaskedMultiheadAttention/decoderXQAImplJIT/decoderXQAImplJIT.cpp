@@ -159,7 +159,7 @@ void DecoderXQAImplJIT::runImpl(XQAParams const& xqaParams, KVCacheBuffer const&
     unsigned int head_size = xqaParams.head_size;
     int num_q_heads = xqaParams.num_q_heads;
     int num_kv_heads = xqaParams.num_kv_heads;
-    TLLM_CHECK_WITH_INFO(num_q_heads % num_kv_heads == 0, "numQHeads should be multiple of numKVHeads.");
+    CHECK_WITH_INFO(num_q_heads % num_kv_heads == 0, "numQHeads should be multiple of numKVHeads.");
     unsigned int num_q_heads_over_kv = num_q_heads / num_kv_heads;
     unsigned int beam_width = xqaParams.beam_width;
     unsigned int batch_beam_size = xqaParams.batch_size * beam_width;
@@ -181,7 +181,7 @@ void DecoderXQAImplJIT::runImpl(XQAParams const& xqaParams, KVCacheBuffer const&
     decoder_params.seqKVLengths = xqaParams.sequence_lengths;
     decoder_params.batchSize = int(batch_beam_size);
     decoder_params.maxQSeqLength = xqaParams.generation_input_length;
-    TLLM_CHECK_WITH_INFO(!xqaParams.multi_query_tokens || xqaParams.spec_decoding_generation_lengths != nullptr,
+    CHECK_WITH_INFO(!xqaParams.multi_query_tokens || xqaParams.spec_decoding_generation_lengths != nullptr,
         "Spec_decoding_generation_lengths must be provided.");
     // Rotary embedding inv_freq buffer.
     decoder_params.rotaryEmbeddingScale = xqaParams.rotary_embedding_scale;
@@ -226,8 +226,8 @@ void DecoderXQAImplJIT::runImpl(XQAParams const& xqaParams, KVCacheBuffer const&
 
     jit::CubinObjKey key = getCubinObjKeyFromXQAParams(xqaParams);
     jit::CubinObj* cubinObj = DecoderXQARunner::getResourceGlobal()->getCubinObjRegistry()->getCubin(key);
-    TLLM_CHECK(cubinObj != nullptr && cubinObj->isInitialized());
-    TLLM_CHECK_WITH_INFO(!xqaParams.multi_query_tokens, "Medusa should take XQA Precompiled codepath.");
+    CHECK(cubinObj != nullptr && cubinObj->isInitialized());
+    CHECK_WITH_INFO(!xqaParams.multi_query_tokens, "Medusa should take XQA Precompiled codepath.");
 
     bool const isGMMAKernel = jit::supportConfigQGMMA(xqaParams, mSM, false);
     constexpr uint32_t kMAX_NB_KERNEL_PARAMS = 11;
@@ -236,7 +236,7 @@ void DecoderXQAImplJIT::runImpl(XQAParams const& xqaParams, KVCacheBuffer const&
     void* kernelParams[kMAX_NB_KERNEL_PARAMS];
     auto appendParam = [&](auto* p) mutable
     {
-        TLLM_CHECK(idxNextParam < maxNbKernelParams);
+        CHECK(idxNextParam < maxNbKernelParams);
         kernelParams[idxNextParam++] = p;
     };
     appendParam(&launchParams.num_k_heads);

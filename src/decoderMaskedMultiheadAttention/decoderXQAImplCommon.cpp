@@ -11,7 +11,7 @@ XQAKernelRuntimeHashKey getRuntimeHashKeyFromXQAParams(XQAParams const& xqaParam
     unsigned int head_size = xqaParams.head_size;
     unsigned int num_q_heads = xqaParams.num_q_heads;
     unsigned int num_kv_heads = xqaParams.num_kv_heads;
-    TLLM_CHECK_WITH_INFO(num_q_heads % num_kv_heads == 0, "numQHeads should be multiple of numKVHeads.");
+    CHECK_WITH_INFO(num_q_heads % num_kv_heads == 0, "numQHeads should be multiple of numKVHeads.");
     unsigned int num_q_heads_over_kv = num_q_heads / num_kv_heads;
     unsigned int beam_width = xqaParams.beam_width;
 

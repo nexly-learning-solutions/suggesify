@@ -32,20 +32,20 @@ public:
         for (uint32_t i = 0; i < n; ++i)
         {
             uint32_t key_size = readFromBuffer<uint32_t>(buffer, remaining_buffer_size);
-            TLLM_CHECK(key_size <= remaining_buffer_size);
+            CHECK(key_size <= remaining_buffer_size);
             Key key(buffer, key_size);
             buffer += key_size;
             remaining_buffer_size -= key_size;
 
             uint32_t obj_size = readFromBuffer<uint32_t>(buffer, remaining_buffer_size);
-            TLLM_CHECK(obj_size <= remaining_buffer_size);
+            CHECK(obj_size <= remaining_buffer_size);
             CubinObj obj(buffer, obj_size);
             buffer += obj_size;
             remaining_buffer_size -= obj_size;
 
             mMap.insert({key, std::move(obj)});
         }
-        TLLM_CHECK(remaining_buffer_size == 0);
+        CHECK(remaining_buffer_size == 0);
     }
 
     std::unique_ptr<CubinObjRegistryTemplate<Key, Hash>> clone() const noexcept
@@ -81,27 +81,27 @@ public:
         for (auto&& p : mMap)
         {
             uint32_t key_size = p.first.getSerializationSize();
-            TLLM_CHECK(key_size <= remaining_buffer_size);
+            CHECK(key_size <= remaining_buffer_size);
             writeToBuffer<uint32_t>(key_size, buffer, remaining_buffer_size);
             p.first.serialize(buffer, key_size);
             buffer += key_size;
             remaining_buffer_size -= key_size;
 
             uint32_t obj_size = p.second.getSerializationSize();
-            TLLM_CHECK(obj_size <= remaining_buffer_size);
+            CHECK(obj_size <= remaining_buffer_size);
             writeToBuffer<uint32_t>(obj_size, buffer, remaining_buffer_size);
             p.second.serialize(buffer, obj_size);
             buffer += obj_size;
             remaining_buffer_size -= obj_size;
         }
-        TLLM_CHECK(remaining_buffer_size == 0);
+        CHECK(remaining_buffer_size == 0);
     }
 
     // Compiles and inserts the cubin if not found in mMap. Does nothing otherwise.
     // When initialize is true, also initialize cubins.
     void insertCubinIfNotExists(Key const& key, CompileEngine* compileEngine, bool initialize)
     {
-        TLLM_CHECK(compileEngine != nullptr);
+        CHECK(compileEngine != nullptr);
 
         std::lock_guard<std::mutex> lock(mMutex);
 

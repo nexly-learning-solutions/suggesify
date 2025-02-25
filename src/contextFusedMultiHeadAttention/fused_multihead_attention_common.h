@@ -76,7 +76,7 @@ struct MHARunnerFixedParams
         case DATA_TYPE_FP16: output += forceFp32Acc ? "fp16_fp32" : "fp16"; break;
         case DATA_TYPE_BF16: output += "bf16"; break;
         case DATA_TYPE_E4M3: output += "e4m3"; break;
-        default: TLLM_CHECK_WITH_INFO(false, "not supported.");
+        default: CHECK_WITH_INFO(false, "not supported.");
         }
         output += ", head_size = " + std::to_string(headSize);
         output += ", head_size_V = " + std::to_string(headSizeV);
@@ -87,7 +87,7 @@ struct MHARunnerFixedParams
         case ContextAttentionMaskType::CAUSAL: output += "causal"; break;
         case ContextAttentionMaskType::SLIDING_WINDOW_CAUSAL: output += "sliding_window_causal"; break;
         case ContextAttentionMaskType::CUSTOM_MASK: output += "custom_mask"; break;
-        default: TLLM_CHECK_WITH_INFO(false, "not supported.");
+        default: CHECK_WITH_INFO(false, "not supported.");
         }
         output += ", attention_input_layout = ";
         switch (attentionInputLayout)
@@ -95,7 +95,7 @@ struct MHARunnerFixedParams
         case AttentionInputLayout::PACKED_QKV: output += "packed_qkv"; break;
         case AttentionInputLayout::Q_CONTIGUOUS_KV: output += "q_contiguous_kv"; break;
         case AttentionInputLayout::Q_PAGED_KV: output += "q_paged_kv"; break;
-        default: TLLM_CHECK_WITH_INFO(false, "not supported.");
+        default: CHECK_WITH_INFO(false, "not supported.");
         }
         output += ", alibi = ";
         output += (hasAlibi ? "true" : "false");

@@ -101,7 +101,7 @@ struct XQAKernelFullHashKey
 
     XQAKernelFullHashKey(void const* buffer, size_t buffer_size)
     {
-        TLLM_CHECK(sizeof(*this) <= buffer_size);
+        CHECK(sizeof(*this) <= buffer_size);
         memcpy(this, buffer, sizeof(*this));
     }
 
@@ -117,7 +117,7 @@ struct XQAKernelFullHashKey
 
     void serialize(void* buffer, size_t buffer_size) const
     {
-        TLLM_CHECK(sizeof(*this) <= buffer_size);
+        CHECK(sizeof(*this) <= buffer_size);
         memcpy(buffer, this, sizeof(*this));
     }
 };
@@ -205,7 +205,7 @@ template <typename KVCacheBuffer>
 void buildXQALaunchParams(XQALaunchParam<KVCacheBuffer>& launchParams, void*& inputScratch, bool hasOutputScratch,
     XQAParams const& params, KVCacheBuffer kv_cache_buffer)
 {
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         params.data_type == DATA_TYPE_FP16 || params.data_type == DATA_TYPE_BF16, "Only fp16 or bf16 supported now.");
     memset(&launchParams, 0, sizeof(XQALaunchParam<KVCacheBuffer>));
     launchParams.num_k_heads = params.num_kv_heads;
@@ -266,7 +266,7 @@ std::optional<T> getGlobalVar(std::shared_ptr<suggestify::common::CUDADriverWrap
     switch (error)
     {
     case CUDA_SUCCESS:
-        TLLM_CHECK(size == sizeof(T));
+        CHECK(size == sizeof(T));
         suggestify::common::check_cuda_error(cudaMemcpy(&ret, pVar, size, cudaMemcpyDeviceToHost));
         break;
     case CUDA_ERROR_NOT_FOUND:
@@ -275,7 +275,7 @@ std::optional<T> getGlobalVar(std::shared_ptr<suggestify::common::CUDADriverWrap
             return std::nullopt;
         }
         [[fallthrough]];
-    default: TLLM_THROW("Failed to retrieve global variable from cubin: error code %i.", static_cast<int32_t>(error));
+    default: THROW("Failed to retrieve global variable from cubin: error code %i.", static_cast<int32_t>(error));
     }
     return std::optional<T>{std::move(ret)};
 }
@@ -306,8 +306,8 @@ inline int computeMultiBlockCount(XQAParams const& xqaParams, int batch_size, in
     // limit for workspace size (computed from maxNbSubSeq).
     multi_block_count = std::max(std::min(multi_block_count, maxNbSubSeq / batch_size), 1);
 
-    TLLM_CHECK_WITH_INFO(multi_block_count >= 1, "MultiBlock count should be larger than 1");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(multi_block_count >= 1, "MultiBlock count should be larger than 1");
+    CHECK_WITH_INFO(
         multi_block_count == 1 || batch_size * multi_block_count <= maxNbSubSeq, "Insufficient workspace");
     return multi_block_count;
 }

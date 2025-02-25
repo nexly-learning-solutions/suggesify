@@ -60,12 +60,12 @@ LoraImpl::LoraImpl(int in_hidden_size, std::vector<int> out_hidden_sizes, int tr
 {
     mOutHiddenSizes.resize(mNumLoraModules);
     mOutHiddenSizes.assign(out_hidden_sizes.begin(), out_hidden_sizes.end());
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
 }
 
 void LoraImpl::setGemmConfig()
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     if (mType == DataType::kHALF)
     {
         mCublasWrapper->setFP16GemmConfig();
@@ -107,7 +107,7 @@ int64_t getGemmWorkSpaceSize(int64_t numTokens, int64_t maxLoraModuleNum, int64_
 size_t LoraImpl::getWorkspaceSize(
     int64_t const numTokens, int64_t const numReqs, nvinfer1::DataType const type) const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     auto const typeSize = suggestify::common::getDTypeSize(type);
 
     return (size_t) getGemmWorkSpaceSize(numTokens, mNumLoraModules, mMaxLowRank, mSplitKSlices)
@@ -123,7 +123,7 @@ void LoraImpl::setBestTactic(std::optional<Config> config)
 int LoraImpl::run(int64_t numTokens, int64_t numReqs, void const* input, int32_t const* loraRanks,
     void const* const* loraWeightsPtr, int weightIndex, void* const* outputs, void* workspace, cudaStream_t stream)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     if (numTokens == 0)
     {
@@ -179,7 +179,7 @@ int LoraImpl::run(int64_t numTokens, int64_t numReqs, void const* input, int32_t
 
             if (N > 0)
             {
-                TLLM_CHECK_WITH_INFO(N <= mMaxLowRank,
+                CHECK_WITH_INFO(N <= mMaxLowRank,
                     fmtstr("Invalid low_rank (%d). low_rank must be smaller than mMaxLowRank (%d)", N, mMaxLowRank));
                 auto const K = mInHiddenSize;
                 auto const N2 = mOutHiddenSizes[loraModuleIdx];
@@ -247,7 +247,7 @@ int LoraImpl::run(int64_t numTokens, int64_t numReqs, void const* input, int32_t
 
                 if (N > 0)
                 {
-                    TLLM_CHECK_WITH_INFO(N <= mMaxLowRank,
+                    CHECK_WITH_INFO(N <= mMaxLowRank,
                         fmtstr(
                             "Invalid low_rank (%d). low_rank must be smaller than mMaxLowRank (%d)", N, mMaxLowRank));
 
@@ -282,11 +282,11 @@ int LoraImpl::run(int64_t numTokens, int64_t numReqs, void const* input, int32_t
                 handled_token_num += M;
                 rowId += count;
             }
-            TLLM_CHECK(handled_token_num == numTokens);
+            CHECK(handled_token_num == numTokens);
         }
         if (problem_sizes.size() > 0)
         {
-            TLLM_CHECK_WITH_INFO(mTransA == false && mTransB == true,
+            CHECK_WITH_INFO(mTransA == false && mTransB == true,
                 fmtstr("Invalid transA (%d) transB (%d). transA must be false, transB must be true", int(mTransA),
                     int(mTransB)));
             splitkGroupedGemm(problem_sizes, ptrA, ptrB, ptrC, ptrD, groupGemmParamsWorkSpace,

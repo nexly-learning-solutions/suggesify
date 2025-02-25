@@ -56,43 +56,43 @@ struct TopKSamplingKernelParams
 
     void checkParams() const
     {
-        TLLM_CHECK(batchSize > 0);
-        TLLM_CHECK(maxBatchSize > 0);
-        TLLM_CHECK(maxBatchSize >= batchSize);
-        TLLM_CHECK(vocabSizePadded > 0);
-        TLLM_CHECK(maxTokensPerStep > 0);
+        CHECK(batchSize > 0);
+        CHECK(maxBatchSize > 0);
+        CHECK(maxBatchSize >= batchSize);
+        CHECK(vocabSizePadded > 0);
+        CHECK(maxTokensPerStep > 0);
 
-        TLLM_CHECK(logProbs || logProbsPtrs);
-        TLLM_CHECK(outputIds || outputIdsPtrs);
+        CHECK(logProbs || logProbsPtrs);
+        CHECK(outputIds || outputIdsPtrs);
 
         if (maxTokensPerStep > 1)
         {
-            TLLM_CHECK(tokensPerStep);
+            CHECK(tokensPerStep);
         }
 
         if (outputIds)
         {
-            TLLM_CHECK(maxSeqLen > 0);
+            CHECK(maxSeqLen > 0);
         }
 
-        TLLM_CHECK(workspace);
+        CHECK(workspace);
 
-        TLLM_CHECK(maxTokensPerStep != 1 || returnAllSelectedTokens || sequenceLengths);
-        TLLM_CHECK(maxTokensPerStep != 1 || returnAllSelectedTokens || endIds);
+        CHECK(maxTokensPerStep != 1 || returnAllSelectedTokens || sequenceLengths);
+        CHECK(maxTokensPerStep != 1 || returnAllSelectedTokens || endIds);
         if (cumLogProbs != nullptr || outputLogProbs != nullptr)
         {
-            TLLM_CHECK(maxTokensPerStep == 1);
+            CHECK(maxTokensPerStep == 1);
             if (cumLogProbs != nullptr)
             {
-                TLLM_CHECK(!returnAllSelectedTokens);
+                CHECK(!returnAllSelectedTokens);
             }
         }
 
-        TLLM_CHECK(((finishedOutput == nullptr) ^ (endIds == nullptr)) == 0);
+        CHECK(((finishedOutput == nullptr) ^ (endIds == nullptr)) == 0);
 
-        TLLM_CHECK(0 < maxTopP && maxTopP <= 1.f);
-        TLLM_CHECK(0 <= maxTopK && maxTopK <= TOP_K_MAX);
-        TLLM_CHECK((skipOutputIdCurrentStep && outputIdCurrentStep && returnAllSelectedTokens)
+        CHECK(0 < maxTopP && maxTopP <= 1.f);
+        CHECK(0 <= maxTopK && maxTopK <= TOP_K_MAX);
+        CHECK((skipOutputIdCurrentStep && outputIdCurrentStep && returnAllSelectedTokens)
             || (skipOutputIdCurrentStep == nullptr && outputIdCurrentStep == nullptr));
     }
 };
@@ -143,7 +143,7 @@ inline bool clampTopP(float& topP)
 {
     if (topP < 0.f || topP > 1.0f)
     {
-        TLLM_LOG_WARNING("TopP (%f) is out of range ([0.0, 1.0f]). Clip to closest number.", topP);
+        LOG_WARNING("TopP (%f) is out of range ([0.0, 1.0f]). Clip to closest number.", topP);
         topP = std::clamp(topP, 0.f, 1.f);
         return true;
     }
@@ -155,7 +155,7 @@ inline bool clampTopK(runtime::SizeType32& topK)
 {
     if (topK < 0 || topK > TOP_K_MAX)
     {
-        TLLM_LOG_WARNING(
+        LOG_WARNING(
             "TopK (%d) is larger than max supported number (%d). Clip to max supported number.", topK, TOP_K_MAX);
         topK = std::clamp(topK, 0, TOP_K_MAX);
         return true;

@@ -17,7 +17,7 @@ CubinObj::CubinObj(void const* buffer_, size_t buffer_size)
     size_t remaining_buffer_size = buffer_size;
     uint32_t len = readFromBuffer<uint32_t>(buffer, remaining_buffer_size);
     mContent.resize(len);
-    TLLM_CHECK(len <= remaining_buffer_size);
+    CHECK(len <= remaining_buffer_size);
     memcpy(mContent.data(), buffer, len);
 }
 
@@ -30,7 +30,7 @@ CubinObj::CubinObj(std::string const& content)
 CubinObj::CubinObj(CubinObj const& other)
 {
     // Only uninitialized CubinObj can be copy-constructed.
-    TLLM_CHECK(!other.mInitialized);
+    CHECK(!other.mInitialized);
 
     this->mContent = other.mContent;
     this->mInitialized = false;
@@ -44,7 +44,7 @@ CubinObj& CubinObj::operator=(CubinObj const& other)
     }
 
     // Only uninitialized CubinObj can be copy-assigned.
-    TLLM_CHECK(!other.mInitialized);
+    CHECK(!other.mInitialized);
 
     this->mContent = other.mContent;
     this->mInitialized = false;
@@ -110,14 +110,14 @@ void CubinObj::serialize(void* buffer_, size_t buffer_size) const noexcept
     uint8_t* buffer = static_cast<uint8_t*>(buffer_);
     uint32_t len = mContent.size();
     writeToBuffer<uint32_t>(len, buffer, remaining_buffer_size);
-    TLLM_CHECK(len <= remaining_buffer_size);
+    CHECK(len <= remaining_buffer_size);
     memcpy(buffer, mContent.c_str(), len);
 }
 
 void CubinObj::launch(dim3 gridDim, dim3 blockDim, CUstream hStream, void** kernelParams)
 {
-    TLLM_CHECK(mInitialized);
-    TLLM_CU_CHECK(mDriver->cuLaunchKernel(mFunction, gridDim.x, gridDim.y, gridDim.z, blockDim.x, blockDim.y,
+    CHECK(mInitialized);
+    CU_CHECK(mDriver->cuLaunchKernel(mFunction, gridDim.x, gridDim.y, gridDim.z, blockDim.x, blockDim.y,
         blockDim.z, mSharedMemBytes, hStream, kernelParams, /*extra=*/nullptr));
 }
 
@@ -127,24 +127,24 @@ void CubinObj::initialize()
     {
         mDriver = suggestify::common::CUDADriverWrapper::getInstance();
         mModule = nullptr;
-        TLLM_CU_CHECK(mDriver->cuModuleLoadData(&mModule, mContent.c_str()));
-        TLLM_CHECK(mModule != nullptr);
+        CU_CHECK(mDriver->cuModuleLoadData(&mModule, mContent.c_str()));
+        CHECK(mModule != nullptr);
         mFunction = nullptr;
-        TLLM_CU_CHECK(mDriver->cuModuleGetFunction(&mFunction, mModule, kFuncName));
-        TLLM_CHECK(mFunction != nullptr);
+        CU_CHECK(mDriver->cuModuleGetFunction(&mFunction, mModule, kFuncName));
+        CHECK(mFunction != nullptr);
 
         // Populate mSharedMemBytes.
         CUdeviceptr shmem_dev_ptr = 0;
-        TLLM_CU_CHECK(mDriver->cuModuleGetGlobal(&shmem_dev_ptr, nullptr, mModule, kSmemName));
-        TLLM_CHECK(shmem_dev_ptr != 0);
-        TLLM_CU_CHECK(mDriver->cuMemcpyDtoH(&mSharedMemBytes, shmem_dev_ptr, sizeof(unsigned int)));
+        CU_CHECK(mDriver->cuModuleGetGlobal(&shmem_dev_ptr, nullptr, mModule, kSmemName));
+        CHECK(shmem_dev_ptr != 0);
+        CU_CHECK(mDriver->cuMemcpyDtoH(&mSharedMemBytes, shmem_dev_ptr, sizeof(unsigned int)));
 
-        TLLM_CHECK(mSharedMemBytes > 0);
+        CHECK(mSharedMemBytes > 0);
 
         /* Set 46KB threshold here because we have to take static/driver shared memory into consideration. */
         if (mSharedMemBytes >= 46 * 1024)
         {
-            TLLM_CU_CHECK(mDriver->cuFuncSetAttribute(
+            CU_CHECK(mDriver->cuFuncSetAttribute(
                 mFunction, CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES, mSharedMemBytes));
         }
 
@@ -157,7 +157,7 @@ CubinObj::~CubinObj()
 {
     if (mInitialized)
     {
-        TLLM_CU_CHECK(mDriver->cuModuleUnload(mModule));
+        CU_CHECK(mDriver->cuModuleUnload(mModule));
         mInitialized = false;
     }
 }

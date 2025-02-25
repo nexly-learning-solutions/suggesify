@@ -330,7 +330,7 @@ __global__ void topKStage2Sampling(SizeType32 const* __restrict topKTmpIdBuf, T*
 template <typename T>
 void invokeBatchTopKSampling(TopKSamplingKernelParams<T> const& params, cudaStream_t stream)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     params.checkParams();
 
@@ -377,10 +377,10 @@ void invokeBatchTopKSampling(TopKSamplingKernelParams<T> const& params, cudaStre
     case 9: // 64 < maxTopK <= 1024
         CASE_K(1024, 256, 256, 8);
         break;
-    default: TLLM_CHECK_WITH_INFO(false, "TopK kernel supports 1 <= k <= 1024 but got k=%d", params.maxTopK);
+    default: CHECK_WITH_INFO(false, "TopK kernel supports 1 <= k <= 1024 but got k=%d", params.maxTopK);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 #undef CASE_K

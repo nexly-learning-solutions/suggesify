@@ -13,9 +13,9 @@
 namespace
 {
 
-void CHECK_TLLM_XQA_JIT_ERROR_(tllmXqaJitStatus result, char const* const func, char const* const file, int const line)
+void CHECK_XQA_JIT_ERROR_(tllmXqaJitStatus result, char const* const func, char const* const file, int const line)
 {
-    if (result != TLLM_XQA_JIT_SUCCESS)
+    if (result != XQA_JIT_SUCCESS)
     {
         std::vector<char> log(tllmXqaJitGetLastErrorStringSize());
         tllmXqaJitGetLastErrorString(log.data());
@@ -24,7 +24,7 @@ void CHECK_TLLM_XQA_JIT_ERROR_(tllmXqaJitStatus result, char const* const func, 
     }
 }
 
-#define CHECK_TLLM_XQA_JIT_ERROR(val) CHECK_TLLM_XQA_JIT_ERROR_((val), #val, __FILE__, __LINE__)
+#define CHECK_XQA_JIT_ERROR(val) CHECK_XQA_JIT_ERROR_((val), #val, __FILE__, __LINE__)
 
 } // anonymous namespace
 
@@ -49,16 +49,16 @@ CubinObj CompileEngine::compile() const
         /*paged_kv_cache=*/mXqaParams.paged_kv_cache,
         /*data_type=*/static_cast<int>(mXqaParams.data_type),
         /*kv_cache_data_type=*/static_cast<int>(mXqaParams.kv_cache_data_type),
-        /*kernel_type=*/useQGMMAKernel ? TLLM_XQA_JIT_QGMMA : TLLM_XQA_JIT_HMMA};
+        /*kernel_type=*/useQGMMAKernel ? XQA_JIT_QGMMA : XQA_JIT_HMMA};
 
-    CHECK_TLLM_XQA_JIT_ERROR(tllmXqaJitCreateAndCompileProgram(&program, &context));
+    CHECK_XQA_JIT_ERROR(tllmXqaJitCreateAndCompileProgram(&program, &context));
 
     size_t cubinSize;
-    CHECK_TLLM_XQA_JIT_ERROR(tllmXqaJitGetCUBINSize(program, &cubinSize));
+    CHECK_XQA_JIT_ERROR(tllmXqaJitGetCUBINSize(program, &cubinSize));
     std::string cubinContent(cubinSize, ' ');
-    CHECK_TLLM_XQA_JIT_ERROR(tllmXqaJitGetCUBIN(program, const_cast<char*>(cubinContent.c_str())));
+    CHECK_XQA_JIT_ERROR(tllmXqaJitGetCUBIN(program, const_cast<char*>(cubinContent.c_str())));
 
-    CHECK_TLLM_XQA_JIT_ERROR(tllmXqaJitDestroyProgram(&program));
+    CHECK_XQA_JIT_ERROR(tllmXqaJitDestroyProgram(&program));
 
     return CubinObj(cubinContent);
 }

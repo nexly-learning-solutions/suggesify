@@ -61,13 +61,13 @@ public:
             }
             else
             {
-                TLLM_CU_CHECK(mDriver->cuModuleLoadData(&hmod, kernelMeta.mCubin));
+                CU_CHECK(mDriver->cuModuleLoadData(&hmod, kernelMeta.mCubin));
                 mModules.insert(std::make_pair(kernelMeta.mCubin, hmod));
             }
 
             XQAKernelFuncInfo funcInfo{};
             funcInfo.mMetaInfoIndex = i;
-            TLLM_CU_CHECK(mDriver->cuModuleGetFunction(&funcInfo.mDeviceFunction, hmod, kernelMeta.mFuncName));
+            CU_CHECK(mDriver->cuModuleGetFunction(&funcInfo.mDeviceFunction, hmod, kernelMeta.mFuncName));
             funcInfo.mSharedMemBytes = getGlobalVar<uint32_t>(mDriver, hmod, "smemSize", true).value();
             funcInfo.mKernelType = getGlobalVar<XQAKernelType>(mDriver, hmod, "kernelType", false)
                                        .value_or(XQAKernelType::kAMPERE_WARP_SPECIALIZED);
@@ -75,7 +75,7 @@ public:
             /* Set 46KB threshold here because we have to take static/driver shared memory into consideration. */
             if (funcInfo.mSharedMemBytes >= 46 * 1024)
             {
-                TLLM_CU_CHECK(mDriver->cuFuncSetAttribute(funcInfo.mDeviceFunction,
+                CU_CHECK(mDriver->cuFuncSetAttribute(funcInfo.mDeviceFunction,
                     CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES, funcInfo.mSharedMemBytes));
             }
             XQAKernelRuntimeHashKey hash_key{kernelMeta.mKVDataType, kernelMeta.mHeadDim, kernelMeta.mBeamWidth,
@@ -91,7 +91,7 @@ public:
         unsigned int head_size = xqaParams.head_size;
         int num_q_heads = xqaParams.num_q_heads;
         int num_kv_heads = xqaParams.num_kv_heads;
-        TLLM_CHECK_WITH_INFO(num_q_heads % num_kv_heads == 0, "numQHeads should be multiple of numKVHeads.");
+        CHECK_WITH_INFO(num_q_heads % num_kv_heads == 0, "numQHeads should be multiple of numKVHeads.");
         unsigned int num_q_heads_over_kv = num_q_heads / num_kv_heads;
         unsigned int beam_width = xqaParams.beam_width;
         // MultiQueryToken kernels can support any num_q_heads_over_kv that is power of 2.
@@ -141,7 +141,7 @@ public:
         unsigned int head_size = xqaParams.head_size;
         int num_q_heads = xqaParams.num_q_heads;
         int num_kv_heads = xqaParams.num_kv_heads;
-        TLLM_CHECK_WITH_INFO(num_q_heads % num_kv_heads == 0, "numQHeads should be multiple of numKVHeads.");
+        CHECK_WITH_INFO(num_q_heads % num_kv_heads == 0, "numQHeads should be multiple of numKVHeads.");
         unsigned int num_q_heads_over_kv = num_q_heads / num_kv_heads;
         unsigned int beam_width = xqaParams.beam_width;
         unsigned int batch_beam_size = xqaParams.batch_size * beam_width;
@@ -163,7 +163,7 @@ public:
         decoder_params.seqKVLengths = xqaParams.sequence_lengths;
         decoder_params.batchSize = int(batch_beam_size);
         decoder_params.maxQSeqLength = xqaParams.generation_input_length;
-        TLLM_CHECK_WITH_INFO(!xqaParams.multi_query_tokens || xqaParams.spec_decoding_generation_lengths != nullptr,
+        CHECK_WITH_INFO(!xqaParams.multi_query_tokens || xqaParams.spec_decoding_generation_lengths != nullptr,
             "Spec_decoding_generation_lengths must be provided.");
         // Rotary embedding inv_freq buffer.
         decoder_params.rotaryEmbeddingScale = xqaParams.rotary_embedding_scale;
@@ -203,7 +203,7 @@ public:
         XQAKernelRuntimeHashKey hash_key = getRuntimeHashKeyFromXQAParams(xqaParams);
         auto const findIter = mFunctions.find(hash_key);
 
-        TLLM_CHECK_WITH_INFO(findIter != mFunctions.end(), "XQAKernelFunc not found.");
+        CHECK_WITH_INFO(findIter != mFunctions.end(), "XQAKernelFunc not found.");
 
         auto const& kernelMeta = mKernelMeta[findIter->second.mMetaInfoIndex];
         const CUfunction func = findIter->second.mDeviceFunction;
@@ -236,13 +236,13 @@ public:
                     sizeof(int) * xqaParams.batch_size * qSeqLen * xqaParams.num_kv_heads, stream));
                 sync_check_cuda_error();
             }
-            TLLM_CU_CHECK(mDriver->cuLaunchKernel(func, multi_block, xqaParams.num_kv_heads * nbTokenBlocksPerGrp,
+            CU_CHECK(mDriver->cuLaunchKernel(func, multi_block, xqaParams.num_kv_heads * nbTokenBlocksPerGrp,
                 xqaParams.batch_size, 128, 1, 2, shared_mem_bytes, stream, kernelParams, nullptr));
         }
         else
         {
             bool const isGmmaKernel = (kernelType == XQAKernelType::kHOPPER_WARP_SPECIALIZED);
-            TLLM_CHECK(isGmmaKernel
+            CHECK(isGmmaKernel
                 == (mSM == kSM_90 && xqaParams.kv_cache_data_type == XQADataType::DATA_TYPE_E4M3
                     && xqaParams.beam_width == 1));
             constexpr uint32_t kMAX_NB_KERNEL_PARAMS = 11;
@@ -251,7 +251,7 @@ public:
             void* kernelParams[kMAX_NB_KERNEL_PARAMS];
             auto appendParam = [&](auto* p) mutable
             {
-                TLLM_CHECK(idxNextParam < maxNbKernelParams);
+                CHECK(idxNextParam < maxNbKernelParams);
                 kernelParams[idxNextParam++] = p;
             };
             appendParam(&launchParams.num_k_heads);
@@ -278,7 +278,7 @@ public:
             {
                 multi_block = computeMultiBlockCount(xqaParams, xqaParams.batch_size, multiprocessor_count);
             }
-            TLLM_CU_CHECK(mDriver->cuLaunchKernel(func, multi_block, xqaParams.num_kv_heads, xqaParams.batch_size, 128,
+            CU_CHECK(mDriver->cuLaunchKernel(func, multi_block, xqaParams.num_kv_heads, xqaParams.batch_size, 128,
                 1, isGmmaKernel ? 3 : 2, shared_mem_bytes, stream, kernelParams, nullptr));
         }
 

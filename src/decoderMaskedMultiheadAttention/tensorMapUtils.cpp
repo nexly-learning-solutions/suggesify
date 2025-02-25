@@ -59,7 +59,7 @@ CUtensorMap makeTensorMapForPagedKVCache(std::shared_ptr<CUDADriverWrapper> cons
     uint64_t const globalDims[] = {headElems, tokensPerPage, nbKHeads, 1U << 31};
     uint32_t const headBytes = elemBytes * headElems;
     uint64_t const globalStrides[] = {headBytes, headBytes * tokensPerPage, headBytes * tokensPerPage * nbKHeads};
-    TLLM_CHECK(headElems <= 256);
+    CHECK(headElems <= 256);
     uint32_t const paddedHeadElems = headElems <= 64 ? 64 : (headElems <= 128 ? 128 : 256);
     uint32_t const partElems = std::min(elemBytes * paddedHeadElems, 128U) / elemBytes;
     uint32_t const boxDims[] = {partElems, std::min(tokensPerPage, nbTokensPerTile), 1, 1};
@@ -71,11 +71,11 @@ CUtensorMap makeTensorMapForPagedKVCache(std::shared_ptr<CUDADriverWrapper> cons
         {
         case 128: return CU_TENSOR_MAP_SWIZZLE_128B;
         case 64: return CU_TENSOR_MAP_SWIZZLE_64B;
-        default: TLLM_THROW("unsupported cache head size");
+        default: THROW("unsupported cache head size");
         }
     }();
 
-    TLLM_CU_CHECK(driver->cuTensorMapEncodeTiled(&tensorMap, dataType, 4, const_cast<void*>(addr), globalDims,
+    CU_CHECK(driver->cuTensorMapEncodeTiled(&tensorMap, dataType, 4, const_cast<void*>(addr), globalDims,
         globalStrides, boxDims, elemStrides, CU_TENSOR_MAP_INTERLEAVE_NONE, swizzle, CU_TENSOR_MAP_L2_PROMOTION_NONE,
         CU_TENSOR_MAP_FLOAT_OOB_FILL_NONE));
     return tensorMap;
@@ -103,7 +103,7 @@ CUtensorMap makeTensorMapForContiguousKVCache(std::shared_ptr<CUDADriverWrapper>
     uint32_t elemBytes = getElemBytes(dataType);
     uint32_t const headBytes = elemBytes * headElems;
     uint64_t const globalStrides[] = {headBytes, headBytes * maxCacheLen, headBytes * maxCacheLen * nbKHeads};
-    TLLM_CHECK(headElems <= 256);
+    CHECK(headElems <= 256);
     uint32_t const paddedHeadElems = headElems <= 64 ? 64 : (headElems <= 128 ? 128 : 256);
     uint32_t const partElems = std::min(elemBytes * paddedHeadElems, 128U) / elemBytes;
     uint32_t const boxDims[] = {partElems, nbTokensPerTile, 1, 1};
@@ -115,11 +115,11 @@ CUtensorMap makeTensorMapForContiguousKVCache(std::shared_ptr<CUDADriverWrapper>
         {
         case 128: return CU_TENSOR_MAP_SWIZZLE_128B;
         case 64: return CU_TENSOR_MAP_SWIZZLE_64B;
-        default: TLLM_THROW("unsupported cache head size");
+        default: THROW("unsupported cache head size");
         }
     }();
 
-    TLLM_CU_CHECK(driver->cuTensorMapEncodeTiled(&tensorMap, dataType, 4, const_cast<void*>(addr), globalDims,
+    CU_CHECK(driver->cuTensorMapEncodeTiled(&tensorMap, dataType, 4, const_cast<void*>(addr), globalDims,
         globalStrides, boxDims, elemStrides, CU_TENSOR_MAP_INTERLEAVE_NONE, swizzle, CU_TENSOR_MAP_L2_PROMOTION_NONE,
         CU_TENSOR_MAP_FLOAT_OOB_FILL_NONE));
     return tensorMap;
