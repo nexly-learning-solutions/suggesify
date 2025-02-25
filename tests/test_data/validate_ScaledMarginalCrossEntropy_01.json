@@ -1,0 +1,37 @@
+{
+    "Version": 0.8,
+    "ModelName": "ScaledMarginalCrossEntropy",
+    "Architecture": "FeedForward",
+    "ShuffleIndices": false,
+
+    "LossFunction": {
+        "Type": "ScaledMarginalCrossEntropy",
+        "Parameters": {
+            "PositiveClassTarget": 1.0,
+            "NegativeClassTarget": 0.0,
+            "PositiveClassScale": 30.0,
+            "NegativeClassScale": 1.0
+        },
+        "Description": "Scaled marginal cross-entropy loss for imbalanced class handling."
+    },
+
+    "Layers": [
+        {
+            "Name": "InputLayer",
+            "LayerType": "Input",
+            "Units": 2,
+            "InputDataSet": "input",
+            "IsSparse": true
+        },
+        {
+            "Name": "OutputLayer",
+            "LayerType": "Output",
+            "ConnectionType": "FullyConnected",
+            "Units": 2,
+            "SourceLayer": "InputLayer",
+            "OutputDataSet": "output",
+            "ActivationFunction": "Sigmoid",
+            "IsSparse": true
+        }
+    ]
+}

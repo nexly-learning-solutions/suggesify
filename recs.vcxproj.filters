@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="src\activation.cu" />
+    <CudaCompile Include="src\kernels.cu" />
+    <CudaCompile Include="src\sorting.cu" />
+    <CudaCompile Include="src\sparse.cu" />
+    <CudaCompile Include="src\knn\exactGpu.cu">
+      <Filter>knn</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\knn\mathUtil.cu">
+      <Filter>knn</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\knn\output.cu">
+      <Filter>knn</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\gpuTypes.cpp" />
+    <ClCompile Include="src\layer.cpp" />
+    <ClCompile Include="src\network.cpp" />
+    <ClCompile Include="src\types.cpp" />
+    <ClCompile Include="src\weight.cpp" />
+    <ClCompile Include="src\utils\cdl.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\filters.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\main.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\netCDFGenerator.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\netCDFhelper.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\predict.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\recommendations.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\train.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\utils.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\runtime\runtime.cpp">
+      <Filter>runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="src\knn\cudautil.cpp">
+      <Filter>knn</Filter>
+    </ClCompile>
+    <ClCompile Include="src\knn\data.cpp">
+      <Filter>knn</Filter>
+    </ClCompile>
+    <ClCompile Include="src\knn\dataReader.cpp">
+      <Filter>knn</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\bitonicSort.cuh" />
+    <ClInclude Include="src\constants.h" />
+    <ClInclude Include="src\enum.h" />
+    <ClInclude Include="src\gpuSort.h" />
+    <ClInclude Include="src\gpuTypes.h" />
+    <ClInclude Include="src\kernels.cuh" />
+    <ClInclude Include="src\layer.h" />
+    <ClInclude Include="src\network.h" />
+    <ClInclude Include="src\threadPool.h" />
+    <ClInclude Include="src\types.h" />
+    <ClInclude Include="src\weight.h" />
+    <ClInclude Include="src\utils\cdl.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\filters.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\netCDFhelper.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\recommendations.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\train.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\utils.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runtime\runtime.h">
+      <Filter>runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="src\knn\cudautil.h">
+      <Filter>knn</Filter>
+    </ClInclude>
+    <ClInclude Include="src\knn\data.h">
+      <Filter>knn</Filter>
+    </ClInclude>
+    <ClInclude Include="src\knn\dataReader.h">
+      <Filter>knn</Filter>
+    </ClInclude>
+    <ClInclude Include="src\knn\exactGpu.h">
+      <Filter>knn</Filter>
+    </ClInclude>
+    <ClInclude Include="src\knn\mathUtil.h">
+      <Filter>knn</Filter>
+    </ClInclude>
+    <ClInclude Include="src\knn\output.h">
+      <Filter>knn</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\Makefile" />
+    <None Include="src\utils\Makefile">
+      <Filter>utils</Filter>
+    </None>
+    <None Include="src\runtime\Makefile">
+      <Filter>runtime</Filter>
+    </None>
+    <None Include="src\knn\Makefile">
+      <Filter>knn</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="utils">
+      <UniqueIdentifier>{d99d3674-a67b-4ac7-89b4-a2659a7505e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="runtime">
+      <UniqueIdentifier>{23f8482b-f2a3-49c7-b92d-13eaa8643dac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="knn">
+      <UniqueIdentifier>{e0788506-842b-420d-b7fd-db278a63dc58}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

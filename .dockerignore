@@ -1,0 +1,14 @@
+.git
+build
+cpp/*build*
+cpp/cmake-*
+cpp/.ccache
+cpp/tests/resources/models
+bitfusion/libs
+**/__pycache__
+examples/**/.git
+examples/**/*.bin
+examples/**/*.engine
+examples/**/*.onnx
+examples/**/c-model
+examples/gpt/gpt*

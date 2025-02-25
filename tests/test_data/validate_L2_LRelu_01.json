@@ -1,0 +1,41 @@
+{
+  "Version": 0.8,
+  "ModelName": "L2_1D_Regression",
+  "Architecture": "FeedForward",
+  "ShuffleIndices": false,
+
+  "LossFunction": {
+      "Type": "L2",
+      "Description": "L2 loss function for regression, minimizing squared error"
+  },
+
+  "Layers": [
+      {
+          "Name": "InputLayer",
+          "LayerType": "Input",
+          "Units": 2,
+          "InputDataSet": "input",
+          "IsSparse": true
+      },
+      {
+          "Name": "HiddenLayer",
+          "LayerType": "Hidden",
+          "ConnectionType": "FullyConnected",
+          "Units": 2,
+          "SourceLayer": "InputLayer",
+          "ActivationFunction": "LeakyReLU",
+          "Slope": 0.0,
+          "IsSparse": true
+      },
+      {
+          "Name": "OutputLayer",
+          "LayerType": "Output",
+          "ConnectionType": "FullyConnected",
+          "Units": 2,
+          "SourceLayer": "HiddenLayer",
+          "OutputDataSet": "output",
+          "ActivationFunction": "Linear",
+          "IsSparse": true
+      }
+  ]
+}

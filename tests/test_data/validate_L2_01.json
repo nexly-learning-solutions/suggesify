@@ -1,0 +1,32 @@
+{
+    "Version": 0.8,
+    "ModelName": "L2_1D_Regression",
+    "Architecture": "FeedForward",
+    "ShuffleIndices": false,
+
+    "LossFunction": {
+        "Type": "L2",
+        "Description": "L2 loss function for regression, minimizes squared error"
+    },
+
+    "Layers": [
+        {
+            "Name": "InputLayer",
+            "LayerType": "Input",
+            "Units": 1,
+            "InputDataSet": "input",
+            "IsSparse": true
+        },
+        {
+            "Name": "OutputLayer",
+            "LayerType": "Output",
+            "ConnectionType": "FullyConnected",
+            "Units": 1,
+            "SourceLayer": "InputLayer",
+            "OutputDataSet": "output",
+            "ActivationFunction": "Linear",
+            "IsSparse": true
+        }
+    ]
+}
+

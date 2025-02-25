@@ -1,0 +1,45 @@
+{
+    "Version": 0.8,
+    "ModelName": "DataScaledMarginalCrossEntropyModel",
+    "Architecture": "FeedForward",
+    "ShuffleIndices": false,
+
+    "LossFunction": {
+        "Type": "DataScaledMarginalCrossEntropy",
+        "Parameters": {
+            "PositiveClassTarget": 1.0,
+            "NegativeClassTarget": 0.0,
+            "PositiveClassScale": 30.0,
+            "NegativeClassScale": 1.0
+        }
+    },
+
+    "Layers": [
+        {
+            "Name": "InputLayer",
+            "LayerType": "Input",
+            "Units": 2,
+            "InputDataSet": "input",
+            "IsSparse": true
+        },
+        {
+            "Name": "HiddenLayer",
+            "LayerType": "Hidden",
+            "ConnectionType": "FullyConnected",
+            "SourceLayer": "InputLayer",
+            "Units": 2,
+            "ActivationFunction": "Sigmoid",
+            "IsSparse": true
+        },
+        {
+            "Name": "OutputLayer",
+            "LayerType": "Output",
+            "ConnectionType": "FullyConnected",
+            "SourceLayer": "HiddenLayer",
+            "Units": 2,
+            "OutputDataSet": "output",
+            "ActivationFunction": "Sigmoid",
+            "IsSparse": true
+        }
+    ]
+}

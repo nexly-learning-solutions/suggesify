@@ -1,0 +1,65 @@
+[submodule "3rdparty/cutlass"]
+    path = 3rdparty/cutlass
+    url = https://github.com/NVIDIA/cutlass.git
+[submodule "3rdparty/json"]
+    path = 3rdparty/json
+    url = https://github.com/nlohmann/json.git
+[submodule "3rdparty/cxxopts"]
+    path = 3rdparty/cxxopts
+    url = https://github.com/jarro2783/cxxopts
+    branch = v3.1.1
+[submodule "3rdparty/NVTX"]
+    path = 3rdparty/NVTX
+    url = https://github.com/NVIDIA/NVTX.git
+[submodule "3rdparty/OpenBLAS"]
+    path = 3rdparty/OpenBLAS
+    url = https://github.com/OpenMathLib/OpenBLAS.git
+[submodule "3rdparty/pybind11"]
+    path = 3rdparty/pybind11
+    url = https://github.com/pybind/pybind11.git
+[submodule "3rdparty/netcdf-cxx4"]
+    path = 3rdparty/netcdf-cxx4
+    url = https://github.com/Unidata/netcdf-cxx4.git
+[submodule "3rdparty/TensorRT"]
+    path = 3rdparty/TensorRT
+    url = https://github.com/NVIDIA/TensorRT.git
+[submodule "3rdparty/Microsoft-MPI"]
+    path = 3rdparty/Microsoft-MPI
+    url = https://github.com/microsoft/Microsoft-MPI.git
+[submodule "3rdparty/cpython"]
+    path = 3rdparty/cpython
+    url = https://github.com/python/cpython.git
+[submodule "3rdparty/nccl"]
+    path = 3rdparty/nccl
+    url = https://github.com/NVIDIA/nccl.git
+[submodule "3rdparty/pytorch"]
+    path = 3rdparty/pytorch
+    url = https://github.com/pytorch/pytorch.git
+[submodule "3rdparty/cudnn-frontend"]
+    path = 3rdparty/cudnn-frontend
+    url = https://github.com/NVIDIA/cudnn-frontend.git
+[submodule "3rdparty/jsoncpp"]
+    path = 3rdparty/jsoncpp
+    url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "3rdparty/highway"]
+    path = 3rdparty/highway
+    url = https://github.com/google/highway.git
+[submodule "3rdparty/googletest"]
+    path = 3rdparty/googletest
+    url = https://github.com/google/googletest.git
+[submodule "3rdparty/pthread-win32"]
+    path = 3rdparty/pthread-win32
+    url = https://github.com/GerHobbelt/pthread-win32.git
+[submodule "3rdparty/boost"]
+    path = 3rdparty/boost
+    url = https://github.com/boostorg/boost.git
+[submodule "3rdparty/glog"]
+    path = 3rdparty/glog
+    url = https://github.com/google/glog.git
+[submodule "3rdparty/cccl"]
+    path = 3rdparty/cccl
+    url = https://github.com/NVIDIA/cccl.git
+    [submodule "3rdparty/netcdf-c"]
+    path = 3rdparty/netcdf-c
+    url = https://github.com/Unidata/netcdf-c.git
+
