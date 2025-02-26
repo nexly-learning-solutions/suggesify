@@ -6,7 +6,7 @@
 #include "cudaUtils.h"
 #include "suggestify/kernels/groupGemm.h"
 #include "suggestify/kernels/splitkGroupGemm.h"
-#include "suggestify/runtime/iBuffer.h"
+#include "iBuffer.h"
 
 #include <algorithm>
 

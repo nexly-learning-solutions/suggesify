@@ -4,7 +4,7 @@
 #include "lookaheadPoolManager.h"
 #include "baseLayer.h"
 #include "decodingParams.h"
-#include "suggestify/runtime/common.h"
+#include "common.h"
 #include <curand_kernel.h>
 #include <tuple>
 

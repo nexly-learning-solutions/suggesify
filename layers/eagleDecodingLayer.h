@@ -3,8 +3,8 @@
 
 #include "baseLayer.h"
 #include "decodingParams.h"
-#include "suggestify/runtime/common.h"
-#include "suggestify/runtime/decodingLayerWorkspace.h"
+#include "common.h"
+#include "decodingLayerWorkspace.h"
 
 #include <curand_kernel.h>
 

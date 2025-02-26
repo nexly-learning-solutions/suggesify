@@ -6,7 +6,7 @@
 #include "suggestify/kernels/penaltyTypes.h"
 #include "defaultDecodingParams.h"
 #include "layerUtils.h"
-#include "suggestify/runtime/bufferManager.h"
+#include "bufferManager.h"
 
 #include <algorithm>
 

@@ -4,9 +4,9 @@
 #include "suggestify/common/assert.h"
 #include "suggestify/executor/executor.h"
 #include "suggestify/kernels/beamSearchKernels.h"
-#include "suggestify/runtime/iTensor.h"
-#include <suggestify/runtime/common.h>
-#include <suggestify/runtime/speculativeDecodingModule.h>
+#include "iTensor.h"
+#include <common.h>
+#include <speculativeDecodingModule.h>
 
 #include <optional>
 #include <utility>

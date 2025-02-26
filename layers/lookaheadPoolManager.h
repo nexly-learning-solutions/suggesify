@@ -4,8 +4,8 @@
 #include <list>
 #include <unordered_map>
 
-#include "suggestify/runtime/bufferManager.h"
-#include "suggestify/runtime/iTensor.h"
+#include "bufferManager.h"
+#include "iTensor.h"
 
 namespace suggestify::layers
 {

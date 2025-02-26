@@ -4,8 +4,8 @@
 #include "suggestify/kernels/decodingCommon.h"
 #include "suggestify/kernels/samplingTopKKernels.h"
 #include "suggestify/kernels/speculativeDecoding/medusaDecodingKernels.h"
-#include "suggestify/runtime/bufferManager.h"
-#include "suggestify/runtime/iBuffer.h"
+#include "bufferManager.h"
+#include "iBuffer.h"
 
 #include <algorithm>
 

@@ -2,7 +2,7 @@
 
 #include "cudaUtils.h"
 #include "suggestify/kernels/gptKernels.h"
-#include "suggestify/runtime/iTensor.h"
+#include "iTensor.h"
 #include <cstdint>
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>

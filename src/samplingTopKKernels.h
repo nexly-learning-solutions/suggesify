@@ -2,7 +2,7 @@
 
 #include "memoryUtils.h"
 #include "suggestify/kernels/decodingCommon.h"
-#include "suggestify/runtime/common.h"
+#include "common.h"
 #include <curand_kernel.h>
 
 namespace suggestify::kernels

@@ -10,11 +10,11 @@
 #include "defaultDecodingParams.h"
 #include "lookaheadAlgorithm.h"
 #include "lookaheadDecodingUtils.h"
-#include "suggestify/runtime/bufferManager.h"
-#include "suggestify/runtime/common.h"
-#include "suggestify/runtime/iBuffer.h"
-#include "suggestify/runtime/iTensor.h"
-#include "suggestify/runtime/lookaheadModule.h"
+#include "bufferManager.h"
+#include "common.h"
+#include "iBuffer.h"
+#include "iTensor.h"
+#include "lookaheadModule.h"
 #include <memory>
 #include <tuple>
 

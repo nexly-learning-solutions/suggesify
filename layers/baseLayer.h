@@ -4,9 +4,9 @@
 #include <utility>
 
 #include "decodingParams.h"
-#include "suggestify/runtime/bufferManager.h"
-#include "suggestify/runtime/common.h"
-#include "suggestify/runtime/decodingLayerWorkspace.h"
+#include "bufferManager.h"
+#include "common.h"
+#include "decodingLayerWorkspace.h"
 
 namespace suggestify::layers
 {

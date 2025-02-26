@@ -6,8 +6,8 @@
 
 #include "assert.h"
 #include "logger.h"
-#include "suggestify/runtime/common.h"
-#include "suggestify/runtime/iBuffer.h"
+#include "common.h"
+#include "iBuffer.h"
 
 #include <csignal>
 #include <cstdlib>

@@ -3,7 +3,7 @@
 #include "suggestify/kernels/gptKernels.h"
 #include "suggestify/kernels/kvCacheUtils.h"
 #include "suggestify/kernels/mlaKernels.h"
-#include "suggestify/runtime/iTensor.h"
+#include "iTensor.h"
 #include <cuda_runtime_api.h>
 
 namespace suggestify

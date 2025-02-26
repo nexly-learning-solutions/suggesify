@@ -4,9 +4,9 @@
 #include "suggestify/kernels/decodingKernels.h"
 #include "layerUtils.h"
 #include "layersFactory.h"
-#include "suggestify/runtime/bufferManager.h"
-#include "suggestify/runtime/iBuffer.h"
-#include "suggestify/runtime/iTensor.h"
+#include "bufferManager.h"
+#include "iBuffer.h"
+#include "iTensor.h"
 
 #include <optional>
 

@@ -8,7 +8,7 @@
 #include "suggestify/kernels/speculativeDecoding/externalDraftTokensKernels.h"
 #include "defaultDecodingParams.h"
 #include "layerUtils.h"
-#include "suggestify/runtime/runtimeKernels.h"
+#include "runtimeKernels.h"
 
 #include <algorithm>
 

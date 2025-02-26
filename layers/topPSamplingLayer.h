@@ -2,7 +2,7 @@
 #pragma once
 
 #include "baseLayer.h"
-#include "suggestify/runtime/common.h"
+#include "common.h"
 
 namespace suggestify::layers
 {

@@ -5,7 +5,7 @@
 
 #include "baseLayer.h"
 #include "decodingParams.h"
-#include "suggestify/runtime/common.h"
+#include "common.h"
 
 namespace suggestify::layers
 {

@@ -10,9 +10,9 @@
 
 #include "suggestify/common/assert.h"
 #include "decodingParams.h"
-#include "suggestify/runtime/bufferManager.h"
-#include "suggestify/runtime/common.h"
-#include "suggestify/runtime/iBuffer.h"
+#include "bufferManager.h"
+#include "common.h"
+#include "iBuffer.h"
 
 namespace suggestify::layers
 {
