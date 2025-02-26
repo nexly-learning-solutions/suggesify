@@ -1,6 +1,6 @@
 
 #pragma once
-#include "suggestify/common/quantization.h"
+#include "quantization.h"
 #include "suggestify/kernels/gptKernels.h"
 #include "suggestify/kernels/multiHeadAttentionCommon.h"
 

@@ -1,6 +1,6 @@
 #pragma once
-#include "suggestify/common/cublasMMWrapper.h"
-#include "suggestify/common/dataType.h"
+#include "cublasMMWrapper.h"
+#include "dataType.h"
 #include <cassert>
 #include <string>
 #include <vector>

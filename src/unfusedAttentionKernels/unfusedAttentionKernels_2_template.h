@@ -1,9 +1,9 @@
 
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaTypeUtils.cuh"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/reduceKernelUtils.cuh"
+#include "assert.h"
+#include "cudaTypeUtils.cuh"
+#include "cudaUtils.h"
+#include "reduceKernelUtils.cuh"
 #include "suggestify/kernels/decoderMaskedMultiheadAttentionUtils.h"
 #include "suggestify/kernels/gptKernels.h"
 #include "suggestify/kernels/kvCacheUtils.h"

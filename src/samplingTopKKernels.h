@@ -1,6 +1,6 @@
 #pragma once
 
-#include "suggestify/common/memoryUtils.h"
+#include "memoryUtils.h"
 #include "suggestify/kernels/decodingCommon.h"
 #include "suggestify/runtime/common.h"
 #include <curand_kernel.h>

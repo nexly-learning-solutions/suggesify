@@ -1,6 +1,6 @@
 #pragma once
 
-#include "suggestify/common/cudaUtils.h"
+#include "cudaUtils.h"
 #include "suggestify/kernels/gptKernels.h"
 #include "suggestify/runtime/iTensor.h"
 #include <cstdint>

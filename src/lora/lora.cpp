@@ -1,9 +1,9 @@
 
 #include "suggestify/kernels/lora/lora.h"
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cublasMMWrapper.h"
-#include "suggestify/common/cudaUtils.h"
+#include "assert.h"
+#include "cublasMMWrapper.h"
+#include "cudaUtils.h"
 #include "suggestify/kernels/groupGemm.h"
 #include "suggestify/kernels/splitkGroupGemm.h"
 #include "suggestify/runtime/iBuffer.h"

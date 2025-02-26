@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "suggestify/common/assert.h"
+#include "assert.h"
 
 namespace suggestify
 {

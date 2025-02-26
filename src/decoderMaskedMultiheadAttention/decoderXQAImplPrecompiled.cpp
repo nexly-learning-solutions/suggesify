@@ -1,9 +1,9 @@
 
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplPrecompiled.h"
 
-#include "suggestify/common/cudaDriverWrapper.h"
-#include "suggestify/common/envUtils.h"
-#include "suggestify/common/workspace.h"
+#include "cudaDriverWrapper.h"
+#include "envUtils.h"
+#include "workspace.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/cubin/xqa_kernel_cubin.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAConstants.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplCommon.h"

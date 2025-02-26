@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "suggestify/common/cudaTypeUtils.cuh"
+#include "cudaTypeUtils.cuh"
 #include "suggestify/kernels/gptKernels.h"
 #include <stdint.h>
 

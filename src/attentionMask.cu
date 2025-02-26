@@ -1,11 +1,11 @@
 
 #include "attentionMask.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaBf16Wrapper.h"
-#include "suggestify/common/cudaFp8Utils.h"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/mathUtils.h"
-#include "suggestify/common/reduceKernelUtils.cuh"
+#include "assert.h"
+#include "cudaBf16Wrapper.h"
+#include "cudaFp8Utils.h"
+#include "cudaUtils.h"
+#include "mathUtils.h"
+#include "reduceKernelUtils.cuh"
 #include <cub/cub.cuh>
 
 using namespace suggestify::common;

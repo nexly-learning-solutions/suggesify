@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "suggestify/common/cudaTypeUtils.cuh"
-#include "suggestify/common/memoryUtils.h"
+#include "cudaTypeUtils.cuh"
+#include "memoryUtils.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttentionUtils.h"
 #include "suggestify/kernels/gptKernels.h"

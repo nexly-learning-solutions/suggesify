@@ -1,6 +1,6 @@
 
 
-#include "suggestify/common/workspace.h"
+#include "workspace.h"
 #include <algorithm>
 #include <cuda.h>
 #include <cuda_fp16.h>
@@ -30,8 +30,8 @@
 #pragma GCC diagnostic pop
 #endif
 
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/dataType.h"
+#include "cudaUtils.h"
+#include "dataType.h"
 #include "suggestify/kernels/mixtureOfExperts/moe_kernels.h"
 
 #ifndef CUDART_VERSION
@@ -464,7 +464,7 @@ void topkGatingSoftmaxKernelLauncher(float const* input, float* output, float* s
         default:
         {
             static constexpr int TPB = 256;
-            TLLM_CHECK(softmax_temp_output != nullptr);
+            CHECK(softmax_temp_output != nullptr);
             moeSoftmax<TPB><<<num_rows, TPB, 0, stream>>>(input, nullptr, softmax_temp_output, num_experts);
             moeTopK<TPB><<<num_rows, TPB, 0, stream>>>(softmax_temp_output, nullptr, output, indices, source_row,
                 num_experts, k, startk, endk, start_expert, end_expert, norm_mode);
@@ -514,7 +514,7 @@ void sparseMixerTopkSoftmax(float const* input, float* output, float* mixer_temp
     int* indices, int* source_row, int64_t const num_rows, int const num_experts, int const k, int const start_expert,
     int const end_expert, float epsilon, cudaStream_t stream)
 {
-    TLLM_CHECK_WITH_INFO(k <= 2, "Current sparse mixer only supports k <= 2");
+    CHECK_WITH_INFO(k <= 2, "Current sparse mixer only supports k <= 2");
 
     constexpr int threads_per_block = 256;
     int num_blocks = ceilDiv(num_rows, threads_per_block);
@@ -534,7 +534,7 @@ void selectExpertsForTokens(float const* input, float* output, float* mixer_temp
 {
     if (norm_mode == MOEExpertScaleNormalizationMode::SPARSE_MIXER)
     {
-        TLLM_CHECK_WITH_INFO(mixer_temp_output, "Sparse mixer output is null when running sparse mixer");
+        CHECK_WITH_INFO(mixer_temp_output, "Sparse mixer output is null when running sparse mixer");
         sparseMixerTopkSoftmax(input, output, mixer_temp_output, softmax_temp_output, indices, source_row, num_rows,
             num_experts, k, start_expert, end_expert, mixer_epsilon, stream);
     }
@@ -589,7 +589,7 @@ void CubKeyValueSorter::run(void* workspace, size_t const workspace_size, int co
     size_t expected_ws_size = getWorkspaceSize(num_key_value_pairs, num_experts_);
     size_t actual_ws_size = workspace_size;
 
-    TLLM_CHECK_WITH_INFO(expected_ws_size <= workspace_size,
+    CHECK_WITH_INFO(expected_ws_size <= workspace_size,
         "[CubKeyValueSorter::run] The allocated workspace is too small to run this problem.");
     cub::DeviceRadixSort::SortPairs(
         workspace, actual_ws_size, keys_in, keys_out, values_in, values_out, num_key_value_pairs, 0, num_bits_, stream);
@@ -1385,11 +1385,11 @@ size_t CutlassMoeFCRunner<T, WeightType, OutputType, ScaleBiasType, Enable>::get
     bool use_lora) const
 {
     int const ep_size = parallelism_config.ep_size;
-    TLLM_CHECK_WITH_INFO(num_experts % ep_size == 0, "Number of experts must be a multiple of ep size");
+    CHECK_WITH_INFO(num_experts % ep_size == 0, "Number of experts must be a multiple of ep size");
     auto workspace = getWorkspaceDeviceBufferSizes(
         num_rows, hidden_size, inter_size, num_experts, num_experts / ep_size, k, activation_type, norm_mode, use_lora);
     auto ws_size = suggestify::common::calculateTotalWorkspaceSize(workspace.data(), workspace.size());
-    TLLM_LOG_DEBUG("Mixture Of Experts Plugin requires workspace of %2f MiB", ws_size / 1024.f / 1024.f);
+    LOG_DEBUG("Mixture Of Experts Plugin requires workspace of %2f MiB", ws_size / 1024.f / 1024.f);
     return ws_size;
 }
 
@@ -1506,11 +1506,11 @@ void CutlassMoeFCRunner<T, WeightType, OutputType, ScaleBiasType, Enable>::gemm1
 
     if (using_hopper_gemm1)
     {
-        TLLM_CHECK(config.is_sm90);
-        TLLM_CHECK(!use_ampere_activation_fusion);
+        CHECK(config.is_sm90);
+        CHECK(!use_ampere_activation_fusion);
         bool has_different_gemm_output_type = using_hopper_gemm1 && !std::is_same_v<T, OutputType>;
         bool const has_intermediate = has_different_gemm_output_type || is_gated_activation;
-        TLLM_CHECK_WITH_INFO(has_intermediate || input != output, "Input and output buffers are overlapping");
+        CHECK_WITH_INFO(has_intermediate || input != output, "Input and output buffers are overlapping");
         auto* gemm_output = has_intermediate ? intermediate_result : static_cast<void*>(output);
 
         auto hopper_input = hopper_input_template;
@@ -1533,8 +1533,8 @@ void CutlassMoeFCRunner<T, WeightType, OutputType, ScaleBiasType, Enable>::gemm1
     }
     else if (use_fp8)
     {
-        TLLM_CHECK(!use_ampere_activation_fusion);
-        TLLM_CHECK(!config.is_sm90);
+        CHECK(!use_ampere_activation_fusion);
+        CHECK(!config.is_sm90);
 
         alpha_scale_ptr_array
             = computeFP8DequantScale(alpha_scale_ptr_array, num_experts_per_node, fc1_fp8_dequant, stream);
@@ -1552,8 +1552,8 @@ void CutlassMoeFCRunner<T, WeightType, OutputType, ScaleBiasType, Enable>::gemm1
     }
     else if (!is_gated_activation)
     {
-        TLLM_CHECK(!use_ampere_activation_fusion);
-        TLLM_CHECK(!config.is_sm90);
+        CHECK(!use_ampere_activation_fusion);
+        CHECK(!config.is_sm90);
         gemm_runner.moeGemmBiasAct(input, fc1_expert_weights, fc1_int_scales, fc1_expert_biases, bias_is_broadcast,
             output, total_tokens_including_expert, HopperGroupedGemmInput{}, expanded_num_rows, fc1_out_size,
             hidden_size, num_experts_per_node, fc1_activation_type, false, alpha_scale_ptr_array, stream, config);
@@ -1562,9 +1562,9 @@ void CutlassMoeFCRunner<T, WeightType, OutputType, ScaleBiasType, Enable>::gemm1
     }
     else
     {
-        TLLM_CHECK(!config.is_sm90);
-        TLLM_CHECK(is_gated_activation);
-        TLLM_CHECK_WITH_INFO(
+        CHECK(!config.is_sm90);
+        CHECK(is_gated_activation);
+        CHECK_WITH_INFO(
             !use_ampere_activation_fusion || input != output, "Input and output buffers are overlapping");
 
         ActivationType activation_type = use_ampere_activation_fusion ? fc1_activation_type : ActivationType::Identity;
@@ -1698,7 +1698,7 @@ bool CutlassMoeFCRunner<T, WeightType, OutputType, ScaleBiasType, Enable>::setup
         host_permuted_gated_lora_ranks.resize(expanded_num_rows);
     }
 
-    TLLM_CUDA_CHECK(cudaEventSynchronize(*(lora_params.memcpy_event_ptr)));
+    CUDA_CHECK(cudaEventSynchronize(*(lora_params.memcpy_event_ptr)));
 
     size_t num_valid_tokens
         = needs_num_valid ? host_expert_first_token_offset[num_experts_per_node] : expanded_num_rows;
@@ -1893,73 +1893,73 @@ void CutlassMoeFCRunner<T, WeightType, OutputType, ScaleBiasType, Enable>::runMo
     auto* final_output = static_cast<OutputType*>(final_output_void);
     auto* token_topk_unpermuted_scales = static_cast<float*>(token_topk_final_scales_void);
 
-    TLLM_CHECK_WITH_INFO(finished == nullptr, "Using 'finished' is deprecated and will be removed in future versions");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(finished == nullptr, "Using 'finished' is deprecated and will be removed in future versions");
+    CHECK_WITH_INFO(
         num_rows == active_rows, "Using 'finished' is deprecated and will be removed in future versions");
-    TLLM_CHECK(input_activations);
-    TLLM_CHECK(gating_output);
-    TLLM_CHECK(fc1_expert_weights);
-    TLLM_CHECK(fc2_expert_weights);
-    TLLM_CHECK(workspace_ptr);
-    TLLM_CHECK(token_topk_unpermuted_scales);
-    TLLM_CHECK(expanded_source_row_to_expanded_dest_row);
-    TLLM_CHECK(expert_for_source_row);
-    TLLM_CHECK(num_experts % parallelism_config.ep_size == 0);
-    TLLM_CHECK_WITH_INFO(hidden_size >= 128 / cutlass::sizeof_bits<WeightType>::value,
+    CHECK(input_activations);
+    CHECK(gating_output);
+    CHECK(fc1_expert_weights);
+    CHECK(fc2_expert_weights);
+    CHECK(workspace_ptr);
+    CHECK(token_topk_unpermuted_scales);
+    CHECK(expanded_source_row_to_expanded_dest_row);
+    CHECK(expert_for_source_row);
+    CHECK(num_experts % parallelism_config.ep_size == 0);
+    CHECK_WITH_INFO(hidden_size >= 128 / cutlass::sizeof_bits<WeightType>::value,
         "Hidden size is too small to meet alignment requirements for MOE GEMM");
-    TLLM_CHECK_WITH_INFO(hidden_size % (128 / cutlass::sizeof_bits<WeightType>::value) == 0,
+    CHECK_WITH_INFO(hidden_size % (128 / cutlass::sizeof_bits<WeightType>::value) == 0,
         "Hidden size does not meet minimum alignment requirements for MOE GEMM");
-    TLLM_CHECK_WITH_INFO(inter_size % (128 / cutlass::sizeof_bits<WeightType>::value) == 0,
+    CHECK_WITH_INFO(inter_size % (128 / cutlass::sizeof_bits<WeightType>::value) == 0,
         "Inter size does not meet minimum alignment requirements for MOE GEMM");
 
-    TLLM_CHECK_WITH_INFO(num_rows <= std::numeric_limits<int>::max(), "Number of rows is too large");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(num_rows <= std::numeric_limits<int>::max(), "Number of rows is too large");
+    CHECK_WITH_INFO(
         num_rows * num_experts <= std::numeric_limits<int>::max(), "Number of rows * num_experts is too large");
-    TLLM_CHECK_WITH_INFO(k * num_experts <= std::numeric_limits<int>::max(), "k * num_experts is too large");
+    CHECK_WITH_INFO(k * num_experts <= std::numeric_limits<int>::max(), "k * num_experts is too large");
 
-    TLLM_CHECK_WITH_INFO(gemm1_config_, "MOE GEMM1 Config is not set");
-    TLLM_CHECK_WITH_INFO(gemm2_config_, "MOE GEMM2 Config is not set");
+    CHECK_WITH_INFO(gemm1_config_, "MOE GEMM1 Config is not set");
+    CHECK_WITH_INFO(gemm2_config_, "MOE GEMM2 Config is not set");
 
     if (int_scales_required)
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             fc1_int_scales != nullptr, "Weight scales expected but scale for first matmul is a null pointer");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             fc2_int_scales != nullptr, "Weight scales expected but scale for second matmul is a null pointer");
 
-        TLLM_CHECK_WITH_INFO(fc1_fp8_dequant == nullptr && fc2_fp8_quant == nullptr && fc2_fp8_dequant == nullptr,
+        CHECK_WITH_INFO(fc1_fp8_dequant == nullptr && fc2_fp8_quant == nullptr && fc2_fp8_dequant == nullptr,
             "FP8 scales are provided for integer quantization");
     }
     else if (fp8_scales_required)
     {
-        TLLM_CHECK_WITH_INFO(fc1_expert_biases == nullptr, "Bias is not supported with FP8");
-        TLLM_CHECK_WITH_INFO(fc2_expert_biases == nullptr, "Bias is not supported with FP8");
+        CHECK_WITH_INFO(fc1_expert_biases == nullptr, "Bias is not supported with FP8");
+        CHECK_WITH_INFO(fc2_expert_biases == nullptr, "Bias is not supported with FP8");
 
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             fc1_fp8_dequant != nullptr, "FP8 scales expected but dequant scale for FC1 is a null pointer");
-        TLLM_CHECK_WITH_INFO(fc2_fp8_quant != nullptr, "FP8 scales expected but quant scale for FC2 is a null pointer");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(fc2_fp8_quant != nullptr, "FP8 scales expected but quant scale for FC2 is a null pointer");
+        CHECK_WITH_INFO(
             fc2_fp8_dequant != nullptr, "FP8 scales expected but quant scale for FC2 is a null pointer");
 
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             fc1_int_scales == nullptr && fc2_int_scales == nullptr, "Integer scales are provided for FP8 quantization");
     }
     else if (use_lora && use_fp8)
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             input_fp8_dequant != nullptr, "FP8 scales expected but quant scale for input is a null pointer");
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             fc1_int_scales == nullptr, "Scales are ignored for fp32/fp16/bf16 but received weight scale for FC1");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             fc2_int_scales == nullptr, "Scales are ignored for fp32/fp16/bf16 but received weight scale for FC2");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             fc1_fp8_dequant == nullptr, "Scales are ignored for fp32/fp16/bf16 but received dequant scale for FC1");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             fc2_fp8_quant == nullptr, "Scales are ignored for fp32/fp16/bf16 but received quant scale for FC2");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             fc2_fp8_dequant == nullptr, "Scales are ignored for fp32/fp16/bf16 but received quant scale for FC2");
     }
 
@@ -1991,12 +1991,12 @@ void CutlassMoeFCRunner<T, WeightType, OutputType, ScaleBiasType, Enable>::runMo
         std::vector<int>& host_permuted_rows = host_lora_workspace_.host_permuted_rows;
         std::vector<int64_t>& host_expert_first_token_offset = host_lora_workspace_.host_expert_first_token_offset;
         host_permuted_rows.resize(expanded_num_rows);
-        TLLM_CUDA_CHECK(cudaMemcpyAsync(host_permuted_rows.data(), permuted_rows_, expanded_num_rows * sizeof(int),
+        CUDA_CHECK(cudaMemcpyAsync(host_permuted_rows.data(), permuted_rows_, expanded_num_rows * sizeof(int),
             cudaMemcpyDeviceToHost, stream));
         host_expert_first_token_offset.resize(num_experts_per_node + 1);
-        TLLM_CUDA_CHECK(cudaMemcpyAsync(host_expert_first_token_offset.data(), expert_first_token_offset_,
+        CUDA_CHECK(cudaMemcpyAsync(host_expert_first_token_offset.data(), expert_first_token_offset_,
             (num_experts_per_node + 1) * sizeof(int64_t), cudaMemcpyDeviceToHost, stream));
-        TLLM_CUDA_CHECK(cudaEventRecord(*(lora_params.memcpy_event_ptr), stream));
+        CUDA_CHECK(cudaEventRecord(*(lora_params.memcpy_event_ptr), stream));
     }
 
     bool const needs_num_valid = finished || parallelism_config.ep_size > 1;
@@ -2095,7 +2095,7 @@ __global__ void initRoutingKernelDiagonal(void* data_void, int num_experts, int 
 void makeLoadBalancedRoutingConfiguration(
     void* data_void, int num_experts, int num_tokens, int k, nvinfer1::DataType type, cudaStream_t stream)
 {
-    TLLM_CHECK_WITH_INFO(type == nvinfer1::DataType::kFLOAT, "Routing configuration must be float");
+    CHECK_WITH_INFO(type == nvinfer1::DataType::kFLOAT, "Routing configuration must be float");
     check_cuda_error(
         cudaMemsetAsync(data_void, 0x0, int64_t{num_experts} * int64_t{num_tokens} * sizeof(float), stream));
 
@@ -2300,7 +2300,7 @@ std::function<void*()> GemmProfilerBackend::getWorkspacePointerGenerator(char* w
     auto index = 0;
     auto getNext = [=]() mutable -> void*
     {
-        TLLM_CHECK_WITH_INFO(index < workspaces.size(), "Mismatching scratch space allocation");
+        CHECK_WITH_INFO(index < workspaces.size(), "Mismatching scratch space allocation");
         auto res = workspace_ptr;
         size_t element_size_bytes = workspaces[index];
         workspace_ptr = nextWorkspacePtr(workspace_ptr, element_size_bytes);
@@ -2357,12 +2357,12 @@ void GemmProfilerBackend::runProfiler(
     QuantParams quant_params;
     if (mWType == nvinfer1::DataType::kINT8 || mWType == nvinfer1::DataType::kINT4)
     {
-        TLLM_CHECK(scale_1 && scale_2);
+        CHECK(scale_1 && scale_2);
         quant_params = QuantParams::Int(scale_1, scale_2);
     }
     else if (mWType == nvinfer1::DataType::kFP8)
     {
-        TLLM_CHECK(scale_1 && scale_2 && scale_3);
+        CHECK(scale_1 && scale_2 && scale_3);
         quant_params = QuantParams::FP8(static_cast<float const*>(scale_1), static_cast<float const*>(scale_2),
             static_cast<float const*>(scale_3), static_cast<float const*>(scale_4));
     }
@@ -2393,7 +2393,7 @@ void GemmProfilerBackend::runProfiler(
     }
     else
     {
-        TLLM_CHECK(mGemmToProfile == GemmToProfile::GEMM_2);
+        CHECK(mGemmToProfile == GemmToProfile::GEMM_2);
         mInterface->gemm2(inputs,
             intermediate,
             outputs,

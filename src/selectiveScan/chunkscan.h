@@ -5,8 +5,8 @@
 #include <cuda_fp8.h>
 #include <mma.h>
 
-#include "suggestify/common/cudaBf16Fallbacks.cuh"
-#include "suggestify/common/cudaDriverWrapper.h"
+#include "cudaBf16Fallbacks.cuh"
+#include "cudaDriverWrapper.h"
 
 #include "Common.h"
 #include "CudaType.h"

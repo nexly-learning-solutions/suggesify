@@ -5,9 +5,9 @@
 #include <NvInferRuntime.h>
 #include <cuda_fp16.h>
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/quantization.h"
+#include "assert.h"
+#include "cudaUtils.h"
+#include "quantization.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/cubinObjRegistry.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplPrecompiled.h"

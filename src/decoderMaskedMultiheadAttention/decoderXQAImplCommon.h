@@ -1,11 +1,11 @@
 
 #pragma once
 #include "decoderXQAConstants.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaDriverWrapper.h"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/envUtils.h"
-#include "suggestify/common/workspace.h"
+#include "assert.h"
+#include "cudaDriverWrapper.h"
+#include "cudaUtils.h"
+#include "envUtils.h"
+#include "workspace.h"
 #include "suggestify/kernels/kvCacheUtils.h"
 #include "suggestify/kernels/multiHeadAttentionCommon.h"
 #include "xqaParams.h"

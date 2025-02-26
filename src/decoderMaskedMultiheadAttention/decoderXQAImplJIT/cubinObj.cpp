@@ -2,9 +2,9 @@
 #include "cubinObj.h"
 
 #include "serializationUtils.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaDriverWrapper.h"
-#include "suggestify/common/cudaUtils.h"
+#include "assert.h"
+#include "cudaDriverWrapper.h"
+#include "cudaUtils.h"
 #include <cuda_runtime_api.h>
 
 namespace suggestify::kernels::jit

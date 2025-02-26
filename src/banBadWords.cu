@@ -1,6 +1,6 @@
 
 
-#include "suggestify/common/cudaUtils.h"
+#include "cudaUtils.h"
 #include "suggestify/kernels/banBadWords.h"
 
 using namespace suggestify::common;

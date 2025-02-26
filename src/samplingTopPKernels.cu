@@ -7,9 +7,9 @@
 #include "3rdparty/cub/cub.cuh"
 #endif
 
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/memoryUtils.h"
-#include "suggestify/common/reduceKernelUtils.cuh"
+#include "cudaUtils.h"
+#include "memoryUtils.h"
+#include "reduceKernelUtils.cuh"
 #include "suggestify/kernels/samplingTopKKernels.h"
 #include "suggestify/kernels/samplingTopPKernels.h"
 

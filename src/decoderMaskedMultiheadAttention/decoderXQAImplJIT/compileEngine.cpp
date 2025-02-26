@@ -3,9 +3,9 @@
 
 #include "cubinObj.h"
 #include "nvrtcWrapper/include/nvrtcWrapper.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/stringUtils.h"
-#include "suggestify/common/tllmException.h"
+#include "assert.h"
+#include "stringUtils.h"
+#include "tllmException.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/kernelUtils.h"
 #include <string>
 #include <vector>

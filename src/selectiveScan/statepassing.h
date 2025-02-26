@@ -4,7 +4,7 @@
 #include <cuda_fp8.h>
 #include <mma.h>
 
-#include "suggestify/common/cudaBf16Fallbacks.cuh"
+#include "cudaBf16Fallbacks.cuh"
 
 #include "Common.h"
 #include "CudaType.h"

@@ -2,8 +2,8 @@
 #pragma once
 
 #include "decoderMaskedMultiheadAttentionTemplate.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/envUtils.h"
+#include "assert.h"
+#include "envUtils.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention.h"
 #include "suggestify/kernels/gptKernels.h"
 #include "suggestify/kernels/kvCacheUtils.h"

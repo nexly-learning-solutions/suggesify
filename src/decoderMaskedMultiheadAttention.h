@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "suggestify/common/cudaBf16Wrapper.h"
-#include "suggestify/common/cudaFp8Utils.h"
+#include "cudaBf16Wrapper.h"
+#include "cudaFp8Utils.h"
 #include "suggestify/kernels/gptKernels.h"
 #include "suggestify/kernels/kvCacheUtils.h"
 #include <cuda_fp16.h>

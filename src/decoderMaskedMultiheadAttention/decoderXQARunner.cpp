@@ -6,9 +6,9 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/envUtils.h"
-#include "suggestify/common/workspace.h"
+#include "cudaUtils.h"
+#include "envUtils.h"
+#include "workspace.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/cubin/xqa_kernel_cubin.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAConstants.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImpl.h"

@@ -1,8 +1,8 @@
 
 #pragma once
 #include "cutlass/gemm/gemm.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/quantization.h"
+#include "assert.h"
+#include "quantization.h"
 #include "suggestify/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels.h"
 #include "suggestify/kernels/lora/lora.h"
 #include <cuda_runtime_api.h>
@@ -74,12 +74,12 @@ struct MOEParallelismConfig
         , ep_size(ep_size)
         , ep_rank(ep_rank)
     {
-        TLLM_CHECK(tp_rank < tp_size);
-        TLLM_CHECK(tp_rank >= 0);
-        TLLM_CHECK(tp_size >= 1);
-        TLLM_CHECK(ep_rank < ep_size);
-        TLLM_CHECK(ep_rank >= 0);
-        TLLM_CHECK(ep_size >= 1);
+        CHECK(tp_rank < tp_size);
+        CHECK(tp_rank >= 0);
+        CHECK(tp_size >= 1);
+        CHECK(ep_rank < ep_size);
+        CHECK(ep_rank >= 0);
+        CHECK(ep_size >= 1);
     }
 
     bool operator==(MOEParallelismConfig const& other) const

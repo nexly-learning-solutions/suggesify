@@ -2,7 +2,7 @@
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
 
 #include "compileEngine.h"
-#include "suggestify/common/envUtils.h"
+#include "envUtils.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/cubin/xqa_kernel_cubin.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAConstants.h"
 #include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"

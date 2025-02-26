@@ -3,7 +3,7 @@
 #include <cuda_runtime_api.h>
 #include <string>
 
-#include "suggestify/common/cudaDriverWrapper.h"
+#include "cudaDriverWrapper.h"
 
 namespace suggestify
 {

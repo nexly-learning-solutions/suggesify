@@ -8,9 +8,9 @@
 #include "3rdparty/cub/cub.cuh"
 #endif
 
-#include "suggestify/common/logger.h"
-#include "suggestify/common/memoryUtils.h"
-#include "suggestify/common/reduceKernelUtils.cuh"
+#include "logger.h"
+#include "memoryUtils.h"
+#include "reduceKernelUtils.cuh"
 #include "suggestify/kernels/samplingTopKKernels.h"
 
 using namespace suggestify::common;
