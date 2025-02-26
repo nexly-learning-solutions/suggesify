@@ -30,22 +30,22 @@ ExternalDraftTokensLayer<T>::ExternalDraftTokensLayer(executor::DecodingMode con
     , mIsDeterministic(isDeterministic)
     , mIsAirTopP(isAirTopP)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
-    TLLM_CHECK_WITH_INFO(!mDecodingMode.isBeamSearch(), "ExternalDraftTokensLayer does not support Beam search mode");
+    CHECK_WITH_INFO(!mDecodingMode.isBeamSearch(), "ExternalDraftTokensLayer does not support Beam search mode");
 
     auto const deviceId = getDevice();
-    TLLM_CUDA_CHECK(cudaGetDeviceProperties(&mDeviceProp, deviceId));
+    CUDA_CHECK(cudaGetDeviceProperties(&mDeviceProp, deviceId));
 
     allocateBuffer(decoderDomain.getBatchSize());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void ExternalDraftTokensLayer<T>::allocateBuffer(SizeType32 batchSize)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto workspaceSize = getTopKWorkspaceSize<T>(batchSize, 1, TOP_K_MAX, mDecoderDomain.getVocabSizePadded());
     mWorkspaceSize = std::max(workspaceSize, mWorkspaceSize);
@@ -87,7 +87,7 @@ void ExternalDraftTokensLayer<T>::allocateBuffer(SizeType32 batchSize)
     mTargetLogits = mBufferManager->gpu(
         ITensor::makeShape({batchSize, mDecoderDomain.getVocabSizePadded()}), TRTDataType<T>::value);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -95,7 +95,7 @@ void ExternalDraftTokensLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWid
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<ExternalDraftTokensSetupParams>(baseSetupParams);
 
@@ -110,7 +110,7 @@ void ExternalDraftTokensLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWid
 
     auto const paramsSize = expandMatchElements(batchSize, runtimeTopK, runtimeTopP);
 
-    TLLM_CHECK_WITH_INFO(paramsSize != 0,
+    CHECK_WITH_INFO(paramsSize != 0,
         fmtstr("ExternalDraftTokensLayer got parameter with unexpected size, want 1 or batchSize(%d), got"
                "runtimeTopK.size() = %zu, runtimeTopP.size() = %zu",
             batchSize, runtimeTopK.size(), runtimeTopP.size()));
@@ -159,14 +159,14 @@ void ExternalDraftTokensLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWid
         {
             auto const deviceId = getDevice();
             cudaDeviceProp prop{};
-            TLLM_CUDA_CHECK(cudaGetDeviceProperties(&prop, deviceId));
+            CUDA_CHECK(cudaGetDeviceProperties(&prop, deviceId));
             smCnt = prop.multiProcessorCount;
         }
         mAirTopPBlockNum
             = calcAirTopPBlockNum<T>(batchSize, mDecoderDomain.getVocabSizePadded(), smCnt, mIsDeterministic);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -174,7 +174,7 @@ void ExternalDraftTokensLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutpu
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(ExternalDraftTokensLayer_forwardAsync);
 
     auto inputs = std::dynamic_pointer_cast<ExternalDraftTokensInputs>(baseInputs);
@@ -230,7 +230,7 @@ void ExternalDraftTokensLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutpu
 
     forwardAcceptedTokens(outputs, baseInputs, workspace);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -244,7 +244,7 @@ void ExternalDraftTokensLayer<T>::acceptDraftTokens(std::shared_ptr<BaseDecoding
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(ExternalDraftTokensLayer_acceptDraftTokens);
 
     auto inputs = std::dynamic_pointer_cast<ExternalDraftTokensInputs>(baseInputs);
@@ -318,7 +318,7 @@ void ExternalDraftTokensLayer<T>::acceptDraftTokens(std::shared_ptr<BaseDecoding
 
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -326,7 +326,7 @@ void ExternalDraftTokensLayer<T>::multinomialSampling(std::shared_ptr<BaseDecodi
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(ExternalDraftTokensLayer_multinomialSampling);
 
     auto inputs = std::dynamic_pointer_cast<ExternalDraftTokensInputs>(baseInputs);
@@ -369,14 +369,14 @@ void ExternalDraftTokensLayer<T>::multinomialSampling(std::shared_ptr<BaseDecodi
         invokeBatchAirTopPSampling<T>(params, getStream());
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void ExternalDraftTokensLayer<T>::getAllTopKs(std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(ExternalDraftTokensLayer_getAllTopKs);
 
     auto inputs = std::dynamic_pointer_cast<ExternalDraftTokensInputs>(baseInputs);
@@ -422,14 +422,14 @@ void ExternalDraftTokensLayer<T>::getAllTopKs(std::shared_ptr<BaseDecodingInputs
     params.skipOutputIdCurrentStep = bufferCast<bool>(*inputs->useDraftLogits);
 
     invokeBatchTopKSampling(params, getStream());
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void ExternalDraftTokensLayer<T>::getAllTopPs(std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(ExternalDraftTokensLayer_getAllTopPs);
 
     auto inputs = std::dynamic_pointer_cast<ExternalDraftTokensInputs>(baseInputs);
@@ -469,7 +469,7 @@ void ExternalDraftTokensLayer<T>::getAllTopPs(std::shared_ptr<BaseDecodingInputs
 
     invokeBatchTopPSampling<T>(params, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -477,7 +477,7 @@ void ExternalDraftTokensLayer<T>::forwardAcceptedTokens(std::shared_ptr<BaseDeco
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(ExternalDraftTokensLayer_forwardAcceptedTokens);
 
     auto inputs = std::dynamic_pointer_cast<ExternalDraftTokensInputs>(baseInputs);
@@ -497,7 +497,7 @@ void ExternalDraftTokensLayer<T>::forwardAcceptedTokens(std::shared_ptr<BaseDeco
 
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template class ExternalDraftTokensLayer<float>;

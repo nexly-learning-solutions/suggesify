@@ -21,10 +21,10 @@ SamplingLayer<T>::SamplingLayer(executor::DecodingMode const& mode, DecoderDomai
     : BaseLayer(decoderDomain, bufferManager)
     , mDecodingMode(mode)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
-    TLLM_CHECK_WITH_INFO(!mDecodingMode.isBeamSearch(), "SamplingLayer does not support Beam search mode");
-    TLLM_CHECK_WITH_INFO(mDecodingMode.isTopKorTopP(), "SamplingLayer requires TopK or TopP mode");
+    CHECK_WITH_INFO(!mDecodingMode.isBeamSearch(), "SamplingLayer does not support Beam search mode");
+    CHECK_WITH_INFO(mDecodingMode.isTopKorTopP(), "SamplingLayer requires TopK or TopP mode");
     if (mDecodingMode.isTopK())
     {
         mSamplingLayers.emplace_back(std::make_unique<TopKSamplingLayer<T>>(decoderDomain, mBufferManager));
@@ -38,13 +38,13 @@ SamplingLayer<T>::SamplingLayer(executor::DecodingMode const& mode, DecoderDomai
 
     allocateBuffer(decoderDomain.getBatchSize());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void SamplingLayer<T>::allocateBuffer(SizeType32 batchSize)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     size_t workspaceSize = 0;
     for (auto&& layer : mSamplingLayers)
@@ -61,9 +61,9 @@ void SamplingLayer<T>::allocateBuffer(SizeType32 batchSize)
         = mBufferManager->gpu(ITensor::makeShape({batchSize, sizeof(curandState_t)}), TRTDataType<int8_t>::value);
 
     mSkipDecodeHost = mBufferManager->pinnedPool(batchSizeShape, TRTDataType<bool>::value);
-    TLLM_CHECK(mSkipDecodeHost != nullptr);
+    CHECK(mSkipDecodeHost != nullptr);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -71,7 +71,7 @@ void SamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, TensorC
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<SamplingSetupParams>(baseSetupParams);
 
@@ -95,7 +95,7 @@ void SamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, TensorC
         layer->setup(batchSize, beamWidth, batchSlots, setupParams, workspace);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -103,7 +103,7 @@ void SamplingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> const& 
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(SamplingLayer_forwardAsync);
 
     auto inputs = std::dynamic_pointer_cast<SamplingInputs>(baseInputs);
@@ -154,7 +154,7 @@ void SamplingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> const& 
         layer->forwardAsync(outputs, baseInputs, workspace);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>

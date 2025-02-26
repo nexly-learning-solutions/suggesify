@@ -46,7 +46,7 @@ static std::vector<std::unique_ptr<BaseLayer>> createLayers(executor::DecodingMo
     auto layerTypes = createDecodingLayerTypes(mode);
     if (!mode.isExplicitDraftTokens() && !mode.isEagle())
     {
-        TLLM_CHECK_WITH_INFO(layerTypes.size() && layerTypes[0] == DecodingLayers_t::PENALTY_LAYER,
+        CHECK_WITH_INFO(layerTypes.size() && layerTypes[0] == DecodingLayers_t::PENALTY_LAYER,
             "Penalty layer is required to be the first layer for any decoder configuration");
     }
     for (auto&& type : layerTypes)
@@ -70,7 +70,7 @@ static std::vector<std::unique_ptr<BaseLayer>> createLayers(executor::DecodingMo
             layer = std::make_unique<StopCriteriaLayer<T>>(mode, decodingDomain, bufferManager);
             break;
 
-        default: TLLM_CHECK_WITH_INFO(false, "Unknown DecodingLayers_t"); break;
+        default: CHECK_WITH_INFO(false, "Unknown DecodingLayers_t"); break;
         }
         layers.push_back(std::move(layer));
     }

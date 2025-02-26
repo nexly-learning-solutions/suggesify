@@ -14,7 +14,7 @@ public:
         SizeType32 maxDraftPathLen, SizeType32 maxDecodingDraftTokens, SizeType32 maxNumPaths) noexcept
         : SpeculativeDecodingModule(maxDraftPathLen, maxDecodingDraftTokens, maxNumPaths)
     {
-        TLLM_CHECK(maxNumPaths * maxDraftPathLen == maxDecodingDraftTokens);
+        CHECK(maxNumPaths * maxDraftPathLen == maxDecodingDraftTokens);
     }
 
     explicit ExplicitDraftTokensModule() noexcept

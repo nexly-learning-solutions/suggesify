@@ -54,7 +54,7 @@ void MemoryCounters::allocate(MemoryType memoryType, MemoryCounters::SizeType32 
     case MemoryType::kCPU: allocate<MemoryType::kCPU>(size); break;
     case MemoryType::kPINNED: allocate<MemoryType::kPINNED>(size); break;
     case MemoryType::kPINNEDPOOL: allocate<MemoryType::kPINNEDPOOL>(size); break;
-    default: TLLM_THROW("Unknown memory type");
+    default: THROW("Unknown memory type");
     }
 }
 
@@ -66,7 +66,7 @@ void MemoryCounters::deallocate(MemoryType memoryType, MemoryCounters::SizeType3
     case MemoryType::kCPU: deallocate<MemoryType::kCPU>(size); break;
     case MemoryType::kPINNED: deallocate<MemoryType::kPINNED>(size); break;
     case MemoryType::kPINNEDPOOL: deallocate<MemoryType::kPINNEDPOOL>(size); break;
-    default: TLLM_THROW("Unknown memory type");
+    default: THROW("Unknown memory type");
     }
 }
 

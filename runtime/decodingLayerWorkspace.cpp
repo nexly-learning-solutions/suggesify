@@ -17,11 +17,11 @@ suggestify::runtime::DecodingLayerWorkspace::DecodingLayerWorkspace(std::shared_
           mBufferManager->gpu(ITensor::makeShape({decoderDomain.getBatchSize(), sizeof(curandState_t)})))
     , mWorkspaceDeviceBuffer(mBufferManager->gpu(workspaceBufferSizeInBytes))
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
-    TLLM_LOG_DEBUG("Creating decoding workspace for a maximum batch size of %i, with a scratch space of %lu bytes",
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_DEBUG("Creating decoding workspace for a maximum batch size of %i, with a scratch space of %lu bytes",
         decoderDomain.getBatchSize(), workspaceBufferSizeInBytes);
     mBufferManager->getStream().synchronize();
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void* suggestify::runtime::DecodingLayerWorkspace::getRawWorkspaceDevicePtr() const
@@ -79,7 +79,7 @@ void suggestify::runtime::DecodingLayerWorkspace::initializeDeviceCurandStates(
     suggestify::runtime::DecodingLayerWorkspace::TensorConstPtr const& batchSlots,
     suggestify::runtime::DecodingLayerWorkspace::TensorPtr& statesDevice)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const* batchSlotsPtr = suggestify::runtime::bufferCast<suggestify::runtime::SizeType32>(*batchSlots);
     auto* curandStateDevicePtr = reinterpret_cast<curandState_t*>(statesDevice->data());
     if (randomSeed)
@@ -91,7 +91,7 @@ void suggestify::runtime::DecodingLayerWorkspace::initializeDeviceCurandStates(
         }
         else
         {
-            TLLM_CHECK_WITH_INFO(static_cast<suggestify::runtime::SizeType32>(randomSeed->size()) == batchSize,
+            CHECK_WITH_INFO(static_cast<suggestify::runtime::SizeType32>(randomSeed->size()) == batchSize,
                 "Random seed vector size mismatch.");
             auto randomSeedsDevice = copyToWorkspace(randomSeed.value());
             auto const* randomSeedsDevicePtr = suggestify::runtime::bufferCast<uint64_t>(*randomSeedsDevice);
@@ -103,7 +103,7 @@ void suggestify::runtime::DecodingLayerWorkspace::initializeDeviceCurandStates(
     {
         suggestify::kernels::invokeCurandInitialize(curandStateDevicePtr, batchSlotsPtr, batchSize, 0, getStream());
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 cudaStream_t suggestify::runtime::DecodingLayerWorkspace::getStream()

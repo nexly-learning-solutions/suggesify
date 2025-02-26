@@ -23,7 +23,7 @@ StopCriteriaLayer<T>::StopCriteriaLayer(executor::DecodingMode const& mode, Deco
     : BaseLayer(decoderDomain, bufferManager)
     , mDecodingMode(mode)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const stopWordsWorkspaceSize = DecodingLayerWorkspace::calculateRequiredWorkspaceSize(
         std::make_pair(ITensor::makeShape({decoderDomain.getBatchSize()}), TRTDataType<SizeType32>::value),
         std::make_pair(ITensor::makeShape({decoderDomain.getBatchSize()}), TRTDataType<TokenIdType*>::value),
@@ -34,7 +34,7 @@ StopCriteriaLayer<T>::StopCriteriaLayer(executor::DecodingMode const& mode, Deco
         std::make_pair(ITensor::makeShape({decoderDomain.getBatchSize(), decoderDomain.getBeamWidth()}),
             TRTDataType<FinishedState::UnderlyingType>::value));
     mWorkspaceSize = std::max(stopWordsWorkspaceSize, lengthCriterionWorkspaceSize);
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -42,8 +42,8 @@ void StopCriteriaLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Ten
     std::shared_ptr<BaseSetupParams> const& setupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -51,7 +51,7 @@ void StopCriteriaLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> con
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(StopCriteriaLayer_forwardAsync);
 
     auto inputs = std::dynamic_pointer_cast<DecodingInputs>(baseInputs);
@@ -61,7 +61,7 @@ void StopCriteriaLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> con
     auto const maxSeqLen = outputs->outputIds->getDimension<-1>();
     auto const* batchSlotsPtr = workspace->getDeviceBatchSlotsPtr();
 
-    TLLM_CHECK_WITH_INFO(inputs->stopCriteriaInputs, "stopCriteriaInputs for forward is not set");
+    CHECK_WITH_INFO(inputs->stopCriteriaInputs, "stopCriteriaInputs for forward is not set");
 
     if (mDecodingMode.isUseStopWords() && inputs->stopCriteriaInputs->maxStopWordsLen != 0)
     {
@@ -76,7 +76,7 @@ void StopCriteriaLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> con
         checkMaxLengthStopCriteria(outputs, inputs, localDecoderDomain, *mBufferManager, workspace);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -84,7 +84,7 @@ void StopCriteriaLayer<T>::checkStopWordsStopCriteria(std::shared_ptr<BaseDecodi
     std::shared_ptr<DecodingInputs> const& inputs, DecoderDomain const& decoderDomain, SizeType32 maxSeqLen,
     BufferManager const& bufferManager, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const maxStopWordsLength = inputs->stopCriteriaInputs->maxStopWordsLen;
     auto* numNewTokens = bufferCastOrNull<SizeType32>(outputs->numNewTokens);
     auto* outputIdsPtr = bufferCast<SizeType32 const*>(*outputs->outputIdsPtr);
@@ -107,7 +107,7 @@ void StopCriteriaLayer<T>::checkStopWordsStopCriteria(std::shared_ptr<BaseDecodi
     {
         bufferManager.copy(*finishedDevice, *outputs->finished.value());
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -115,7 +115,7 @@ void StopCriteriaLayer<T>::checkMaxLengthStopCriteria(std::shared_ptr<BaseDecodi
     std::shared_ptr<DecodingInputs> const& inputs, DecoderDomain const& decoderDomain,
     BufferManager const& bufferManager, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto* numNewTokens = bufferCastOrNull<SizeType32>(outputs->numNewTokens);
     auto [finishedSumDevice, finishedDevice]
         = workspace->mirrorInWorkspace(outputs->finishedSum.value_or(nullptr), outputs->finished.value_or(nullptr));
@@ -135,7 +135,7 @@ void StopCriteriaLayer<T>::checkMaxLengthStopCriteria(std::shared_ptr<BaseDecodi
     {
         bufferManager.copy(*finishedDevice, *outputs->finished.value());
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -143,7 +143,7 @@ void StopCriteriaLayer<T>::checkEosToken(std::shared_ptr<BaseDecodingOutputs>& o
     std::shared_ptr<DecodingInputs> const& inputs, DecoderDomain const& decoderDomain,
     BufferManager const& bufferManager, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto* numNewTokens = bufferCastOrNull<SizeType32>(outputs->numNewTokens);
     auto* sequenceLengthsPtr = bufferCastOrNull<SizeType32>(outputs->sequenceLength);
     auto const* endIdsPtr = bufferCastOrNull<TokenIdType>(inputs->endIds);
@@ -152,7 +152,7 @@ void StopCriteriaLayer<T>::checkEosToken(std::shared_ptr<BaseDecodingOutputs>& o
     invokeExplicitEOSCriterion(bufferCastOrNull<TokenIdType const*>(outputs->outputIdsPtr), endIdsPtr, finishedStatePtr,
         sequenceLengthsPtr, numNewTokens, workspace->getDeviceBatchSlotsPtr(), decoderDomain.getBatchSize(),
         decoderDomain.getBeamWidth(), decoderDomain.getMaxDecodingTokens(), bufferManager.getStream().get());
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template class StopCriteriaLayer<float>;

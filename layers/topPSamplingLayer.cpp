@@ -26,20 +26,20 @@ TopPSamplingLayer<T>::TopPSamplingLayer(DecoderDomain const& decoderDomain,
     , mIsDeterministic(isDeterministic)
     , mIsAirTopP(isAirTopP)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const deviceId = getDevice();
-    TLLM_CUDA_CHECK(cudaGetDeviceProperties(&mDeviceProp, deviceId));
+    CUDA_CHECK(cudaGetDeviceProperties(&mDeviceProp, deviceId));
 
     allocateBuffer(mDecoderDomain.getBatchSize());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void TopPSamplingLayer<T>::allocateBuffer(SizeType32 batchSize)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     if (!mIsAirTopP)
     {
@@ -66,7 +66,7 @@ void TopPSamplingLayer<T>::allocateBuffer(SizeType32 batchSize)
         mInitialTopPDevice->getSizeInBytes(), mTopPDecayDevice->getSizeInBytes(), mTopPMinDevice->getSizeInBytes(),
         mTopPResetIdsDevice->getSizeInBytes(), mSkipDecodeDevice->getSizeInBytes()});
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -74,7 +74,7 @@ void TopPSamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Ten
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<SamplingSetupParams>(baseSetupParams);
 
@@ -104,7 +104,7 @@ void TopPSamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Ten
 
     auto const paramsSize
         = expandMatchElements(batchSize, runtimeTopK, runtimeTopP, decayVec, topPMinVec, topPResetIdsVec);
-    TLLM_CHECK_WITH_INFO(paramsSize != 0,
+    CHECK_WITH_INFO(paramsSize != 0,
         fmtstr("TopPSamplingLayer got parameter with unexpected size, want 1 or batchSize(%d), got"
                "runtimeTopK.size() = %zu, "
                "runtimeTopP.size() = %zu, "
@@ -125,7 +125,7 @@ void TopPSamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Ten
         auto& decay = decayVec[i];
         if (decay <= 0.f || decay > 1.0f)
         {
-            TLLM_LOG_WARNING(
+            LOG_WARNING(
                 "Decay (%f) is out of range ((0.0, 1.0f]). Change to default (%f).", decay, defaultTopPDecay);
             decay = defaultTopPDecay;
         }
@@ -133,7 +133,7 @@ void TopPSamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Ten
         auto& topPMin = topPMinVec[i];
         if (topPMin <= 0.f || topPMin > 1.0f)
         {
-            TLLM_LOG_WARNING(
+            LOG_WARNING(
                 "TopP min (%f) is out of range ([0.0, 1.0f]). Change to default (%f).", topPMin, defaultTopPMin);
             topPMin = defaultTopPMin;
         }
@@ -190,14 +190,14 @@ void TopPSamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Ten
         {
             auto const deviceId = getDevice();
             cudaDeviceProp prop{};
-            TLLM_CUDA_CHECK(cudaGetDeviceProperties(&prop, deviceId));
+            CUDA_CHECK(cudaGetDeviceProperties(&prop, deviceId));
             smCnt = prop.multiProcessorCount;
         }
         mAirTopPBlockNum
             = calcAirTopPBlockNum<T>(batchSize, mDecoderDomain.getVocabSizePadded(), smCnt, mIsDeterministic);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -205,7 +205,7 @@ void TopPSamplingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> con
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(TopPSamplingLayer_forwardAsync);
 
     auto inputs = std::dynamic_pointer_cast<SamplingInputs>(baseInputs);
@@ -273,7 +273,7 @@ void TopPSamplingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> con
     invokeComputeToppDecay(runtimeTopPDevicePtr, initialTopPDevicePtr, outputIdsPtr, topPDecayDevicePtr,
         topPMinDevicePtr, topPResetIdsDevice, sequenceLength, workspace->getDeviceBatchSlotsPtr(), batchSize,
         getStream());
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>

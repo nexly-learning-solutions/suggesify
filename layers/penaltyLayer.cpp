@@ -29,17 +29,17 @@ PenaltyLayer<T>::PenaltyLayer(executor::DecodingMode const& mode, DecoderDomain 
     : BaseLayer(decoderDomain, bufferManager)
     , mDecodingMode(mode)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     initialize();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void PenaltyLayer<T>::initialize()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     allocateBuffer();
 
@@ -54,13 +54,13 @@ void PenaltyLayer<T>::initialize()
         allocateWorkspace();
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void PenaltyLayer<T>::allocateWorkspace()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     if (mDecodingMode.isUseOccurrencePenalty())
     {
@@ -75,13 +75,13 @@ void PenaltyLayer<T>::allocateWorkspace()
         }
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void PenaltyLayer<T>::allocateBuffer()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     mLogitsPtrsHost = mBufferManager->pinnedPool(ITensor::makeShape({}), TRTDataType<T*>::value);
     auto const batchSizeShape = ITensor::makeShape({mDecoderDomain.getBatchSize()});
@@ -115,7 +115,7 @@ void PenaltyLayer<T>::allocateBuffer()
     auto const logitsPtrDeviceDesc = std::make_pair(batchSizeShape, TRTDataType<T*>::value);
     mWorkspaceSize = DecodingLayerWorkspace::calculateRequiredWorkspaceSize(logitsPtrDeviceDesc);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -123,13 +123,13 @@ void PenaltyLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, TensorCo
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<DynamicDecodeSetupParams>(baseSetupParams);
 
     if (mConfiguredBeamWidth == -1)
     {
-        TLLM_CHECK(mDecodingMode.isAuto());
+        CHECK(mDecodingMode.isAuto());
         mConfiguredBeamWidth = beamWidth;
         mDecodingMode
             = mConfiguredBeamWidth == 1 ? executor::DecodingMode::TopKTopP() : executor::DecodingMode::BeamSearch();
@@ -139,7 +139,7 @@ void PenaltyLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, TensorCo
     FillBuffers const fillBuffers{batchSize, mDecoderDomain.getBatchSize(), mBufferManager};
 
     auto const& penaltyParams = setupParams->penaltyParams;
-    TLLM_CHECK_WITH_INFO(penaltyParams, "penaltyParams for setup is not set");
+    CHECK_WITH_INFO(penaltyParams, "penaltyParams for setup is not set");
 
     bool const useTemperature = mDecodingMode.isUseTemperature() && penaltyParams->temperature.has_value();
     bool const useRepetitionPenalty
@@ -181,7 +181,7 @@ void PenaltyLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, TensorCo
             batchSlots, getLimitsPenalty(DecodingPenaltyType::MinLength), "min length");
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -189,7 +189,7 @@ void PenaltyLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> const& b
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(PenaltyLayer_forwardAsync);
 
     auto outputs = std::dynamic_pointer_cast<BaseDecodingOutputs>(baseOutputs);
@@ -214,7 +214,7 @@ void PenaltyLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> const& b
     {
         if (params->logitsVec)
         {
-            TLLM_CHECK_WITH_INFO(params->logitsVec->size() == localDecoderDomain.getBatchSize(),
+            CHECK_WITH_INFO(params->logitsVec->size() == localDecoderDomain.getBatchSize(),
                 "Logits vector size (%lu) is not equal to the batchSize (%d)", params->logitsVec->size(),
                 localDecoderDomain.getBatchSize());
             logitsPtrsHostData[bi] = bufferCastOrNull<T>(params->logitsVec.value()[bi]);
@@ -312,7 +312,7 @@ void PenaltyLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> const& b
         std::swap(mPenaltyWorkspaceDevice, mPenaltyWorkspacePrevDevice);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template class PenaltyLayer<float>;

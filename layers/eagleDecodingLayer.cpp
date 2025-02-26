@@ -20,17 +20,17 @@ EagleDecodingLayer<T>::EagleDecodingLayer(
     DecoderDomain const& decoderDomain, std::shared_ptr<BufferManager> bufferManager)
     : BaseLayer(decoderDomain, bufferManager)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     allocateBuffer();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void EagleDecodingLayer<T>::allocateBuffer()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSizeShape = ITensor::makeShape({mDecoderDomain.getBatchSize()});
     mTemperature = mBufferManager->pinnedPool(batchSizeShape, TRTDataType<float>::value);
@@ -51,7 +51,7 @@ void EagleDecodingLayer<T>::allocateBuffer()
     workspaces[1] = mDecoderDomain.getBatchSize() * sizeof(SizeType32);
     mWorkspaceSize = calculateTotalWorkspaceSize(workspaces, NUM_BUFFERS);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -59,7 +59,7 @@ void EagleDecodingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Te
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<EagleSetupParams>(baseSetupParams);
     workspace->initializeDeviceCurandStates(
@@ -75,14 +75,14 @@ void EagleDecodingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Te
 
     fillContextBuffers(batchSize, batchSlots, *setupParams, workspace);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void EagleDecodingLayer<T>::fillContextBuffers(SizeType32 batchSize, BufferConstPtr batchSlots,
     EagleSetupParams const& setupParams, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     FillContextEagleParams params;
     params.outputRandDataSample = bufferCast<float>(*setupParams.randomDataSample);
@@ -97,7 +97,7 @@ void EagleDecodingLayer<T>::fillContextBuffers(SizeType32 batchSize, BufferConst
 
     invokeFillContextEagleData(params, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -105,7 +105,7 @@ void EagleDecodingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> co
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(EagleDecodingLayer_forwardSyncCPU);
 
     auto inputs = std::dynamic_pointer_cast<EagleInputs>(baseInputs);
@@ -119,14 +119,14 @@ void EagleDecodingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> co
 
     packAcceptedPaths(*outputs, *inputs, workspace);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void EagleDecodingLayer<T>::augmentBatchSlots(EagleOutputs const& outputs, EagleInputs const& inputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputs.localBatchSize;
     auto const engineBatchSize = inputs.nextDraftLens->getDimension<0>();
@@ -146,14 +146,14 @@ void EagleDecodingLayer<T>::augmentBatchSlots(EagleOutputs const& outputs, Eagle
         bufferCast<SizeType32>(*inputs.seqSlots), workspace->getDeviceBatchSlotsPtr(), engineBatchSize, batchSize,
         getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void EagleDecodingLayer<T>::unpackData(EagleOutputs const& outputs, EagleInputs const& inputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const engineBatchSize = inputs.nextDraftLens->getDimension<0>();
     auto const maxSeqLen = outputs.outputIds->getDimension<-1>();
@@ -218,14 +218,14 @@ void EagleDecodingLayer<T>::unpackData(EagleOutputs const& outputs, EagleInputs 
 
     mBufferManager->copy(*outputs.generationLengths, *outputs.generationLengthsHost);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void EagleDecodingLayer<T>::convertToPackedMask(EagleOutputs const& outputs, EagleInputs const& inputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const engineBatchSize = inputs.nextDraftLens->getDimension<0>();
     auto const maxDecodingTokens = mDecoderDomain.getSpeculativeDecodingModule()->getMaxDecodingTokens();
@@ -243,14 +243,14 @@ void EagleDecodingLayer<T>::convertToPackedMask(EagleOutputs const& outputs, Eag
     invokeGetPackedMaskFromPath(
         packedMasksDevice, batchSlots, nextDraftPaths, engineBatchSize, maxDecodingTokens, maxPathLen, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void EagleDecodingLayer<T>::packAcceptedPaths(EagleOutputs const& outputs, EagleInputs const& inputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputs.localBatchSize;
     auto const engineBatchSize = inputs.nextDraftLens->getDimension<0>();
@@ -269,16 +269,16 @@ void EagleDecodingLayer<T>::packAcceptedPaths(EagleOutputs const& outputs, Eagle
     auto bestPathIndicesSlotsPtr = bufferCast<SizeType32>(*inputs.acceptedPathIds);
     auto lastDraftPathsSlotsPtr = bufferCast<SizeType32>(*inputs.lastDraftPaths);
 
-    TLLM_CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for EagleDecodingLayer");
-    TLLM_CHECK_WITH_INFO(numNewTokens != nullptr, "Accepted lengths must be provided for EagleDecodingLayer");
-    TLLM_CHECK_WITH_INFO(numNewTokensCumSum != nullptr, "numNewTokensCumSum must be provided for EagleDecodingLayer");
-    TLLM_CHECK_WITH_INFO(pathsOffsets != nullptr, "pathsOffsets must be provided for EagleDecodingLayer");
+    CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for EagleDecodingLayer");
+    CHECK_WITH_INFO(numNewTokens != nullptr, "Accepted lengths must be provided for EagleDecodingLayer");
+    CHECK_WITH_INFO(numNewTokensCumSum != nullptr, "numNewTokensCumSum must be provided for EagleDecodingLayer");
+    CHECK_WITH_INFO(pathsOffsets != nullptr, "pathsOffsets must be provided for EagleDecodingLayer");
     invokePackAcceptedPaths(numNewTokensCumSum, pathsOffsets, numNewTokens, bestPathIndicesSlotsPtr,
         lastDraftPathsSlotsPtr, batchSlots, batchSize, engineBatchSize,
         mDecoderDomain.getSpeculativeDecodingModule()->getMaxNumPaths(),
         mDecoderDomain.getSpeculativeDecodingModule()->getMaxPathLen(), true, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>

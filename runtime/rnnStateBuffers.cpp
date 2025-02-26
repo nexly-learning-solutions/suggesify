@@ -20,14 +20,14 @@ RnnStateBuffers::RnnStateBuffers()
 RnnStateBuffers::RnnStateBuffers(
     TllmRuntime const& runtime, runtime::ModelConfig const& modelConfig, runtime::WorldConfig const& worldConfig)
 {
-    TLLM_LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
-    TLLM_CHECK(modelConfig.isRnnBased());
-    TLLM_CHECK_WITH_INFO(modelConfig.hasRnnConfig(), "RNN only support Mamba1/Mamba2/RecurrentGemma now.");
+    LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
+    CHECK(modelConfig.isRnnBased());
+    CHECK_WITH_INFO(modelConfig.hasRnnConfig(), "RNN only support Mamba1/Mamba2/RecurrentGemma now.");
     auto maxBatchSize = modelConfig.getMaxBatchSize();
     auto maxBeamWidth = modelConfig.getMaxBeamWidth();
     auto maxBatchBeam = maxBatchSize * maxBeamWidth;
     auto rnnConfig = modelConfig.getRnnConfig();
-    TLLM_CHECK_WITH_INFO(rnnConfig.has_value(), "RnnStateBuffers should be used with rnnConfig.");
+    CHECK_WITH_INFO(rnnConfig.has_value(), "RnnStateBuffers should be used with rnnConfig.");
     mConvKernel = rnnConfig->convKernel;
     mStateSize = rnnConfig->stateSize;
     mRnnHiddenSize = rnnConfig->rnnHiddenSize;
@@ -89,12 +89,12 @@ RnnStateBuffers::RnnStateBuffers(
     }
 
     reshape(maxBatchSize);
-    TLLM_LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RnnStateBuffers::reshape(SizeType32 batchSize)
 {
-    TLLM_LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
     auto const rnnStatesShape = [&]()
     {
         if (mRnnHeadSize > 0)
@@ -137,9 +137,9 @@ void RnnStateBuffers::reshape(SizeType32 batchSize)
     }
     if (slotMappingDevice != nullptr)
     {
-        TLLM_CHECK(slotMappingHost != nullptr);
-        TLLM_CHECK(rnnStates != nullptr && convStates != nullptr);
-        TLLM_CHECK(rnnStatePtrs != nullptr && convStatePtrs != nullptr);
+        CHECK(slotMappingHost != nullptr);
+        CHECK(rnnStates != nullptr && convStates != nullptr);
+        CHECK(rnnStatePtrs != nullptr && convStatePtrs != nullptr);
 
         auto slotMappingShape = ITensor::makeShape({batchSize});
         slotMappingDevice->reshape(slotMappingShape);
@@ -152,7 +152,7 @@ void RnnStateBuffers::reshape(SizeType32 batchSize)
         }
         fillStatePtrs();
     }
-    TLLM_LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RnnStateBuffers::fillStatePtrs()
@@ -193,7 +193,7 @@ void RnnStateBuffers::reset(BufferManager& manager)
 
 RnnStateBuffers RnnStateBuffers::sliceTo(SizeType32 offset, SizeType32 size)
 {
-    TLLM_LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
     RnnStateBuffers buffers;
     buffers.rnnState = utils::sliceBufferVector(rnnState, offset, size);
     buffers.convState = utils::sliceBufferVector(convState, offset, size);
@@ -201,9 +201,9 @@ RnnStateBuffers RnnStateBuffers::sliceTo(SizeType32 offset, SizeType32 size)
 
     if (slotMappingDevice != nullptr)
     {
-        TLLM_CHECK(slotMappingHost != nullptr);
-        TLLM_CHECK(rnnStates != nullptr && convStates != nullptr);
-        TLLM_CHECK(rnnStatePtrs != nullptr && convStatePtrs != nullptr);
+        CHECK(slotMappingHost != nullptr);
+        CHECK(rnnStates != nullptr && convStates != nullptr);
+        CHECK(rnnStatePtrs != nullptr && convStatePtrs != nullptr);
         buffers.slotMappingHost = ITensor::slice(slotMappingHost, offset, size);
         buffers.slotMappingDevice = ITensor::slice(slotMappingHost, offset, size);
         int* slotMapping = static_cast<int*>(buffers.slotMappingHost->data());
@@ -213,17 +213,17 @@ RnnStateBuffers RnnStateBuffers::sliceTo(SizeType32 offset, SizeType32 size)
         }
         buffers.fillStatePtrs();
     }
-    TLLM_LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
     return buffers;
 }
 
 void RnnStateBuffers::prepareContextStep(RuntimeBuffers* runtimeBuffers, BufferManager& manager)
 {
-    TLLM_LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
     SizeType32 const batchSize = runtimeBuffers->generationConfig.batchSize;
     auto& requestTypes = runtimeBuffers->requestTypes;
     auto RequestTypesPtr = bufferCast<int32_t>(*requestTypes);
-    TLLM_CHECK(requestTypes->getSize() == static_cast<std::size_t>(batchSize));
+    CHECK(requestTypes->getSize() == static_cast<std::size_t>(batchSize));
     std::fill_n(RequestTypesPtr, batchSize, 0);
 
     manager.setZero(*convStates);
@@ -231,20 +231,20 @@ void RnnStateBuffers::prepareContextStep(RuntimeBuffers* runtimeBuffers, BufferM
     {
         manager.copy(*slotMappingHost, *slotMappingDevice);
     }
-    TLLM_LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RnnStateBuffers::tile(RuntimeBuffers* runtimeBuffers, BufferManager& manager, ModelConfig const& modelConfig,
     WorldConfig const& worldConfig)
 {
-    TLLM_LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
-    TLLM_CHECK_WITH_INFO(false, "Beam search for mamba is not supported now.");
+    LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
+    CHECK_WITH_INFO(false, "Beam search for mamba is not supported now.");
     auto& generationConfig = runtimeBuffers->generationConfig;
     auto& logits = runtimeBuffers->logits;
     auto& contextLengthsDevice = runtimeBuffers->contextLengthsDevice;
     auto& contextLengthsHost = runtimeBuffers->contextLengthsHost;
     auto const beamWidth = generationConfig.beamWidth;
-    TLLM_CHECK_WITH_INFO(beamWidth > 1, "Tiling is only necessary for beam search.");
+    CHECK_WITH_INFO(beamWidth > 1, "Tiling is only necessary for beam search.");
 
     if (worldConfig.isLastPipelineParallelRank() && !modelConfig.computeContextLogits())
     {
@@ -257,13 +257,13 @@ void RnnStateBuffers::tile(RuntimeBuffers* runtimeBuffers, BufferManager& manage
     utils::tileBufferReplace(contextLengthsDevice, beamWidth, manager);
     utils::tileCpuBufferReplace(contextLengthsHost, beamWidth);
 
-    TLLM_LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RnnStateBuffers::postContextStep(RuntimeBuffers* runtimeBuffers, std::vector<RuntimeBuffers> const& contextBuffers,
     BufferManager& manager, ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
     auto& generationConfig = runtimeBuffers->generationConfig;
     auto& requestTypes = runtimeBuffers->requestTypes;
     auto& contextLengthsDevice = runtimeBuffers->contextLengthsDevice;
@@ -287,14 +287,14 @@ void RnnStateBuffers::postContextStep(RuntimeBuffers* runtimeBuffers, std::vecto
 
     manager.copy(*contextLengthsDevice, *outputLengths);
     lastTokenIds->reshape(ITensor::makeShape({batchSize * beamWidth}));
-    TLLM_LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RnnStateBuffers::getRuntimeBuffers(RuntimeBuffers const* runtimeBuffers, TensorMap& inputBuffers,
     TensorMap& outputBuffers, SizeType32 const step, TensorPtr const& inputIds, ModelConfig const& modelConfig,
     WorldConfig const& worldConfig) const
 {
-    TLLM_LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s start", __PRETTY_FUNCTION__);
     auto& logits = runtimeBuffers->logits;
     auto& hiddenStates = runtimeBuffers->hiddenStates;
     auto& lastTokenIds = runtimeBuffers->lastTokenIds;
@@ -346,5 +346,5 @@ void RnnStateBuffers::getRuntimeBuffers(RuntimeBuffers const* runtimeBuffers, Te
 
     inputBuffers.insert_or_assign("host_request_types", requestTypes);
     inputBuffers.insert_or_assign("host_context_lengths", runtimeBuffers->contextLengthsHost);
-    TLLM_LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s stop", __PRETTY_FUNCTION__);
 }

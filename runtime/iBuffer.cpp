@@ -16,7 +16,7 @@ using namespace suggestify::runtime;
 MemoryType IBuffer::memoryType(void const* data)
 {
     cudaPointerAttributes attributes{};
-    TLLM_CUDA_CHECK(::cudaPointerGetAttributes(&attributes, data));
+    CUDA_CHECK(::cudaPointerGetAttributes(&attributes, data));
     switch (attributes.type)
     {
     case cudaMemoryTypeHost: return MemoryType::kPINNEDPOOL;
@@ -25,7 +25,7 @@ MemoryType IBuffer::memoryType(void const* data)
     case cudaMemoryTypeUnregistered: return MemoryType::kCPU;
     }
 
-    TLLM_THROW("Unsupported memory type");
+    THROW("Unsupported memory type");
 }
 
 IBuffer::UniquePtr IBuffer::slice(IBuffer::SharedPtr buffer, std::size_t offset, std::size_t size)
@@ -35,7 +35,7 @@ IBuffer::UniquePtr IBuffer::slice(IBuffer::SharedPtr buffer, std::size_t offset,
 
 IBuffer::UniquePtr IBuffer::wrap(void* data, nvinfer1::DataType type, std::size_t size, std::size_t capacity)
 {
-    TLLM_CHECK_WITH_INFO(size <= capacity, "Requested size is larger than capacity");
+    CHECK_WITH_INFO(size <= capacity, "Requested size is larger than capacity");
     auto memoryType = IBuffer::memoryType(data);
 
     IBuffer::UniquePtr result;
@@ -58,7 +58,7 @@ IBuffer::UniquePtr IBuffer::wrap(void* data, nvinfer1::DataType type, std::size_
         result.reset(
             new GenericBuffer<GpuBorrowingAllocator>(capacity, type, GpuBorrowingAllocator(data, capacityInBytes)));
         break;
-    default: TLLM_THROW("Unknown memory type");
+    default: THROW("Unknown memory type");
     }
     result->resize(size);
     return result;
@@ -94,7 +94,7 @@ char const* IBuffer::getDataTypeName() const
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
-    TLLM_THROW("Unknown data type");
+    THROW("Unknown data type");
 }
 
 char const* IBuffer::getMemoryTypeName() const
@@ -107,5 +107,5 @@ char const* IBuffer::getMemoryTypeName() const
     case MemoryType::kGPU: return MemoryTypeString<MemoryType::kGPU>::value;
     case MemoryType::kUVM: return MemoryTypeString<MemoryType::kUVM>::value;
     }
-    TLLM_THROW("Unknown memory type");
+    THROW("Unknown memory type");
 }

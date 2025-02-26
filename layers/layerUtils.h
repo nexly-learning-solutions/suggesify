@@ -41,11 +41,11 @@ struct FillBuffers
                 }
                 else
                 {
-                    TLLM_CHECK_WITH_INFO(optParam->size() == batchSize, "Argument vector size mismatch.");
+                    CHECK_WITH_INFO(optParam->size() == batchSize, "Argument vector size mismatch.");
                     value = optParam.value()[bi];
                 }
             }
-            TLLM_CHECK_WITH_INFO(limits.first < static_cast<float>(value) && static_cast<float>(value) <= limits.second,
+            CHECK_WITH_INFO(limits.first < static_cast<float>(value) && static_cast<float>(value) <= limits.second,
                 "%s param (%f) is out of limits (%f, %f]", name.c_str(), static_cast<float>(value), limits.first,
                 limits.second);
             hostBufferRange[batchSlot] = value;
@@ -95,15 +95,15 @@ inline DecoderDomain getLocalDecoderDomain(
     if (inputs->logits)
     {
         auto const& logitsShape = inputs->logits.value()->getShape();
-        TLLM_CHECK(logitsShape.nbDims == 3 || logitsShape.nbDims == 4);
+        CHECK(logitsShape.nbDims == 3 || logitsShape.nbDims == 4);
         beamWidth = inputs->logits.value()->getDimension<-2>();
         vocabSize = inputs->logits.value()->getDimension<-1>();
     }
     else if (inputs->logitsVec)
     {
-        TLLM_CHECK(inputs->logitsVec->size());
+        CHECK(inputs->logitsVec->size());
         auto const& logitsShape = inputs->logitsVec.value()[0]->getShape();
-        TLLM_CHECK(logitsShape.nbDims == 3 || logitsShape.nbDims == 4);
+        CHECK(logitsShape.nbDims == 3 || logitsShape.nbDims == 4);
         beamWidth = inputs->logitsVec.value()[0]->getDimension<-2>();
         vocabSize = inputs->logitsVec.value()[0]->getDimension<-1>();
     }
@@ -114,7 +114,7 @@ inline DecoderDomain getLocalDecoderDomain(
     }
     else
     {
-        TLLM_THROW("Can't get local Decoder domain");
+        THROW("Can't get local Decoder domain");
     }
     return {batchSize, beamWidth, vocabSize};
 }

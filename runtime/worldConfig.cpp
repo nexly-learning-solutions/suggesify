@@ -25,7 +25,7 @@ WorldConfig::WorldConfig(SizeType32 tensorParallelism, SizeType32 pipelineParall
 {
 #if ENABLE_MULTI_DEVICE
     auto const numDevices = mDeviceIds.size();
-    TLLM_CHECK(numDevices > 0);
+    CHECK(numDevices > 0);
 
     if (!deviceIds.has_value())
     {
@@ -34,26 +34,26 @@ WorldConfig::WorldConfig(SizeType32 tensorParallelism, SizeType32 pipelineParall
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(static_cast<SizeType32>(numDevices) <= mGpusPerNode,
+        CHECK_WITH_INFO(static_cast<SizeType32>(numDevices) <= mGpusPerNode,
             "Number of device IDs %zu is greater than GPUs per node %d", numDevices, mGpusPerNode);
 
-        TLLM_CHECK(*std::max_element(mDeviceIds.begin(), mDeviceIds.end()) < mGpusPerNode);
-        TLLM_CHECK(*std::min_element(mDeviceIds.begin(), mDeviceIds.end()) >= 0);
+        CHECK(*std::max_element(mDeviceIds.begin(), mDeviceIds.end()) < mGpusPerNode);
+        CHECK(*std::min_element(mDeviceIds.begin(), mDeviceIds.end()) >= 0);
 
         std::set<SizeType32> const deviceIdSet(mDeviceIds.begin(), mDeviceIds.end());
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             deviceIdSet.size() == numDevices, "Device IDs are not unique %zu != %zu", deviceIdSet.size(), numDevices);
 
         if (std::adjacent_find(deviceIdSet.begin(), deviceIdSet.end(), [](auto x, auto y) { return y - x != 1; })
             != deviceIdSet.end())
         {
-            TLLM_LOG_WARNING("The user specified device IDs are not contiguous!");
+            LOG_WARNING("The user specified device IDs are not contiguous!");
         }
-        TLLM_LOG_INFO("Using user-specified devices: %s", tc::arr2str(mDeviceIds.data(), numDevices).c_str());
+        LOG_INFO("Using user-specified devices: %s", tc::arr2str(mDeviceIds.data(), numDevices).c_str());
     }
 
-    TLLM_CHECK(mTensorParallelism > 0);
-    TLLM_CHECK(mPipelineParallelism > 0);
+    CHECK(mTensorParallelism > 0);
+    CHECK(mPipelineParallelism > 0);
 #else
     mRank = 0;
     mGpusPerNode = 1;
@@ -76,21 +76,21 @@ WorldConfig WorldConfig::mpi(SizeType32 gpusPerNode, std::optional<SizeType32> t
     auto const mpiSize = comm.getSize();
     auto const mpiRank = comm.getRank();
     auto const mpiLocalSize = LOCAL_COMM_SESSION.getSize();
-    TLLM_LOG_INFO("MPI size: %d, MPI local size: %d, rank: %d", mpiSize, mpiLocalSize, mpiRank);
+    LOG_INFO("MPI size: %d, MPI local size: %d, rank: %d", mpiSize, mpiLocalSize, mpiRank);
     auto const pp = pipelineParallelism.value_or(1);
     auto const cp = contextParallelism.value_or(1);
     auto const tp = tensorParallelism.value_or(mpiSize / pp / cp);
-    TLLM_LOG_DEBUG("TP: %d, PP: %d, CP: %d, gpusPerNode: %d", tp, pp, cp, gpusPerNode);
-    TLLM_CHECK_WITH_INFO(
+    LOG_DEBUG("TP: %d, PP: %d, CP: %d, gpusPerNode: %d", tp, pp, cp, gpusPerNode);
+    CHECK_WITH_INFO(
         mpiSize == tp * pp * cp, "MPI size %d != TP size %d * PP size %d * CP Size %d", mpiSize, tp, pp, cp);
     SizeType32 deviceCount{0};
-    TLLM_CUDA_CHECK(cudaGetDeviceCount(&deviceCount));
+    CUDA_CHECK(cudaGetDeviceCount(&deviceCount));
     if ((mpiSize < gpusPerNode && deviceCount < mpiSize) || (mpiSize >= gpusPerNode && deviceCount < gpusPerNode))
     {
-        TLLM_CHECK_WITH_INFO(deviceCount == 1,
+        CHECK_WITH_INFO(deviceCount == 1,
             "Detect %d GPUs, the GPU number is incompatible with %d gpusPerNode when MPI size is %d", deviceCount,
             gpusPerNode, mpiSize);
-        TLLM_LOG_WARNING("gpusPerNode is %d but only detect single GPU, will set gpusPerNode to 1", gpusPerNode);
+        LOG_WARNING("gpusPerNode is %d but only detect single GPU, will set gpusPerNode to 1", gpusPerNode);
         if (std::getenv("CUDA_VISIBLE_DEVICES") != nullptr || std::getenv("NVIDIA_VISIBLE_DEVICES") != nullptr)
         {
             std::ostringstream oss;
@@ -103,7 +103,7 @@ WorldConfig WorldConfig::mpi(SizeType32 gpusPerNode, std::optional<SizeType32> t
                 oss << " NVIDIA_VISIBLE_DEVICES=" << std::getenv("NVIDIA_VISIBLE_DEVICES");
             }
             std::string envStr = oss.str();
-            TLLM_LOG_WARNING(
+            LOG_WARNING(
                 "Detect%s, please provide the full device list instead of limiting to single device, "
                 "otherwise allreduce performance may be sub-optimal "
                 "since custom allreduce kernel relies on P2P access to peer devices.",

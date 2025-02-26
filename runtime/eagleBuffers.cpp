@@ -65,8 +65,8 @@ EagleBuffers::EagleBuffers(SizeType32 maxBatchSize, SizeType32 maxBeamWidth, run
     runtime::ModelConfig const& modelConfig, runtime::WorldConfig const& worldConfig,
     executor::DecodingConfig const& decodingConfig, runtime::TllmRuntime const& runtime)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
-    TLLM_CHECK_WITH_INFO(maxBeamWidth == 1, "EAGLE does not support beam search");
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    CHECK_WITH_INFO(maxBeamWidth == 1, "EAGLE does not support beam search");
 
     auto const maxNumSequences = maxBatchSize;
 
@@ -152,13 +152,13 @@ EagleBuffers::EagleBuffers(SizeType32 maxBatchSize, SizeType32 maxBeamWidth, run
     mDefaultPosteriorThreshold = defaultConfig.getPosteriorThreshold().value_or(mDefaultPosteriorThreshold);
     bufferCast<SizeType32>(*greedySamplingHost)[0] = mDoGreedySampling;
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void EagleBuffers::reshape(
     SizeType32 numCtxSequences, SizeType32 numGenSequences, runtime::ModelConfig const& modelConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const numSequences = numCtxSequences + numGenSequences;
 
@@ -204,7 +204,7 @@ void EagleBuffers::reshape(
 
     cumSumGenerationLengths->reshape(ITensor::makeShape({numSequences + 1}));
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -212,7 +212,7 @@ void EagleBuffers::setFromInputs(RequestVector const& contextRequests, RequestVe
     SizeType32 vocabSizePadded, ITensor const& seqSlots, EagleBuffers::Inputs const& draftBuffers,
     runtime::EagleModule const& eagleModule, runtime::BufferManager const& manager) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     using runtime::bufferCast;
 
@@ -392,7 +392,7 @@ void EagleBuffers::setFromInputs(RequestVector const& contextRequests, RequestVe
     manager.copy(*posteriorAlphaHost, *engineInputs.posteriorAlpha);
     manager.copy(*posteriorThresholdHost, *engineInputs.posteriorThreshold);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void EagleBuffers::setFromInputs(RequestVector const& contextRequests, RequestVector const& genRequests,
@@ -400,7 +400,7 @@ void EagleBuffers::setFromInputs(RequestVector const& contextRequests, RequestVe
     runtime::TllmRuntime const& runtime, runtime::ModelConfig const& modelConfig,
     runtime::WorldConfig const& worldConfig) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const& manager = runtime.getBufferManager();
 
@@ -421,16 +421,16 @@ void EagleBuffers::setFromInputs(RequestVector const& contextRequests, RequestVe
         setFromInputs<half>(
             contextRequests, genRequests, vocabSizePadded, seqSlots, draftBuffers, *eagleModule, manager);
         break;
-    default: TLLM_THROW("DataType %d not supported in EagleBuffers", static_cast<SizeType32>(dtype)); break;
+    default: THROW("DataType %d not supported in EagleBuffers", static_cast<SizeType32>(dtype)); break;
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void EagleBuffers::insertInputTensors(
     TensorMap& inputBuffers, TensorMap& outputBuffers, runtime::WorldConfig const&) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     inputBuffers.insert_or_assign("greedy_sampling", greedySamplingHost);
     inputBuffers.insert_or_assign("eagle_temperature", engineInputs.temperatures);
     inputBuffers.insert_or_assign("posterior_alpha", engineInputs.posteriorAlpha);
@@ -468,7 +468,7 @@ void EagleBuffers::insertInputTensors(
     outputBuffers.insert_or_assign("num_accepted_tokens", engineOutputs.acceptedLens);
     outputBuffers.insert_or_assign("accepted_paths", engineOutputs.acceptedPaths);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 }

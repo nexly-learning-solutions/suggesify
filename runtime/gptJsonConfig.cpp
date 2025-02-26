@@ -38,8 +38,8 @@ FieldType parseJsonFieldOr(Json const& json, std::string_view name, FieldType de
     }
     catch (nlohmann::json::out_of_range& e)
     {
-        TLLM_LOG_DEBUG("Parameter %s cannot be read from json:", std::string(name).c_str());
-        TLLM_LOG_DEBUG(e.what());
+        LOG_DEBUG("Parameter %s cannot be read from json:", std::string(name).c_str());
+        LOG_DEBUG(e.what());
     }
     return value;
 }
@@ -54,13 +54,13 @@ std::optional<FieldType> parseJsonFieldOptional(Json const& json, std::string_vi
     }
     catch (nlohmann::json::out_of_range const& e)
     {
-        TLLM_LOG_DEBUG(e.what());
-        TLLM_LOG_DEBUG("Optional value for parameter %s will not be set.", std::string(name).c_str());
+        LOG_DEBUG(e.what());
+        LOG_DEBUG("Optional value for parameter %s will not be set.", std::string(name).c_str());
     }
     catch (nlohmann::json::type_error const& e)
     {
-        TLLM_LOG_DEBUG(e.what());
-        TLLM_LOG_DEBUG("Optional value for parameter %s will not be set.", std::string(name).c_str());
+        LOG_DEBUG(e.what());
+        LOG_DEBUG("Optional value for parameter %s will not be set.", std::string(name).c_str());
     }
     return value;
 }
@@ -100,7 +100,7 @@ std::vector<ModelConfig::LayerType> buildLayerTypes(
         }
         else
         {
-            TLLM_LOG_WARNING("Unknown layer type: %s, assuming attention", layerStringTypes[i % groupSize].c_str());
+            LOG_WARNING("Unknown layer type: %s, assuming attention", layerStringTypes[i % groupSize].c_str());
         }
     }
 
@@ -204,7 +204,7 @@ ModelConfig createModelConfig(
     }
     else
     {
-        TLLM_THROW("Unsupported logits data type");
+        THROW("Unsupported logits data type");
     }
     modelConfig.setLogitsDtype(logitsDtype);
 
@@ -212,7 +212,7 @@ ModelConfig createModelConfig(
         = arch == std::string("DecoderModel") || parseJsonFieldOr(config, "cross_attention", false);
     if (useCrossAttention)
     {
-        TLLM_LOG_INFO("Setting encoder max input length and hidden size for accepting visual features.");
+        LOG_INFO("Setting encoder max input length and hidden size for accepting visual features.");
         auto const maxEncoderLen = parseJsonFieldOr<SizeType32>(json.at("build_config"), "max_encoder_input_len", 0);
         modelConfig.setMaxEncoderLen(maxEncoderLen);
         modelConfig.setEncoderHiddenSize(hiddenSize * tensorParallelism);
@@ -264,7 +264,7 @@ void parseBuilderConfig(ModelConfig& modelConfig, Json const& builderConfig)
     auto it = builderConfig.find("kv_cache_type");
     if (it == builderConfig.end())
     {
-        TLLM_LOG_ERROR(
+        LOG_ERROR(
             "Missing kv_cache_type field in builder_config, you need to rebuild engine. Default to continuous kv "
             "cache.");
     }
@@ -300,7 +300,7 @@ void parsePluginConfig(ModelConfig& modelConfig, Json const& pluginConfig)
         : ModelConfig::ManageWeightsType::kDisabled;
     auto const ppReduceScatter = parseJsonFieldOr<bool>(pluginConfig, "pp_reduce_scatter", false);
 
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         !removeInputPadding || modelConfig.getMaxNumTokens(), "Padding removal requires max_num_tokens to be set.");
 
     modelConfig.useGptAttentionPlugin(useGptAttentionPlugin);
@@ -332,7 +332,7 @@ void parseLora(ModelConfig& modelConfig, Json const& json, Json const& pluginCon
         auto const& numKvHeadsPerLayer = modelConfig.getNumKvHeadsPerLayer();
         if (!loraModuleNames.empty())
         {
-            TLLM_CHECK_WITH_INFO(std::all_of(numKvHeadsPerLayer.cbegin(), numKvHeadsPerLayer.cend(),
+            CHECK_WITH_INFO(std::all_of(numKvHeadsPerLayer.cbegin(), numKvHeadsPerLayer.cend(),
                                      [firstNumKvHeads = numKvHeadsPerLayer[0]](SizeType32 numKvHeads)
                                      { return numKvHeads == firstNumKvHeads; }),
                 "LORA with a VGQA model is not supported");
@@ -355,7 +355,7 @@ void parseLora(ModelConfig& modelConfig, Json const& json, Json const& pluginCon
 
         if (modelConfig.getLoraModules().empty() || modelConfig.getMaxLoraRank() == 0)
         {
-            TLLM_LOG_WARNING("lora_plugin enabled, but no lora module enabled: setting useLoraPlugin to false");
+            LOG_WARNING("lora_plugin enabled, but no lora module enabled: setting useLoraPlugin to false");
             useLoraPlugin = false;
         }
     }
@@ -374,11 +374,11 @@ GptJsonConfig parseJson(InputType&& input)
     auto const engineVersionNone = engineVersion == std::string("none");
     if (engineVersionNone)
     {
-        TLLM_LOG_INFO("No engine version found in the config file, assuming engine(s) built by old builder API.");
+        LOG_INFO("No engine version found in the config file, assuming engine(s) built by old builder API.");
     }
     else
     {
-        TLLM_LOG_INFO("Engine version %s found in the config file, assuming engine(s) built by new builder API.",
+        LOG_INFO("Engine version %s found in the config file, assuming engine(s) built by new builder API.",
             engineVersion.c_str());
     }
 
@@ -417,7 +417,7 @@ GptJsonConfig parseJson(InputType&& input)
         {
             return nvinfer1::DataType::kBF16;
         }
-        TLLM_THROW("Model data type '%s' not supported", precision.c_str());
+        THROW("Model data type '%s' not supported", precision.c_str());
     }();
 
     auto modelConfig = createModelConfig(json, engineVersionNone, tensorParallelism, dataType);
@@ -497,7 +497,7 @@ GptJsonConfig parseJson(InputType&& input)
             auto const& pretrainedConfig = json.at("pretrained_config");
             auto const maxDraftLen = parseJsonFieldOr(pretrainedConfig, "max_draft_len", 0);
             auto const medusaHeads = parseJsonFieldOptional<SizeType32>(pretrainedConfig, "num_medusa_heads");
-            TLLM_CHECK_WITH_INFO(medusaHeads.has_value() && maxDraftLen > 0,
+            CHECK_WITH_INFO(medusaHeads.has_value() && maxDraftLen > 0,
                 "Both num_medusa_heads and max_draft_len have to be provided for Medusa model");
 
             auto medusaModule = std::make_shared<MedusaModule>(medusaHeads.value(), maxDraftLen);
@@ -508,14 +508,14 @@ GptJsonConfig parseJson(InputType&& input)
             auto const maxDraftLen = parseJsonFieldOr(builderConfig, "max_draft_len", 0);
             if (modelConfig.getSpeculativeDecodingMode().isLookaheadDecoding())
             {
-                TLLM_CHECK_WITH_INFO(
+                CHECK_WITH_INFO(
                     maxDraftLen > 0, "max_draft_len has to be larger than 0 for Lookahead decoding model");
                 auto lookaheadDecodingModule = std::make_shared<LookaheadModule>(maxDraftLen, maxDraftLen);
                 modelConfig.setSpeculativeDecodingModule(lookaheadDecodingModule);
             }
             else if (modelConfig.getSpeculativeDecodingMode().isDraftTokensExternal())
             {
-                TLLM_CHECK_WITH_INFO(
+                CHECK_WITH_INFO(
                     maxDraftLen > 0, "max_draft_len has to be larger than 0 for decoding with external draft tokens");
                 auto speculativeDecodingModule
                     = std::make_shared<SpeculativeDecodingModule>(maxDraftLen, maxDraftLen, 1);
@@ -531,9 +531,9 @@ GptJsonConfig parseJson(InputType&& input)
                 auto const maxNonLeafNodesPerLayer
                     = pretrainedConfig.at("max_non_leaves_per_layer").template get<SizeType32>();
 
-                TLLM_CHECK_WITH_INFO(maxDraftLen > 0, "max_draft_len has to be larger than 0 for eagle decoding");
-                TLLM_CHECK_WITH_INFO(numEagleLayers > 0, "num_eagle_layers has to be larger than 0 for eagle decoding");
-                TLLM_CHECK_WITH_INFO(
+                CHECK_WITH_INFO(maxDraftLen > 0, "max_draft_len has to be larger than 0 for eagle decoding");
+                CHECK_WITH_INFO(numEagleLayers > 0, "num_eagle_layers has to be larger than 0 for eagle decoding");
+                CHECK_WITH_INFO(
                     maxNonLeafNodesPerLayer > 0, "max_non_leaves_per_layer has to be larger than 0 for eagle decoding");
                 auto eagleModule = std::make_shared<EagleModule>(
                     numEagleLayers, maxDraftLen, numEagleNetLayers, maxNonLeafNodesPerLayer);
@@ -610,10 +610,10 @@ GptJsonConfig parseJson(InputType&& input)
 
 std::string GptJsonConfig::engineFilename(WorldConfig const& worldConfig, std::string const& model) const
 {
-    TLLM_CHECK_WITH_INFO(getTensorParallelism() == worldConfig.getTensorParallelism(), "tensor parallelism mismatch");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(getTensorParallelism() == worldConfig.getTensorParallelism(), "tensor parallelism mismatch");
+    CHECK_WITH_INFO(
         getPipelineParallelism() == worldConfig.getPipelineParallelism(), "pipeline parallelism mismatch");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         getContextParallelism() == worldConfig.getContextParallelism(), "Context parallelism mismatch");
     auto pp = worldConfig.isPipelineParallel() ? "_pp" + std::to_string(worldConfig.getPipelineParallelism()) : "";
     auto cp = worldConfig.isContextParallel() ? "_cp" + std::to_string(worldConfig.getContextParallelism()) : "";
@@ -638,7 +638,7 @@ GptJsonConfig GptJsonConfig::parse(std::istream& json)
 
 GptJsonConfig GptJsonConfig::parse(std::filesystem::path const& path)
 {
-    TLLM_CHECK_WITH_INFO(std::filesystem::exists(path), std::string("File does not exist: ") + path.string());
+    CHECK_WITH_INFO(std::filesystem::exists(path), std::string("File does not exist: ") + path.string());
     std::ifstream json(path);
     return parse(json);
 }

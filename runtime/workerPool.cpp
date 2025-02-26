@@ -13,11 +13,11 @@ WorkerPool::WorkerPool(std::size_t numWorkers, std::int32_t deviceId)
             {
                 if (deviceId >= 0)
                 {
-                    TLLM_CUDA_CHECK(cudaSetDevice(deviceId));
+                    CUDA_CHECK(cudaSetDevice(deviceId));
                 }
                 else
                 {
-                    TLLM_LOG_WARNING("WorkerPool did not set cuda device");
+                    LOG_WARNING("WorkerPool did not set cuda device");
                 }
 
                 while (true)

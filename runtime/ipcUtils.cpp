@@ -17,7 +17,7 @@ namespace
 
 bool canAccessPeer(WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const srcDevice = worldConfig.getDevice();
 
     for (SizeType32 rank : worldConfig.getTensorParallelGroup())
@@ -25,9 +25,9 @@ bool canAccessPeer(WorldConfig const& worldConfig)
         SizeType32 destDevice = worldConfig.getDeviceOf(rank);
         if (worldConfig.getNodeRankOf(rank) != worldConfig.getNodeRank())
         {
-            TLLM_LOG_INFO("Detect inter-node TP between rank %d and rank %d, fail to access peer GPU memory",
+            LOG_INFO("Detect inter-node TP between rank %d and rank %d, fail to access peer GPU memory",
                 worldConfig.getRank(), rank);
-            TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+            LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
             return false;
         }
         if (destDevice == srcDevice)
@@ -36,15 +36,15 @@ bool canAccessPeer(WorldConfig const& worldConfig)
         }
 
         int canAccessPeer{0};
-        TLLM_CUDA_CHECK(cudaDeviceCanAccessPeer(&canAccessPeer, srcDevice, destDevice));
+        CUDA_CHECK(cudaDeviceCanAccessPeer(&canAccessPeer, srcDevice, destDevice));
         if (canAccessPeer == 0)
         {
-            TLLM_LOG_INFO("cudaDeviceCanAccessPeer failed for device: %d peerDevice: %d", srcDevice, destDevice);
-            TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+            LOG_INFO("cudaDeviceCanAccessPeer failed for device: %d peerDevice: %d", srcDevice, destDevice);
+            LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
             return false;
         }
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     return true;
 }
 }
@@ -62,7 +62,7 @@ IpcMemory::IpcMemory(std::size_t bufferSize, BufferManager const& manager, World
 
 void IpcMemory::allocateIpcMemory(std::size_t bufferSize, BufferManager const& manager, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const ipcAlignedBufferSize = common::alignSize(bufferSize, 1LU << 21);
     mBuffer = BufferManager::gpuSync(ipcAlignedBufferSize, nvinfer1::DataType::kUINT8);
@@ -70,7 +70,7 @@ void IpcMemory::allocateIpcMemory(std::size_t bufferSize, BufferManager const& m
     auto* bufferPtr = mBuffer->data();
 
     cudaIpcMemHandle_t localHandle;
-    TLLM_CUDA_CHECK(cudaIpcGetMemHandle(&localHandle, bufferPtr));
+    CUDA_CHECK(cudaIpcGetMemHandle(&localHandle, bufferPtr));
 
     auto const tpGroupId = worldConfig.getContextParallelRank()
         + worldConfig.getContextParallelism() * worldConfig.getPipelineParallelRank();
@@ -93,12 +93,12 @@ void IpcMemory::allocateIpcMemory(std::size_t bufferSize, BufferManager const& m
         else
         {
             uint8_t* foreignBuffer{nullptr};
-            TLLM_CUDA_CHECK(cudaIpcOpenMemHandle(
+            CUDA_CHECK(cudaIpcOpenMemHandle(
                 reinterpret_cast<void**>(&foreignBuffer), handles[nodeId], cudaIpcMemLazyEnablePeerAccess));
             mCommPtrs.at(nodeId) = foreignBuffer;
         }
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 IpcMemory::~IpcMemory()
@@ -111,22 +111,22 @@ IpcMemory::~IpcMemory()
 
 void IpcMemory::destroyIpcMemory()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     for (std::size_t nodeId = 0; nodeId < mCommPtrs.size(); ++nodeId)
     {
         if (nodeId != static_cast<std::size_t>(mTpRank))
         {
-            TLLM_CUDA_CHECK(cudaIpcCloseMemHandle(mCommPtrs.at(nodeId)));
+            CUDA_CHECK(cudaIpcCloseMemHandle(mCommPtrs.at(nodeId)));
         }
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 AllReduceBuffers::AllReduceBuffers(SizeType32 maxBatchSize, SizeType32 maxBeamWidth, SizeType32 maxSequenceLength,
     SizeType32 hiddenSize, BufferManager const& manager, WorldConfig const& worldConfig, bool const fakeBuffers)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     if (fakeBuffers)
     {
         auto const tpSize = worldConfig.getTensorParallelism();
@@ -165,7 +165,7 @@ AllReduceBuffers::AllReduceBuffers(SizeType32 maxBatchSize, SizeType32 maxBeamWi
         for (std::size_t memIdx = 0; memIdx < mIpcMemoryHandles.size(); memIdx++)
         {
             auto const& memCommPtrs = mIpcMemoryHandles[memIdx].getCommPtrs();
-            TLLM_CHECK(memCommPtrs.size() == static_cast<std::size_t>(tpSize));
+            CHECK(memCommPtrs.size() == static_cast<std::size_t>(tpSize));
             std::copy(memCommPtrs.begin(), memCommPtrs.end(), commPtrs.begin() + memIdx * tpSize);
         }
 #if ENABLE_MULTI_DEVICE
@@ -178,7 +178,7 @@ AllReduceBuffers::AllReduceBuffers(SizeType32 maxBatchSize, SizeType32 maxBeamWi
         }
 #endif
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void lamportInitializeAll(void* buffer_0, void* buffer_1, void* buffer_2, size_t size)

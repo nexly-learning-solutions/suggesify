@@ -22,17 +22,17 @@ TopKSamplingLayer<T>::TopKSamplingLayer(
     DecoderDomain const& decoderDomain, std::shared_ptr<BufferManager> bufferManager)
     : BaseLayer(decoderDomain, bufferManager)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     allocateBuffer(mDecoderDomain.getBatchSize());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void TopKSamplingLayer<T>::allocateBuffer(SizeType32 const batchSize)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     mWorkspaceSize = getTopKWorkspaceSize<T>(batchSize, 1, TOP_K_MAX, mDecoderDomain.getVocabSizePadded());
     auto const batchSizeShape = ITensor::makeShape({batchSize});
@@ -43,7 +43,7 @@ void TopKSamplingLayer<T>::allocateBuffer(SizeType32 const batchSize)
     mSkipDecodeHost = mBufferManager->cpu(batchSizeShape, TRTDataType<bool>::value);
     mSetupWorkspaceSize = batchSize * sizeof(SizeType32);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -51,7 +51,7 @@ void TopKSamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Ten
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<SamplingSetupParams>(baseSetupParams);
     mNormalizeLogProbs = setupParams->normalizeLogProbs.value_or(false);
@@ -61,7 +61,7 @@ void TopKSamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Ten
 
     auto const paramsSize = expandMatchElements(batchSize, runtimeTopK, runtimeTopP);
 
-    TLLM_CHECK_WITH_INFO(paramsSize != 0,
+    CHECK_WITH_INFO(paramsSize != 0,
         fmtstr("TopKSamplingLayer got parameter with unexpected size, want 1 or batchSize(%d), got"
                "runtimeTopK.size() = %zu, runtimeTopP.size() = %zu",
             batchSize, runtimeTopK.size(), runtimeTopP.size()));
@@ -102,7 +102,7 @@ void TopKSamplingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Ten
         {topKsPtr, runtimeTopK.front(), bufferCast<SizeType32>(*mRuntimeTopKHost)}, {},
         skipDecodeHostPtr, batchSlotsHostPtr, false);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -110,7 +110,7 @@ void TopKSamplingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> con
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(TopKSamplingLayer_forwardAsync);
 
     auto inputs = std::dynamic_pointer_cast<SamplingInputs>(baseInputs);
@@ -164,7 +164,7 @@ void TopKSamplingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> con
 
     invokeBatchTopKSampling(params, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>

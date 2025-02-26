@@ -51,8 +51,8 @@ ExplicitDraftTokensBuffers::ExplicitDraftTokensBuffers(SizeType32 maxBatchSize, 
     runtime::WorldConfig const& worldConfig, executor::DecodingConfig const& decodingConfig,
     runtime::TllmRuntime const& runtime)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
-    TLLM_CHECK_WITH_INFO(maxBeamWidth == 1, "Explicit draft tokens does not support beam search");
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    CHECK_WITH_INFO(maxBeamWidth == 1, "Explicit draft tokens does not support beam search");
 
     auto const maxNumSequences = maxBatchSize;
     auto const vocabSizePadded = modelConfig.getVocabSizePadded(worldConfig.getSize());
@@ -115,13 +115,13 @@ ExplicitDraftTokensBuffers::ExplicitDraftTokensBuffers(SizeType32 maxBatchSize, 
 
     reshape(0, maxNumSequences, modelConfig);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void ExplicitDraftTokensBuffers::reshape(
     SizeType32 numCtxSequences, SizeType32 numGenSequences, runtime::ModelConfig const& modelConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const numSequences = numCtxSequences + numGenSequences;
 
@@ -167,7 +167,7 @@ void ExplicitDraftTokensBuffers::reshape(
 
     cumSumGenerationLengths->reshape(ITensor::makeShape({numSequences}));
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -176,7 +176,7 @@ void ExplicitDraftTokensBuffers::setFromInputs(SizeType32 numCtxSequences, SizeT
     ITensor const& contextPositionIds, runtime::ExplicitDraftTokensModule const& explicitDraftTokensModule,
     runtime::CudaStream const& stream) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     using runtime::bufferCast;
 
@@ -236,7 +236,7 @@ void ExplicitDraftTokensBuffers::setFromInputs(SizeType32 numCtxSequences, SizeT
         tksd::invokeCopyProbs(params, stream.get());
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void ExplicitDraftTokensBuffers::setFromInputs(SizeType32 numCtxSequences, SizeType32 numGenSequences,
@@ -244,7 +244,7 @@ void ExplicitDraftTokensBuffers::setFromInputs(SizeType32 numCtxSequences, SizeT
     ITensor const& contextPositionIds, runtime::TllmRuntime const& runtime, runtime::ModelConfig const& modelConfig,
     runtime::WorldConfig const& worldConfig) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const& manager = runtime.getBufferManager();
     auto const& stream = runtime.getStream();
@@ -287,7 +287,7 @@ void ExplicitDraftTokensBuffers::setFromInputs(SizeType32 numCtxSequences, SizeT
             contextPositionIds, *explicitDraftTokensModule, stream);
         break;
     default:
-        TLLM_THROW("DataType %d not supported in ExplicitDraftTokensBuffers", static_cast<SizeType32>(dtype));
+        THROW("DataType %d not supported in ExplicitDraftTokensBuffers", static_cast<SizeType32>(dtype));
         break;
     }
 
@@ -310,13 +310,13 @@ void ExplicitDraftTokensBuffers::setFromInputs(SizeType32 numCtxSequences, SizeT
     positionOffsetsShape.d[1] = maxGenLength;
     engineInputs.positionOffsets->reshape(positionOffsetsShape);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void ExplicitDraftTokensBuffers::insertInputTensors(
     TensorMap& inputBuffers, TensorMap& outputBuffers, runtime::WorldConfig const&) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     inputBuffers.insert_or_assign("redrafter_inverted_temperature", engineInputs.temperatures);
     inputBuffers.insert_or_assign("device_request_types", engineInputs.requestTypesDevice);
 
@@ -349,7 +349,7 @@ void ExplicitDraftTokensBuffers::insertInputTensors(
     outputBuffers.insert_or_assign("total_gen_token", engineOutputs.totalGenToken);
     outputBuffers.insert_or_assign("packed_position_ids", engineOutputs.packedPositionIds);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 }

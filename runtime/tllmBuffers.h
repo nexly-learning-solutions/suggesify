@@ -72,13 +72,13 @@ public:
 protected:
     void allocateImpl(PointerType* ptr, std::size_t n)
     {
-        TLLM_CUDA_CHECK(::cudaMalloc(ptr, n));
+        CUDA_CHECK(::cudaMalloc(ptr, n));
     }
 
     void deallocateImpl(
         PointerType ptr, [[maybe_unused]] std::size_t n)
     {
-        TLLM_CUDA_CHECK_FREE_RESOURCE(::cudaFree(ptr));
+        CUDA_CHECK_FREE_RESOURCE(::cudaFree(ptr));
     }
 };
 
@@ -94,8 +94,8 @@ public:
         : mCudaStream(std::move(stream))
         , mMemPool(std::move(memPool))
     {
-        TLLM_CHECK_WITH_INFO(static_cast<bool>(mCudaStream), "Undefined CUDA stream");
-        TLLM_CHECK_WITH_INFO(static_cast<bool>(mMemPool), "Undefined CUDA mem pool");
+        CHECK_WITH_INFO(static_cast<bool>(mCudaStream), "Undefined CUDA stream");
+        CHECK_WITH_INFO(static_cast<bool>(mMemPool), "Undefined CUDA mem pool");
     }
 
     [[nodiscard]] CudaStreamPtr getCudaStream() const
@@ -106,12 +106,12 @@ public:
 protected:
     void allocateImpl(PointerType* ptr, std::size_t n)
     {
-        TLLM_CUDA_CHECK(::cudaMallocAsync(ptr, n, mMemPool->getPool(), mCudaStream->get()));
+        CUDA_CHECK(::cudaMallocAsync(ptr, n, mMemPool->getPool(), mCudaStream->get()));
     }
 
     void deallocateImpl(PointerType ptr, [[maybe_unused]] std::size_t n)
     {
-        TLLM_CUDA_CHECK_FREE_RESOURCE(::cudaFreeAsync(ptr, mCudaStream->get()));
+        CUDA_CHECK_FREE_RESOURCE(::cudaFreeAsync(ptr, mCudaStream->get()));
     }
 
 private:
@@ -130,13 +130,13 @@ public:
 protected:
     void allocateImpl(PointerType* ptr, std::size_t n)
     {
-        TLLM_CUDA_CHECK(::cudaMallocManaged(ptr, n));
+        CUDA_CHECK(::cudaMallocManaged(ptr, n));
     }
 
     void deallocateImpl(
         PointerType ptr, [[maybe_unused]] std::size_t n)
     {
-        TLLM_CUDA_CHECK_FREE_RESOURCE(::cudaFree(ptr));
+        CUDA_CHECK_FREE_RESOURCE(::cudaFree(ptr));
     }
 };
 
@@ -151,13 +151,13 @@ public:
 protected:
     void allocateImpl(PointerType* ptr, std::size_t n)
     {
-        TLLM_CUDA_CHECK(::cudaHostAlloc(ptr, n, cudaHostAllocDefault));
+        CUDA_CHECK(::cudaHostAlloc(ptr, n, cudaHostAllocDefault));
     }
 
     void deallocateImpl(
         PointerType ptr, [[maybe_unused]] std::size_t n)
     {
-        TLLM_CUDA_CHECK_FREE_RESOURCE(::cudaFreeHost(ptr));
+        CUDA_CHECK_FREE_RESOURCE(::cudaFreeHost(ptr));
     }
 };
 
@@ -198,7 +198,7 @@ public:
         : mPtr(ptr)
         , mCapacity(capacity)
     {
-        TLLM_CHECK_WITH_INFO(capacity == std::size_t(0) || static_cast<bool>(mPtr), "Undefined pointer");
+        CHECK_WITH_INFO(capacity == std::size_t(0) || static_cast<bool>(mPtr), "Undefined pointer");
     }
 
 protected:
@@ -255,17 +255,17 @@ public:
     ~MemoryPool()
     {
         std::lock_guard<std::mutex> lock(mLock);
-        TLLM_LOG_DEBUG("MemoryPool: Deallocating %zu chunks", mAllocatedChunks.size());
+        LOG_DEBUG("MemoryPool: Deallocating %zu chunks", mAllocatedChunks.size());
         for (auto const& [ptr, size] : mAllocatedChunks)
         {
-            TLLM_LOG_DEBUG("MemoryPool: Deallocating %zu B", size);
+            LOG_DEBUG("MemoryPool: Deallocating %zu B", size);
             try
             {
                 mAllocator.deallocate(ptr, size);
             }
             catch (std::exception const& e)
             {
-                TLLM_LOG_EXCEPTION(e);
+                LOG_EXCEPTION(e);
             }
         }
         mAllocatedChunks.clear();
@@ -337,7 +337,7 @@ private:
 
     void allocateChunk()
     {
-        TLLM_LOG_DEBUG("MemoryPool: Allocating %zu B", mChunkSize);
+        LOG_DEBUG("MemoryPool: Allocating %zu B", mChunkSize);
         auto basePointer = mAllocator.allocate(mChunkSize);
         mAllocatedChunks.emplace_back(basePointer, mChunkSize);
         mMemorySegments.push_back(MemorySegment{basePointer, mChunkSize});
@@ -352,18 +352,18 @@ void MemoryPool<TAllocator>::allocateImpl(MemoryPool::PointerType* ptr, std::siz
     std::size_t const alignedRequest{
         requestedSize == 0 ? kAlignment : common::ceilDiv(requestedSize, kAlignment) * kAlignment};
 
-    TLLM_LOG_DEBUG("MemoryPool: Requested to reserve %zu B (%zu B aligned)", requestedSize, alignedRequest);
+    LOG_DEBUG("MemoryPool: Requested to reserve %zu B (%zu B aligned)", requestedSize, alignedRequest);
 
     auto it = std::find_if(mMemorySegments.begin(), mMemorySegments.end(),
         [alignedRequest](auto const& ms) { return ms.tag == nullptr && ms.size >= alignedRequest; });
 
     if (it == mMemorySegments.end())
     {
-        TLLM_LOG_DEBUG("MemoryPool: Needs more space to accommodate request of %zu B", requestedSize);
+        LOG_DEBUG("MemoryPool: Needs more space to accommodate request of %zu B", requestedSize);
         if (mChunkSize < alignedRequest)
         {
             mChunkSize = alignedRequest;
-            TLLM_LOG_DEBUG("MemoryPool: Increasing chunk size to %zu B", mChunkSize);
+            LOG_DEBUG("MemoryPool: Increasing chunk size to %zu B", mChunkSize);
         }
         allocateChunk();
         it = std::prev(mMemorySegments.end());
@@ -391,13 +391,13 @@ void MemoryPool<TAllocator>::deallocateImpl(PointerType tag, std::size_t n)
     auto it = std::find_if(mMemorySegments.begin(), mMemorySegments.end(),
         [&tag](MemorySegment const& segment) { return segment.tag == tag; });
 
-    TLLM_CHECK_WITH_INFO(it != mMemorySegments.end(), "MemoryPool free: Requested tag %p could not be found", tag);
+    CHECK_WITH_INFO(it != mMemorySegments.end(), "MemoryPool free: Requested tag %p could not be found", tag);
 
     it->tag = nullptr;
 
     if (it->size < n)
     {
-        TLLM_LOG_WARNING("MemoryPool: Requested to free %zu B, but only %zu B available", n, it->size);
+        LOG_WARNING("MemoryPool: Requested to free %zu B, but only %zu B available", n, it->size);
     }
 
     if (it != mMemorySegments.begin())
@@ -425,10 +425,10 @@ template <typename TAllocator>
 void MemoryPool<TAllocator>::logSegments() const
 {
     std::lock_guard<std::mutex> lock(mLock);
-    TLLM_LOG_DEBUG("MemoryPool segments:");
+    LOG_DEBUG("MemoryPool segments:");
     for (auto ms : mMemorySegments)
     {
-        TLLM_LOG_DEBUG("* Segment size %zu, tag %p, basePointer %p", ms.size, ms.tag, ms.basePointer);
+        LOG_DEBUG("* Segment size %zu, tag %p, basePointer %p", ms.size, ms.tag, ms.basePointer);
     }
 }
 
@@ -504,12 +504,12 @@ public:
 
     void* data() override
     {
-        return TLLM_LIKELY(mSize > 0) ? mBuffer : nullptr;
+        return LIKELY(mSize > 0) ? mBuffer : nullptr;
     }
 
     [[nodiscard]] void const* data() const override
     {
-        return TLLM_LIKELY(mSize > 0) ? mBuffer : nullptr;
+        return LIKELY(mSize > 0) ? mBuffer : nullptr;
     }
 
     [[nodiscard]] std::size_t getSize() const override
@@ -559,7 +559,7 @@ public:
         }
         catch (std::exception const& e)
         {
-            TLLM_LOG_EXCEPTION(e);
+            LOG_EXCEPTION(e);
         }
     }
 
@@ -571,8 +571,8 @@ protected:
         , mAllocator{std::move(allocator)}
         , mBuffer{capacity > 0 ? mAllocator.allocate(toBytes(capacity)) : nullptr}
     {
-        TLLM_CHECK(size <= capacity);
-        TLLM_CHECK(capacity == 0 || size > 0);
+        CHECK(size <= capacity);
+        CHECK(capacity == 0 || size > 0);
     }
 
 private:
@@ -592,7 +592,7 @@ using UVMBuffer = GenericBuffer<UVMAllocator>;
 template <typename T>
 typename std::make_unsigned<T>::type nonNegative(T value)
 {
-    TLLM_CHECK_WITH_INFO(value >= 0, "Value must be non-negative");
+    CHECK_WITH_INFO(value >= 0, "Value must be non-negative");
     return static_cast<typename std::make_unsigned<T>::type>(value);
 }
 

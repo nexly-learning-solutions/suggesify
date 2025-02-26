@@ -10,14 +10,14 @@ using namespace suggestify::runtime;
 
 void LookaheadPoolManager::setup(SizeType32 guessSetSize)
 {
-    TLLM_CHECK(guessSetSize >= 0 && guessSetSize <= mGuessSetSizeMax);
+    CHECK(guessSetSize >= 0 && guessSetSize <= mGuessSetSizeMax);
     mGuessSetSize = guessSetSize;
     mTokenMap.clear();
 }
 
 void LookaheadPoolManager::insertOne(Key key, TensorConstPtr const& ngram)
 {
-    if (TLLM_UNLIKELY(ITensor::volume(ngram->getShape()) == 0 || mGuessSetSize == 0))
+    if (UNLIKELY(ITensor::volume(ngram->getShape()) == 0 || mGuessSetSize == 0))
     {
         return;
     }
@@ -84,7 +84,7 @@ std::list<LookaheadPoolManager::TensorConstPtr> LookaheadPoolManager::guess(Key 
 
 void LookaheadPoolManager::update(TensorConstPtr const& keyTokens, TensorConstPtr const& ngramTokens)
 {
-    TLLM_CHECK(keyTokens->getShape().d[0] == ngramTokens->getShape().d[0]);
+    CHECK(keyTokens->getShape().d[0] == ngramTokens->getShape().d[0]);
     BufferRange<Key const> keyRange(*keyTokens);
     auto window = ngramTokens->getShape().d[0];
 

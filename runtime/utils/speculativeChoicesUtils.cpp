@@ -33,7 +33,7 @@ void setOnePackedMask(
 void computePathsAndMask(SpeculativeDecodingModule const& speculativeDecodingModule, std::vector<TreeNode> const& tree,
     TensorPtr packedMask, TensorPtr paths)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto pathsPtr = paths ? bufferCast<SizeType32>(*paths) : nullptr;
 
     if (pathsPtr)
@@ -99,13 +99,13 @@ void computePathsAndMask(SpeculativeDecodingModule const& speculativeDecodingMod
             stack.push(childLinearIdx);
         }
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 uint64_t computePrefix(std::vector<SizeType32> const& vec, SizeType32 len)
 {
     SizeType32 constexpr BITS_PER_BYTE = 8;
-    TLLM_CHECK_WITH_INFO(static_cast<SizeType32>(sizeof(uint64_t)) * BITS_PER_BYTE / PREFIX_CHUNK_SIZE_BITS >= len,
+    CHECK_WITH_INFO(static_cast<SizeType32>(sizeof(uint64_t)) * BITS_PER_BYTE / PREFIX_CHUNK_SIZE_BITS >= len,
         "Provided choices have depth (%d) larger than Prefix can fit (%ld).", len,
         sizeof(uint64_t) * BITS_PER_BYTE / PREFIX_CHUNK_SIZE_BITS);
 
@@ -113,7 +113,7 @@ uint64_t computePrefix(std::vector<SizeType32> const& vec, SizeType32 len)
     for (SizeType32 ci = 0; ci < len; ++ci)
     {
         auto val = vec[ci];
-        TLLM_CHECK_WITH_INFO(val <= PREFIX_MAX_VALUE,
+        CHECK_WITH_INFO(val <= PREFIX_MAX_VALUE,
             "Provided choices have too large node degree (%d). Larger than Prefix can fit (%d).", val,
             PREFIX_MAX_VALUE);
         prefix |= (vec[ci] << PREFIX_CHUNK_SIZE_BITS * (len - 1 - ci));
@@ -145,7 +145,7 @@ void dumpChoices(Choices const& choices, std::vector<SizeType32> const& indices)
         }
     }
     ss << "]" << std::endl;
-    TLLM_LOG_DEBUG(ss.str().c_str());
+    LOG_DEBUG(ss.str().c_str());
 }
 
 void checkNumNonLeafNodesPerLayer(std::vector<TreeNode> const& tree, SizeType32 maxNonLeafNodesPerLayer)
@@ -160,7 +160,7 @@ void checkNumNonLeafNodesPerLayer(std::vector<TreeNode> const& tree, SizeType32 
     }
     for (auto const& [depth, numNodes] : nonLeavesPerLayer)
     {
-        TLLM_CHECK_WITH_INFO(numNodes <= maxNonLeafNodesPerLayer,
+        CHECK_WITH_INFO(numNodes <= maxNonLeafNodesPerLayer,
             "Choices tree at level %d has %d non leaf nodes, while only %d are allowed.", depth, numNodes,
             maxNonLeafNodesPerLayer);
     }
@@ -170,7 +170,7 @@ SizeType32 initTensorsFromChoices(SpeculativeDecodingModule const& speculativeDe
     std::vector<SizeType32>& topKs, TensorPtr generationInputLengths, TensorPtr positionOffsets, TensorPtr treeIds,
     TensorPtr paths, TensorPtr packedMask, std::optional<SizeType32> maxNonLeafNodesPerLayer)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const numChoices = static_cast<SizeType32>(choices.size());
 
     std::vector<SizeType32> sortedIndices(numChoices);
@@ -228,7 +228,7 @@ SizeType32 initTensorsFromChoices(SpeculativeDecodingModule const& speculativeDe
         positionOffsetsPtr[0] = 0;
     }
 
-    TLLM_CHECK(numChoices <= speculativeDecodingModule.getMaxDecodingDraftTokens());
+    CHECK(numChoices <= speculativeDecodingModule.getMaxDecodingDraftTokens());
 
     for (SizeType32 ci = 0; ci < numChoices; ++ci)
     {
@@ -238,8 +238,8 @@ SizeType32 initTensorsFromChoices(SpeculativeDecodingModule const& speculativeDe
 
         if (curDepth != depth)
         {
-            TLLM_CHECK(depth + 1 == curDepth);
-            TLLM_CHECK_WITH_INFO(curDepth <= speculativeDecodingModule.getMaxDraftPathLen(),
+            CHECK(depth + 1 == curDepth);
+            CHECK_WITH_INFO(curDepth <= speculativeDecodingModule.getMaxDraftPathLen(),
                 "Choices require larger maxPathLen than the engine was built with.");
             topKs[depth - 1] = maxTopK;
 
@@ -296,7 +296,7 @@ SizeType32 initTensorsFromChoices(SpeculativeDecodingModule const& speculativeDe
 
     computePathsAndMask(speculativeDecodingModule, tree, packedMask, paths);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     return depth;
 }
 }

@@ -27,7 +27,7 @@ std::string getNumpyTypeDesc(nvinfer1::DataType type)
 
     if (type == dt::kBF16)
     {
-        TLLM_LOG_WARNING(
+        LOG_WARNING(
             "getNumpyTypeDesc(TYPE_BF16) returns an invalid type 'x' since Numpy doesn't "
             "support bfloat16 as of now, it will be properly extended if numpy supports. "
             "Please refer for the discussions https://github.com/numpy/numpy/issues/19808.");
@@ -38,12 +38,12 @@ std::string getNumpyTypeDesc(nvinfer1::DataType type)
 
 nvinfer1::DataType typeFromNumpyDesc(std::string const& type)
 {
-    TLLM_LOG_DEBUG("numpy type: %s", type.c_str());
+    LOG_DEBUG("numpy type: %s", type.c_str());
 
     using dt = nvinfer1::DataType;
     static std::unordered_map<std::string, dt> const type_map{{"?", dt::kBOOL}, {"u1", dt::kUINT8}, {"i1", dt::kINT8},
         {"i4", dt::kINT32}, {"i8", dt::kINT64}, {"f2", dt::kHALF}, {"f4", dt::kFLOAT}};
-    TLLM_CHECK_WITH_INFO(type_map.count(type) > 0, "numpy data type '" + type + "' not supported");
+    CHECK_WITH_INFO(type_map.count(type) > 0, "numpy data type '" + type + "' not supported");
     return type_map.at(type);
 }
 
@@ -65,7 +65,7 @@ void parseNpyIntro(FILE*& f_ptr, uint32_t& header_len, uint32_t& start_data)
     n_elems = fread((void*) &npy_major, sizeof(uint8_t), 1, f_ptr);
     n_elems += fread((void*) &npy_minor, sizeof(uint8_t), 1, f_ptr);
 
-    TLLM_LOG_DEBUG("npy format version: %d.%d", npy_major, npy_minor);
+    LOG_DEBUG("npy format version: %d.%d", npy_major, npy_minor);
 
     if (npy_major == 1)
     {
@@ -99,7 +99,7 @@ int parseNpyHeader(FILE*& f_ptr, uint32_t header_len, nvinfer1::DataType& type, 
     std::string header(header_c, header_len);
     free(header_c);
 
-    TLLM_LOG_DEBUG("npy header: %s", header.c_str());
+    LOG_DEBUG("npy header: %s", header.c_str());
 
     size_t start, end;
     start = header.find("'descr'") + 7;
@@ -166,7 +166,7 @@ int parseNpyHeader(FILE*& f_ptr, uint32_t header_len, nvinfer1::DataType& type, 
 
     size_t n_elems = fread(data, eltSize, size, f_ptr);
     auto const statusCode = fclose(f_ptr);
-    TLLM_CHECK_WITH_INFO(statusCode == 0 && n_elems == size, "reading tensor failed");
+    CHECK_WITH_INFO(statusCode == 0 && n_elems == size, "reading tensor failed");
 
     if (where == MemoryType::kGPU)
     {
@@ -186,7 +186,7 @@ void saveNpy(BufferManager const& manager, ITensor const& tensor, std::string co
 #ifdef ENABLE_BF16
     if (dtype == nvinfer1::DataType::kBF16)
     {
-        TLLM_CHECK(where == MemoryType::kGPU);
+        CHECK(where == MemoryType::kGPU);
         auto tensorFp32 = manager.gpu(shape, nvinfer1::DataType::kFLOAT);
         auto dataFp32 = bufferCast<float>(*tensorFp32);
         auto dataBf16 = bufferCast<__nv_bfloat16 const>(tensor);
@@ -231,7 +231,7 @@ void saveNpy(BufferManager const& manager, ITensor const& tensor, std::string co
     auto const header_len = static_cast<uint16_t>(header.size());
 
     FILE* f_ptr = fopen(filename.c_str(), "wb");
-    TLLM_CHECK_WITH_INFO(f_ptr != nullptr, tc::fmtstr("Unable to open %s for writing.\n", filename.c_str()));
+    CHECK_WITH_INFO(f_ptr != nullptr, tc::fmtstr("Unable to open %s for writing.\n", filename.c_str()));
 
     fwrite(magic, sizeof(char), sizeof(magic) - 1, f_ptr);
     fwrite(&npy_major, sizeof(uint8_t), 1, f_ptr);

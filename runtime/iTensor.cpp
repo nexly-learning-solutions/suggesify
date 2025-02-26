@@ -16,34 +16,34 @@ namespace tc = suggestify::common;
 
 ITensor::UniquePtr ITensor::slice(SharedPtr tensor, std::size_t offset, std::size_t size)
 {
-    TLLM_CHECK(tensor);
+    CHECK(tensor);
     return std::make_unique<TensorView>(std::move(tensor), offset, size);
 }
 
 ITensor::UniquePtr ITensor::slice(SharedPtr tensor, Shape const& offsetDims, ITensor::DimType64 size)
 {
     auto shape = tensor->getShape();
-    TLLM_CHECK(offsetDims.nbDims >= 0);
-    TLLM_CHECK(shape.nbDims >= offsetDims.nbDims);
-    TLLM_CHECK(size >= 0);
+    CHECK(offsetDims.nbDims >= 0);
+    CHECK(shape.nbDims >= offsetDims.nbDims);
+    CHECK(size >= 0);
 
     Shape strides = ITensor::strides(shape);
     DimType64 offset{0};
     for (SizeType32 di = 0; di < offsetDims.nbDims - 1; di++)
     {
-        TLLM_CHECK(0 <= offsetDims.d[di] && offsetDims.d[di] < shape.d[di]);
+        CHECK(0 <= offsetDims.d[di] && offsetDims.d[di] < shape.d[di]);
         offset += offsetDims.d[di] * strides.d[di];
     }
 
-    if (TLLM_LIKELY(offsetDims.nbDims > 0))
+    if (LIKELY(offsetDims.nbDims > 0))
     {
-        TLLM_CHECK(offsetDims.d[offsetDims.nbDims - 1] + size <= shape.d[offsetDims.nbDims - 1]);
+        CHECK(offsetDims.d[offsetDims.nbDims - 1] + size <= shape.d[offsetDims.nbDims - 1]);
         offset += offsetDims.d[offsetDims.nbDims - 1] * strides.d[offsetDims.nbDims - 1];
     }
     else
     {
-        TLLM_CHECK(size >= 0 && size <= 1);
-        TLLM_CHECK(shape.nbDims == 0 ? size == 0 : true);
+        CHECK(size >= 0 && size <= 1);
+        CHECK(shape.nbDims == 0 ? size == 0 : true);
     }
 
     Shape dims;
@@ -65,7 +65,7 @@ ITensor::UniquePtr ITensor::view(IBuffer::SharedPtr buffer, nvinfer1::Dims const
 
 nvinfer1::Dims ITensor::makeShape(std::initializer_list<ITensor::DimType64> const& dims)
 {
-    TLLM_CHECK_WITH_INFO(dims.size() <= nvinfer1::Dims::MAX_DIMS, "Number of dimensions is too large");
+    CHECK_WITH_INFO(dims.size() <= nvinfer1::Dims::MAX_DIMS, "Number of dimensions is too large");
     nvinfer1::Dims shape{};
     shape.nbDims = static_cast<decltype(Shape::nbDims)>(dims.size());
     std::copy(dims.begin(), dims.end(), shape.d);
@@ -91,7 +91,7 @@ std::string ITensor::toString(nvinfer1::Dims const& dims)
 ITensor::UniquePtr ITensor::wrap(void* data, nvinfer1::DataType type, nvinfer1::Dims const& shape, std::size_t capacity)
 {
     auto const size = volumeNonNegative(shape);
-    TLLM_CHECK_WITH_INFO(size <= capacity, "Requested size is larger than capacity");
+    CHECK_WITH_INFO(size <= capacity, "Requested size is larger than capacity");
     auto memoryType = IBuffer::memoryType(data);
 
     ITensor::UniquePtr result;
@@ -121,17 +121,17 @@ ITensor::UniquePtr ITensor::wrap(void* data, nvinfer1::DataType type, nvinfer1::
             new GenericTensor<ManagedBorrowingAllocator>(
                 shape, capacity, type, ManagedBorrowingAllocator(data, capacityInBytes)));
         break;
-    default: TLLM_THROW("Invalid memory type."); break;
+    default: THROW("Invalid memory type."); break;
     }
     return result;
 }
 
 ITensor::Shape ITensor::squeeze(Shape const& shape, SizeType32 dim)
 {
-    TLLM_CHECK_WITH_INFO(0 < shape.nbDims, "Cannot squeeze 1-dimensional tensor");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(0 < shape.nbDims, "Cannot squeeze 1-dimensional tensor");
+    CHECK_WITH_INFO(
         dim < shape.nbDims, tc::fmtstr("Invalid index %d, tensor has %d dimensions", dim, shape.nbDims));
-    TLLM_CHECK_WITH_INFO(shape.d[dim] == 1, "Can only squeeze dimension of size 1");
+    CHECK_WITH_INFO(shape.d[dim] == 1, "Can only squeeze dimension of size 1");
 
     Shape newDims{shape.nbDims - 1};
     std::copy(shape.d, shape.d + dim, newDims.d);
@@ -141,8 +141,8 @@ ITensor::Shape ITensor::squeeze(Shape const& shape, SizeType32 dim)
 
 ITensor::Shape ITensor::unsqueeze(Shape const& shape, SizeType32 dim)
 {
-    TLLM_CHECK_WITH_INFO(shape.nbDims < Shape::MAX_DIMS, "Too many dimensions to unsqueeze");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(shape.nbDims < Shape::MAX_DIMS, "Too many dimensions to unsqueeze");
+    CHECK_WITH_INFO(
         0 <= dim && dim <= shape.nbDims, common::fmtstr("Invalid dim %d, tensor has %d dimensions", dim, shape.nbDims));
 
     Shape newDims{shape.nbDims + 1};
@@ -157,7 +157,7 @@ namespace
 template <typename T>
 void printTensor(ITensor const& tensor, std::ostream& out)
 {
-    TLLM_CHECK_WITH_INFO(tensor.getDataType() == TRTDataType<typename std::remove_cv<T>::type>::value,
+    CHECK_WITH_INFO(tensor.getDataType() == TRTDataType<typename std::remove_cv<T>::type>::value,
         tc::fmtstr("Data type mismatch: %d vs %d", static_cast<std::int32_t>(tensor.getDataType()),
             static_cast<std::int32_t>(TRTDataType<typename std::remove_cv<T>::type>::value)));
     auto const& shape = tensor.getShape();
@@ -227,7 +227,7 @@ std::ostream& suggestify::runtime::operator<<(std::ostream& out, ITensor const& 
 #ifdef ENABLE_BF16
     case nvinfer1::DataType::kBF16: printTensor<__nv_bfloat16>(tensor, out); break;
 #endif
-    default: TLLM_THROW("Unsupported data type");
+    default: THROW("Unsupported data type");
     }
 
     return out;

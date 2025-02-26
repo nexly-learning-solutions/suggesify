@@ -17,21 +17,21 @@ namespace suggestify::runtime::utils
 int initDevice(WorldConfig const& worldConfig)
 {
     auto const device = worldConfig.getDevice();
-    TLLM_CUDA_CHECK(cudaSetDevice(device));
+    CUDA_CHECK(cudaSetDevice(device));
     return device;
 }
 
 std::vector<uint8_t> loadEngine(std::string const& enginePath)
 {
     std::ifstream engineFile(enginePath, std::ios::binary);
-    TLLM_CHECK_WITH_INFO(engineFile.good(), std::string("Error opening engine file: " + enginePath));
+    CHECK_WITH_INFO(engineFile.good(), std::string("Error opening engine file: " + enginePath));
     engineFile.seekg(0, std::ifstream::end);
     auto const size = engineFile.tellg();
     engineFile.seekg(0, std::ifstream::beg);
 
     std::vector<uint8_t> engineBlob(size);
     engineFile.read(reinterpret_cast<char*>(engineBlob.data()), size);
-    TLLM_CHECK_WITH_INFO(engineFile.good(), std::string("Error loading engine file: " + enginePath));
+    CHECK_WITH_INFO(engineFile.good(), std::string("Error loading engine file: " + enginePath));
     return engineBlob;
 }
 
@@ -78,7 +78,7 @@ void assertNoVGQA(ModelConfig const& modelConfig, WorldConfig const& worldConfig
 {
     auto [numKvHeadsPerLayerBegin, numKvHeadsPerLayerEnd] = modelConfig.getNumKvHeadsPerLayerLocalRange(
         worldConfig.getPipelineParallelism(), worldConfig.getPipelineParallelRank());
-    TLLM_CHECK_WITH_INFO(std::all_of(numKvHeadsPerLayerBegin, numKvHeadsPerLayerEnd,
+    CHECK_WITH_INFO(std::all_of(numKvHeadsPerLayerBegin, numKvHeadsPerLayerEnd,
                              [firstNumKvHeads = *numKvHeadsPerLayerBegin](SizeType32 numKvHeads)
                              { return numKvHeads == firstNumKvHeads; }),
         "Deprecated session API does not support multiple cache pools, use the newer executor API instead");
@@ -137,7 +137,7 @@ void printTensorMap(std::ostream& stream, StringPtrMap<ITensor> const& map)
 void setRawPointers(ITensor& pointers, ITensor::SharedPtr const& input, int32_t pointersSlot, int32_t inputSlot)
 {
     auto const pointersLength = static_cast<int32_t>(pointers.getSizeInBytes() / sizeof(void**));
-    TLLM_CHECK_WITH_INFO(pointersSlot < pointersLength,
+    CHECK_WITH_INFO(pointersSlot < pointersLength,
         tc::fmtstr("Pointer slot (%d) out of range [0,%d].", pointersSlot, pointersLength - 1));
 
     auto const inputSliced = ITensor::slice(input, inputSlot);
@@ -149,7 +149,7 @@ void setRawPointers(ITensor& pointers, ITensor::SharedPtr const& input)
 {
     auto const& inputRows = input->getShape().d[0];
     auto const pointersLength = static_cast<int32_t>(pointers.getSizeInBytes() / sizeof(void**));
-    TLLM_CHECK_WITH_INFO(inputRows == pointersLength,
+    CHECK_WITH_INFO(inputRows == pointersLength,
         tc::fmtstr("Input dim 0 (" FMT_DIM ") does not match pointers length (%d).", inputRows, pointersLength));
 
     for (SizeType32 inputSlot = 0; inputSlot < inputRows; ++inputSlot)
@@ -191,8 +191,8 @@ namespace
 template <typename T>
 void tileCpuBufferReplaceImpl(ITensor::SharedPtr& tensor, SizeType32 beamWidth)
 {
-    TLLM_CHECK(tensor != nullptr);
-    TLLM_CHECK(tensor->getDataType() == TRTDataType<T>::value);
+    CHECK(tensor != nullptr);
+    CHECK(tensor->getDataType() == TRTDataType<T>::value);
     auto shape = tensor->getShape();
     shape.d[0] *= beamWidth;
 
@@ -204,11 +204,11 @@ void tileCpuBufferReplaceImpl(ITensor::SharedPtr& tensor, SizeType32 beamWidth)
     case MemoryType::kPINNEDPOOL:
         tiledTensor = std::shared_ptr(BufferManager::pinnedPool(shape, tensor->getDataType()));
         break;
-    default: TLLM_THROW("Tensor is not using CPU memory."); break;
+    default: THROW("Tensor is not using CPU memory."); break;
     }
     auto const src = bufferCast<T>(*tensor);
     auto const dst = bufferCast<T>(*tiledTensor);
-    TLLM_CHECK(tensor->getSize() * beamWidth == tiledTensor->getSize());
+    CHECK(tensor->getSize() * beamWidth == tiledTensor->getSize());
     for (size_t i = 0; i < tensor->getSize(); i++)
     {
         std::fill_n(dst + beamWidth * i, beamWidth, src[i]);
@@ -230,7 +230,7 @@ void tileCpuBufferReplace(ITensor::SharedPtr& tensor, SizeType32 beamWidth)
         case nvinfer1::DataType::kBOOL: tileCpuBufferReplaceImpl<bool>(tensor, beamWidth); break;
         case nvinfer1::DataType::kUINT8: tileCpuBufferReplaceImpl<uint8_t>(tensor, beamWidth); break;
         case nvinfer1::DataType::kINT64: tileCpuBufferReplaceImpl<int64_t>(tensor, beamWidth); break;
-        default: TLLM_THROW("unsupported data type");
+        default: THROW("unsupported data type");
         }
     }
 }

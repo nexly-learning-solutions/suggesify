@@ -18,9 +18,9 @@ namespace suggestify::layers
 #define GET_INFO_STAGE1(nPBM)                                                                                          \
     {                                                                                                                  \
         int constexpr nBlock = (nPBM < 16) ? ((nPBM < 8) ? nThreadForSmallBeamWidth : 128) : 64;                       \
-        TLLM_CUDA_CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(                                                 \
+        CUDA_CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(                                                 \
             &nMaxActiveBlock, beamStage1Kernel<T, 2 * nPBM, nBlock>, nBlock, 0));                                      \
-        TLLM_CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage1Kernel<T, 2 * nPBM, nBlock>));                          \
+        CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage1Kernel<T, 2 * nPBM, nBlock>));                          \
         break;                                                                                                         \
     }
 
@@ -28,19 +28,19 @@ namespace suggestify::layers
     {                                                                                                                  \
         if (nByteDynamicSharedMemoryStage2 > nByteMaxSharedMemoryPerBlock)                                             \
         {                                                                                                              \
-            TLLM_CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage2Kernel<T, nPBM, 128, false>));                      \
+            CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage2Kernel<T, nPBM, 128, false>));                      \
         }                                                                                                              \
         else if (nVPart <= 32)                                                                                         \
         {                                                                                                              \
-            TLLM_CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage2Kernel<T, nPBM, 32, true>));                        \
+            CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage2Kernel<T, nPBM, 32, true>));                        \
         }                                                                                                              \
         else if (nVPart <= 64)                                                                                         \
         {                                                                                                              \
-            TLLM_CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage2Kernel<T, nPBM, 64, true>));                        \
+            CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage2Kernel<T, nPBM, 64, true>));                        \
         }                                                                                                              \
         else                                                                                                           \
         {                                                                                                              \
-            TLLM_CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage2Kernel<T, nPBM, 128, true>));                       \
+            CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage2Kernel<T, nPBM, 128, true>));                       \
         }                                                                                                              \
         break;                                                                                                         \
     }
@@ -48,7 +48,7 @@ namespace suggestify::layers
 #define GET_INFO_STAGE3(nPBM, bV2)                                                                                     \
     {                                                                                                                  \
         int constexpr nThreadStage3 = (nPBM + 31) / 32 * 32;                                                           \
-        TLLM_CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage3Kernel<T, nPBM, nThreadStage3, true, bV2>));            \
+        CUDA_CHECK(cudaFuncGetAttributes(&attr, beamStage3Kernel<T, nPBM, nThreadStage3, true, bV2>));            \
         break;                                                                                                         \
     }
 
@@ -56,24 +56,24 @@ template <typename T>
 BeamSearchLayer<T>::BeamSearchLayer(DecoderDomain const& decoderDomain, std::shared_ptr<BufferManager> bufferManager)
     : BaseLayer(decoderDomain, bufferManager)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     SizeType32 const nBS{mDecoderDomain.getBatchSize()};
     SizeType32 const nBM{mDecoderDomain.getBeamWidth()};
     SizeType32 const nV{mDecoderDomain.getVocabSize()};
-    TLLM_CHECK_WITH_INFO(nBM <= nMaxBeamWidth, "Beam width is larger than the maximum supported (%d > %d)", int(nBM),
+    CHECK_WITH_INFO(nBM <= nMaxBeamWidth, "Beam width is larger than the maximum supported (%d > %d)", int(nBM),
         int(nMaxBeamWidth));
 
     allocateBuffer();
     configureBeamSearchLayer();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void BeamSearchLayer<T>::allocateBuffer()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSizeShape = ITensor::makeShape({mDecoderDomain.getBatchSize()});
     mBeamSearchDiversityRateHost = mBufferManager->pinnedPool(batchSizeShape, TRTDataType<float>::value);
@@ -83,13 +83,13 @@ void BeamSearchLayer<T>::allocateBuffer()
     mLengthPenaltyDevice = mBufferManager->gpu(batchSizeShape, TRTDataType<float>::value);
     mEarlyStoppingDevice = mBufferManager->gpu(batchSizeShape, TRTDataType<int>::value);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void BeamSearchLayer<T>::configureBeamSearchLayer()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     SizeType32 const nBS{mDecoderDomain.getBatchSize()};
     SizeType32 const nBM{mDecoderDomain.getBeamWidth()};
@@ -99,9 +99,9 @@ void BeamSearchLayer<T>::configureBeamSearchLayer()
 
     int nByteMaxSharedMemoryPerSM = -1, nByteMaxSharedMemoryPerBlock = -1;
     int const device = suggestify::common::getDevice();
-    TLLM_CUDA_CHECK(
+    CUDA_CHECK(
         cudaDeviceGetAttribute(&nByteMaxSharedMemoryPerSM, cudaDevAttrMaxSharedMemoryPerMultiprocessor, device));
-    TLLM_CUDA_CHECK(
+    CUDA_CHECK(
         cudaDeviceGetAttribute(&nByteMaxSharedMemoryPerBlock, cudaDevAttrMaxSharedMemoryPerBlockOptin, device));
     this->mByteMaxSharedMemoryPerBlock = nByteMaxSharedMemoryPerBlock;
     int const nByteReservedSharedMemoryPerBlock = nByteMaxSharedMemoryPerSM - nByteMaxSharedMemoryPerBlock;
@@ -119,7 +119,7 @@ void BeamSearchLayer<T>::configureBeamSearchLayer()
         }
         int nByteStaticSharedMemory = attr.sharedSizeBytes;
         int nByteMaxDynamicSharedMemoryPerBlock = nByteMaxSharedMemoryPerBlock - nByteStaticSharedMemory;
-        TLLM_CHECK_WITH_INFO(nByteMaxDynamicSharedMemoryPerBlock * nMaxVPartStage1 >= sizeof(T) * nV,
+        CHECK_WITH_INFO(nByteMaxDynamicSharedMemoryPerBlock * nMaxVPartStage1 >= sizeof(T) * nV,
             "vocab_size is too large for Beam search.");
         int nByteExtralSharedMemory = nByteReservedSharedMemoryPerBlock + nByteStaticSharedMemory;
         int nBlock = nMaxActiveBlock;
@@ -130,13 +130,13 @@ void BeamSearchLayer<T>::configureBeamSearchLayer()
             nByteDynamicSharedMemoryStage1 -= nByteDynamicSharedMemoryStage1 % sizeof(T);
             nVPart = ceilDiv(sizeof(T) * nV, nByteDynamicSharedMemoryStage1);
         }
-        TLLM_CHECK_WITH_INFO(nBlock >= 0, "No enough active blocks for Beam Search stage 1 kernel.");
+        CHECK_WITH_INFO(nBlock >= 0, "No enough active blocks for Beam Search stage 1 kernel.");
 
         int const nByteDynamicSharedMemoryStage1 = sizeof(T) * ceilDiv(nV, nVPart);
         this->mVPart = nVPart;
         this->mByteSharedMemoryStage1 = nByteDynamicSharedMemoryStage1;
 
-        TLLM_CHECK_WITH_INFO(nBS * nBM * nPBM < (1 << 21),
+        CHECK_WITH_INFO(nBS * nBM * nPBM < (1 << 21),
             "max_batch_size or max_beam_width of TRT-LLM engine is too large for Beam search, try to decrease the "
             "parameters while building.");
         size_t const nByteDynamicSharedMemoryStage2
@@ -208,7 +208,7 @@ void BeamSearchLayer<T>::configureBeamSearchLayer()
             + max(nByteStage1LogProbs + nByteStage1Ids + max(nByteStage1TopK, nByteStage2TopK), nByteStage3);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -222,10 +222,10 @@ void BeamSearchLayer<T>::setup(SizeType32 const batchSize, SizeType32 const beam
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     SizeType32 const nBM{mDecoderDomain.getBeamWidth()};
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         beamWidth <= nBM, "Beam width is larger than the constructed for (%d > %d).", int(beamWidth), int(nBM));
 
     auto setupParams = std::dynamic_pointer_cast<BeamSearchSetupParams>(baseSetupParams);
@@ -243,7 +243,7 @@ void BeamSearchLayer<T>::setup(SizeType32 const batchSize, SizeType32 const beam
         mEarlyStoppingDevice, batchSlots, std::make_pair(-fltEpsilon, std::numeric_limits<int>::max()),
         "early stopping");
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 __global__ void updateCacheIndirectionKernel(
@@ -278,22 +278,22 @@ void BeamSearchLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> const
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto ip = std::dynamic_pointer_cast<DecodingInputs>(baseInputs);
     auto op = std::dynamic_pointer_cast<BeamSearchOutputs>(baseOutputs);
     auto const localDecoderDomain = getLocalDecoderDomain(ip, mDecoderDomain);
 
-    TLLM_CHECK_WITH_INFO(localDecoderDomain.getBeamWidth() > 1, "Use beamWidth <= 1 (%d <= 1) in Beam Search mode",
+    CHECK_WITH_INFO(localDecoderDomain.getBeamWidth() > 1, "Use beamWidth <= 1 (%d <= 1) in Beam Search mode",
         localDecoderDomain.getBeamWidth());
-    TLLM_CHECK_WITH_INFO(ip->srcCacheIndirection.has_value(), "srcCacheIndirection is mandatory in beam search.");
-    TLLM_CHECK_WITH_INFO(op->parentIds.has_value(), "parentIds tensor is mandatory in beam search.");
-    TLLM_CHECK_WITH_INFO(op->finished.has_value(), "finished tensor is mandatory in beam search.");
-    TLLM_CHECK_WITH_INFO(op->cumLogProbs.has_value(), "cumLogProbs tensor is mandatory in beam search.");
-    TLLM_CHECK_WITH_INFO(op->beamHypotheses, "Output BeamHypotheses is not set.");
-    TLLM_CHECK_WITH_INFO(bufferCastOrNull<int>(*op->sequenceLength) != nullptr || mLengthPenaltyDevice == nullptr,
+    CHECK_WITH_INFO(ip->srcCacheIndirection.has_value(), "srcCacheIndirection is mandatory in beam search.");
+    CHECK_WITH_INFO(op->parentIds.has_value(), "parentIds tensor is mandatory in beam search.");
+    CHECK_WITH_INFO(op->finished.has_value(), "finished tensor is mandatory in beam search.");
+    CHECK_WITH_INFO(op->cumLogProbs.has_value(), "cumLogProbs tensor is mandatory in beam search.");
+    CHECK_WITH_INFO(op->beamHypotheses, "Output BeamHypotheses is not set.");
+    CHECK_WITH_INFO(bufferCastOrNull<int>(*op->sequenceLength) != nullptr || mLengthPenaltyDevice == nullptr,
         "Current sequence lengths must be set for length penalty computation.");
-    TLLM_CHECK_WITH_INFO(ip->ite == 0, "Pipeline Parallelism is not supported yet!");
+    CHECK_WITH_INFO(ip->ite == 0, "Pipeline Parallelism is not supported yet!");
 
     BeamHypotheses bh;
     bh.nMaxBatchSize = static_cast<std::int32_t>(op->outputIdsPtr->getDimension<0>());
@@ -334,7 +334,7 @@ void BeamSearchLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> const
 
     T const* logProbs = bufferCast<T>(*workspace->getDeviceRuntimeLogits());
     T const* bias = static_cast<T const*>(nullptr);
-    TLLM_CHECK_WITH_INFO(getWorkspaceSize() >= 2 * bh.nBatchSize * bh.nBeamWidth * bh.nBeamWidth * 2,
+    CHECK_WITH_INFO(getWorkspaceSize() >= 2 * bh.nBatchSize * bh.nBeamWidth * bh.nBeamWidth * 2,
         "Workspace size (%lu) is not enough for topk softmax required (%lu).", (uint64_t) getWorkspaceSize(),
         (uint64_t) (2 * bh.nMaxBatchSize * bh.nBeamWidth * bh.nBeamWidth * 2));
 
@@ -354,7 +354,7 @@ void BeamSearchLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> const
         tgtCI, srcCI, bh, ip->maxAttentionWindow, ip->sinkTokenLength);
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template class BeamSearchLayer<float>;

@@ -21,17 +21,17 @@ ExplicitDraftTokensLayer<T>::ExplicitDraftTokensLayer(
     DecoderDomain const& decoderDomain, std::shared_ptr<BufferManager> bufferManager)
     : BaseLayer(decoderDomain, bufferManager)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     allocateBuffer();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void ExplicitDraftTokensLayer<T>::allocateBuffer()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     mTemperature
         = mBufferManager->pinnedPool(ITensor::makeShape({mDecoderDomain.getBatchSize()}), TRTDataType<float>::value);
@@ -55,7 +55,7 @@ void ExplicitDraftTokensLayer<T>::allocateBuffer()
                                                      * mDecoderDomain.getSpeculativeDecodingModule()->getMaxPathLen()}),
         TRTDataType<SizeType32>::value);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -63,7 +63,7 @@ void ExplicitDraftTokensLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWid
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<ExplicitDraftTokensSetupParams>(baseSetupParams);
     workspace->initializeDeviceCurandStates(
@@ -92,7 +92,7 @@ void ExplicitDraftTokensLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWid
         fillContextBuffers<__nv_bfloat16>(batchSize, batchSlots, *setupParams, workspace);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -100,7 +100,7 @@ void ExplicitDraftTokensLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutpu
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto inputs = std::dynamic_pointer_cast<ExplicitDraftTokensInputs>(baseInputs);
     auto outputs = std::dynamic_pointer_cast<ExplicitDraftTokensOutputs>(baseOutputs);
@@ -123,7 +123,7 @@ void ExplicitDraftTokensLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutpu
 
     packAcceptedPaths(*outputs, *inputs, workspace);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -138,7 +138,7 @@ void ExplicitDraftTokensLayer<T>::fillContextBuffers(SizeType32 batchSize, Buffe
     ExplicitDraftTokensSetupParams const& setupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     FillContextExplicitDraftTokensParams<Dtype> params;
     params.randDataSample = bufferCast<Dtype>(*setupParams.randomDataSample);
@@ -152,7 +152,7 @@ void ExplicitDraftTokensLayer<T>::fillContextBuffers(SizeType32 batchSize, Buffe
 
     invokeFillContextBuffers(params, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -160,7 +160,7 @@ template <typename Dtype>
 void ExplicitDraftTokensLayer<T>::splitInputDataToBatchSlots(ExplicitDraftTokensOutputs const& outputs,
     ExplicitDraftTokensInputs const& inputs, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputs.localBatchSize;
     auto const maxSeqLen = outputs.outputIds->getDimension<-1>();
@@ -218,14 +218,14 @@ void ExplicitDraftTokensLayer<T>::splitInputDataToBatchSlots(ExplicitDraftTokens
 
     mBufferManager->copy(*outputs.generationLengths, *outputs.generationLengthsHost);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void ExplicitDraftTokensLayer<T>::convertPackedMask(ExplicitDraftTokensOutputs const& outputs,
     ExplicitDraftTokensInputs const& inputs, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto batchSlots = bufferCast<SizeType32>(*inputs.seqSlots);
     auto masksDevice = bufferCast<bool>(*inputs.masks);
@@ -245,14 +245,14 @@ void ExplicitDraftTokensLayer<T>::convertPackedMask(ExplicitDraftTokensOutputs c
         batchSlots, mDecoderDomain.getSpeculativeDecodingModule()->getMaxDecodingDraftTokens(),
         mDecoderDomain.getSpeculativeDecodingModule()->getMaxDecodingTokens(), packedMasksDevice, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void ExplicitDraftTokensLayer<T>::packAcceptedPaths(ExplicitDraftTokensOutputs const& outputs,
     ExplicitDraftTokensInputs const& inputs, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputs.localBatchSize;
 
@@ -263,17 +263,17 @@ void ExplicitDraftTokensLayer<T>::packAcceptedPaths(ExplicitDraftTokensOutputs c
     auto bestPathIndicesSlotsPtr = bufferCastOrNull<SizeType32>(mBestPathIndicesSlots);
     auto lastDraftIndicesSlotsPtr = bufferCastOrNull<SizeType32>(mLastDraftIndicesSlots);
 
-    TLLM_CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for ExplicitDraftTokensLayer");
-    TLLM_CHECK_WITH_INFO(numNewTokens != nullptr, "Accepted lengths must be provided for ExplicitDraftTokensLayer");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for ExplicitDraftTokensLayer");
+    CHECK_WITH_INFO(numNewTokens != nullptr, "Accepted lengths must be provided for ExplicitDraftTokensLayer");
+    CHECK_WITH_INFO(
         numNewTokensCumSum != nullptr, "numNewTokensCumSum must be provided for ExplicitDraftTokensLayer");
-    TLLM_CHECK_WITH_INFO(pathsOffsets != nullptr, "pathsOffsets must be provided for ExplicitDraftTokensLayer");
+    CHECK_WITH_INFO(pathsOffsets != nullptr, "pathsOffsets must be provided for ExplicitDraftTokensLayer");
     invokePackAcceptedPaths(numNewTokensCumSum, pathsOffsets, numNewTokens, bestPathIndicesSlotsPtr,
         lastDraftIndicesSlotsPtr, batchSlots, batchSize, batchSize,
         mDecoderDomain.getSpeculativeDecodingModule()->getMaxNumPaths(),
         mDecoderDomain.getSpeculativeDecodingModule()->getMaxPathLen(), false, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template class ExplicitDraftTokensLayer<float>;

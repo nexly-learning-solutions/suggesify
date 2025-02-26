@@ -28,7 +28,7 @@ ncclDataType_t toNcclType(nvinfer1::DataType dataType)
 #if ENABLE_BF16
     case nvinfer1::DataType::kBF16: return ncclBfloat16;
 #endif
-    default: TLLM_THROW("Unsupported data type: %d", static_cast<int>(dataType));
+    default: THROW("Unsupported data type: %d", static_cast<int>(dataType));
     }
 }
 #endif
@@ -38,9 +38,9 @@ void NcclCommunicator::send(
     void const* sendbuff, size_t count, nvinfer1::DataType dataType, int peer, CudaStream const& stream) const
 {
 #if ENABLE_MULTI_DEVICE
-    TLLM_NCCL_CHECK(ncclSend(sendbuff, count, toNcclType(dataType), peer, mComm, stream.get()));
+    NCCL_CHECK(ncclSend(sendbuff, count, toNcclType(dataType), peer, mComm, stream.get()));
 #else
-    TLLM_THROW("Multi device support is disabled.");
+    THROW("Multi device support is disabled.");
 #endif
 }
 
@@ -48,9 +48,9 @@ void NcclCommunicator::receive(
     void* sendbuff, size_t count, nvinfer1::DataType dataType, int peer, CudaStream const& stream) const
 {
 #if ENABLE_MULTI_DEVICE
-    TLLM_NCCL_CHECK(ncclRecv(sendbuff, count, toNcclType(dataType), peer, mComm, stream.get()));
+    NCCL_CHECK(ncclRecv(sendbuff, count, toNcclType(dataType), peer, mComm, stream.get()));
 #else
-    TLLM_THROW("Multi device support is disabled.");
+    THROW("Multi device support is disabled.");
 #endif
 }
 
@@ -66,7 +66,7 @@ ncclComm_t NcclCommunicator::createComm(int worldSize, int rank, mpi::MpiComm co
     mpiComm.bcastValue(id, 0);
     ncclComm_t comm;
     setenv("NCCL_RUNTIME_CONNECT", "0", 0);
-    TLLM_NCCL_CHECK(ncclCommInitRank(&comm, worldSize, id, rank));
+    NCCL_CHECK(ncclCommInitRank(&comm, worldSize, id, rank));
     return comm;
 #else
     return nullptr;
@@ -78,7 +78,7 @@ NcclCommunicator::~NcclCommunicator()
 #if ENABLE_MULTI_DEVICE
     if (mComm && ncclCommDestroy(mComm) != ncclSuccess)
     {
-        TLLM_LOG_WARNING("Failed to destroy NCCL communicator.");
+        LOG_WARNING("Failed to destroy NCCL communicator.");
     }
 #endif
 }

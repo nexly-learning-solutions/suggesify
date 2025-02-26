@@ -14,7 +14,7 @@ namespace tc = suggestify::common;
 
 void RuntimeBuffers::clear()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     contextLengthsHost = nullptr;
     contextLengthsDevice = nullptr;
 
@@ -32,22 +32,22 @@ void RuntimeBuffers::clear()
     hiddenStates = nullptr;
 
     allocated = false;
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RuntimeBuffers::clearTensorMaps()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     for (auto& buffer : inputBuffers)
         buffer.clear();
     for (auto& buffer : outputBuffers)
         buffer.clear();
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RuntimeBuffers::create(TllmRuntime const& runtime, ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const& manager = runtime.getBufferManager();
     auto const& engine = runtime.getEngine();
 
@@ -98,7 +98,7 @@ void RuntimeBuffers::create(TllmRuntime const& runtime, ModelConfig const& model
         hiddenStates = manager.emptyTensor(MemoryType::kGPU, modelConfig.getDataType());
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RuntimeBuffers::initFromInput(ITensor const& inputIds, TensorPtr const& inputLengths, bool inputPacked,
@@ -116,7 +116,7 @@ void RuntimeBuffers::initFromInput(ITensor const& inputIds, TensorPtr const& inp
 
 void RuntimeBuffers::reshape(ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = generationConfig.batchSize;
     auto const beamWidth = generationConfig.beamWidth;
@@ -186,7 +186,7 @@ void RuntimeBuffers::reshape(ModelConfig const& modelConfig, WorldConfig const& 
     }
 
     allocated = true;
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RuntimeBuffers::reset(BufferManager& manager)
@@ -209,7 +209,7 @@ void RuntimeBuffers::reset(BufferManager& manager)
 std::vector<RuntimeBuffers> RuntimeBuffers::split(
     SizeType32 contextBatchSize, ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     std::vector<RuntimeBuffers> bufferSlices;
     auto const generationBatchSize = generationConfig.batchSize;
@@ -254,7 +254,7 @@ std::vector<RuntimeBuffers> RuntimeBuffers::split(
             }
             if (worldConfig.isPipelineParallel())
             {
-                TLLM_CHECK_WITH_INFO(hiddenStates->getShape().nbDims == 3,
+                CHECK_WITH_INFO(hiddenStates->getShape().nbDims == 3,
                     "Invalid shape for hiddenStates.");
                 buffers.hiddenStates = ITensor::slice(hiddenStates, offset, batchSize);
             }
@@ -272,15 +272,15 @@ std::vector<RuntimeBuffers> RuntimeBuffers::split(
         }
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     return bufferSlices;
 }
 
 void RuntimeBuffers::gatherLastTokenLogits(
     BufferManager& manager, ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
-    TLLM_CHECK_WITH_INFO(modelConfig.computeContextLogits(),
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    CHECK_WITH_INFO(modelConfig.computeContextLogits(),
         "Gather last token logits is only necessary when context logits are computed");
 
     if (worldConfig.isLastPipelineParallelRank())
@@ -299,13 +299,13 @@ void RuntimeBuffers::gatherLastTokenLogits(
         }
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RuntimeBuffers::postContextStep(std::vector<RuntimeBuffers> const& contextBuffers, BufferManager& manager,
     ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const batchSize = generationConfig.batchSize;
     auto const beamWidth = generationConfig.beamWidth;
 
@@ -332,14 +332,14 @@ void RuntimeBuffers::postContextStep(std::vector<RuntimeBuffers> const& contextB
             manager, modelConfig.usePackedInput());
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void RuntimeBuffers::prepareContextStep(TensorPtr const& inputIds, TokenIdType const padId, BufferManager& manager,
     batch_manager::kv_cache_manager::BaseKVCacheManager const* kvCacheManager, SizeType32 firstBatchSlotIdx,
     ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const& stream = manager.getStream();
 
     sequenceLengths = contextLengthsDevice;
@@ -364,14 +364,14 @@ void RuntimeBuffers::prepareContextStep(TensorPtr const& inputIds, TokenIdType c
         manager.copy(*contextLengthsDevice, *lastTokenIds);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 RuntimeBuffers::TensorPtr RuntimeBuffers::prepareNextStep(SizeType32 const step, BufferManager& manager,
     batch_manager::kv_cache_manager::BaseKVCacheManager* kvCacheManager, SizeType32 firstBatchSlotIdx,
     ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const& stream = manager.getStream();
     SizeType32 const batchSize = generationConfig.batchSize;
     SizeType32 const beamWidth = generationConfig.beamWidth;
@@ -401,7 +401,7 @@ RuntimeBuffers::TensorPtr RuntimeBuffers::prepareNextStep(SizeType32 const step,
     {
         kernels::invokeInclusiveSum(*lastTokenIds, *lastTokenIds, manager, stream);
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     return nextInputIds;
 }
 
@@ -409,7 +409,7 @@ void RuntimeBuffers::getRuntimeBuffers(TensorMap& inputBuffers, TensorMap& outpu
     TensorPtr const& inputIds, TensorPtr const& commPtrs, ModelConfig const& modelConfig,
     WorldConfig const& worldConfig) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     inputBuffers.clear();
     outputBuffers.clear();
 
@@ -436,5 +436,5 @@ void RuntimeBuffers::getRuntimeBuffers(TensorMap& inputBuffers, TensorMap& outpu
         inputBuffers.insert_or_assign("prompt_vocab_size", promptTuningParams.vocabSize);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }

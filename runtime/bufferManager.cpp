@@ -17,7 +17,7 @@ BufferManager::BufferManager(CudaStreamPtr stream, bool trimPool)
     : mStream{std::move(stream)}
     , mTrimPool{trimPool}
 {
-    TLLM_CHECK_WITH_INFO(static_cast<bool>(mStream), "Undefined CUDA stream");
+    CHECK_WITH_INFO(static_cast<bool>(mStream), "Undefined CUDA stream");
     mPool = CudaMemPool::getPrimaryPoolForDevice(mStream->getDevice());
 }
 
@@ -98,7 +98,7 @@ void BufferManager::setMem(IBuffer& buffer, int32_t value) const
 {
     if (buffer.getMemoryType() == MemoryType::kGPU)
     {
-        TLLM_CUDA_CHECK(cudaMemsetAsync(buffer.data(), value, buffer.getSizeInBytes(), mStream->get()));
+        CUDA_CHECK(cudaMemsetAsync(buffer.data(), value, buffer.getSizeInBytes(), mStream->get()));
     }
     else
     {
@@ -116,7 +116,7 @@ void BufferManager::copy(void const* src, IBuffer& dst, MemoryType srcType) cons
         }
         else
         {
-            TLLM_CUDA_CHECK(cudaMemcpyAsync(dst.data(), src, dst.getSizeInBytes(), cudaMemcpyDefault, mStream->get()));
+            CUDA_CHECK(cudaMemcpyAsync(dst.data(), src, dst.getSizeInBytes(), cudaMemcpyDefault, mStream->get()));
         }
     }
 }
@@ -131,16 +131,16 @@ void BufferManager::copy(IBuffer const& src, void* dst, MemoryType dstType) cons
         }
         else
         {
-            TLLM_CUDA_CHECK(cudaMemcpyAsync(dst, src.data(), src.getSizeInBytes(), cudaMemcpyDefault, mStream->get()));
+            CUDA_CHECK(cudaMemcpyAsync(dst, src.data(), src.getSizeInBytes(), cudaMemcpyDefault, mStream->get()));
         }
     }
 }
 
 void BufferManager::copy(IBuffer const& src, IBuffer& dst) const
 {
-    TLLM_CHECK_WITH_INFO(src.getDataType() == dst.getDataType(),
+    CHECK_WITH_INFO(src.getDataType() == dst.getDataType(),
         tc::fmtstr("Incompatible data types: %s != %s", src.getDataTypeName(), dst.getDataTypeName()));
-    TLLM_CHECK_WITH_INFO(src.getSizeInBytes() == dst.getSizeInBytes(),
+    CHECK_WITH_INFO(src.getSizeInBytes() == dst.getSizeInBytes(),
         tc::fmtstr("Incompatible buffer sizes: %lu != %lu", src.getSizeInBytes(), dst.getSizeInBytes()));
     copy(src, dst.data(), dst.getMemoryType());
 }
@@ -157,7 +157,7 @@ BufferManager::IBufferPtr BufferManager::allocate(
     case MemoryType::kPINNEDPOOL: return pinnedPool(size, type);
     }
 
-    TLLM_THROW("Unknown memory type");
+    THROW("Unknown memory type");
 }
 
 BufferManager::ITensorPtr BufferManager::allocate(
@@ -172,7 +172,7 @@ BufferManager::ITensorPtr BufferManager::allocate(
     case MemoryType::kPINNEDPOOL: return pinnedPool(dims, type);
     }
 
-    TLLM_THROW("Unknown memory type");
+    THROW("Unknown memory type");
 }
 
 BufferManager::IBufferPtr BufferManager::copyFrom(IBuffer const& src, MemoryType memoryType) const
@@ -198,7 +198,7 @@ std::size_t BufferManager::memoryPoolReserved() const
 {
     if (!static_cast<bool>(mPool))
     {
-        TLLM_LOG_TRACE(
+        LOG_TRACE(
             "Operation '%s' trivially returns zero on systems without memory pool support.", __PRETTY_FUNCTION__);
         return 0;
     }
@@ -210,7 +210,7 @@ std::size_t BufferManager::memoryPoolUsed() const
 {
     if (!static_cast<bool>(mPool))
     {
-        TLLM_LOG_TRACE(
+        LOG_TRACE(
             "Operation '%s' trivially returns zero on systems without memory pool support.", __PRETTY_FUNCTION__);
         return 0;
     }
@@ -222,7 +222,7 @@ std::size_t BufferManager::memoryPoolFree() const
 {
     if (!static_cast<bool>(mPool))
     {
-        TLLM_LOG_TRACE(
+        LOG_TRACE(
             "Operation '%s' trivially returns zero on systems without memory pool support.", __PRETTY_FUNCTION__);
         return 0;
     }
@@ -234,7 +234,7 @@ void BufferManager::memoryPoolTrimTo(std::size_t size)
 {
     if (!static_cast<bool>(mPool))
     {
-        TLLM_LOG_TRACE("Operation '%s' does not do anything on this system as it does not support memory pools.",
+        LOG_TRACE("Operation '%s' does not do anything on this system as it does not support memory pools.",
             __PRETTY_FUNCTION__);
         return;
     }

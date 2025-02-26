@@ -18,7 +18,7 @@ namespace suggestify::runtime
 
 void LoraManager::create(ModelConfig const& modelConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto modules = modelConfig.getLoraModules();
     SizeType32 modOff = 0;
@@ -28,14 +28,14 @@ void LoraManager::create(ModelConfig const& modelConfig)
         mModuleOffset[m.value()] = modOff++;
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void LoraManager::fillInputTensors(TensorPtr weightsPtrs, TensorPtr adapterSizes, PeftTable const& peftTable,
     ReqIdsVec const& reqIds, std::vector<SizeType32> const& reqBeamWidth, ModelConfig const& modelConfig,
     WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto batchSize = static_cast<SizeType32>(reqIds.size());
     for (SizeType32 bid = 0; bid < batchSize; ++bid)
     {
@@ -47,13 +47,13 @@ void LoraManager::fillInputTensors(TensorPtr weightsPtrs, TensorPtr adapterSizes
         auto peftValues = it->second;
         fillInputTensors(weightsPtrs, adapterSizes, peftValues, bid, reqBeamWidth[bid], modelConfig, worldConfig);
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void LoraManager::fillInputTensors(TensorPtr weightsPtrs, TensorPtr adapterSizes, PeftValues const& peftValues,
     SizeType32 batchIdx, SizeType32 beamWidth, ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const ppSize = worldConfig.getPipelineParallelism();
     auto const ppRank = worldConfig.getPipelineParallelRank();
@@ -63,7 +63,7 @@ void LoraManager::fillInputTensors(TensorPtr weightsPtrs, TensorPtr adapterSizes
     auto weightsPointersPtr = bufferCast<int64_t>(*weightsPtrs);
     auto adapterSizesPtr = bufferCast<int32_t>(*adapterSizes);
 
-    TLLM_CHECK(!peftValues.empty());
+    CHECK(!peftValues.empty());
 
     auto const numRows = static_cast<SizeType32>(peftValues.size());
     for (SizeType32 row = 0; row < numRows; ++row)
@@ -82,10 +82,10 @@ void LoraManager::fillInputTensors(TensorPtr weightsPtrs, TensorPtr adapterSizes
         auto adapterSizesPtrOffset = common::flat_index3(
             modOff, layerIdx - firstLayerId, batchIdx, adapterSizes->getShape().d[1], adapterSizes->getShape().d[2]);
 
-        TLLM_CHECK_WITH_INFO(static_cast<SizeType32>(weightsPtrs->getSize())
+        CHECK_WITH_INFO(static_cast<SizeType32>(weightsPtrs->getSize())
                 >= weightsPointersPtrOffset + lora::kLORA_NUM_WEIGHTS_POINTERS * beamWidth,
             "Coding error attempting to write lora ptrs outside range of buffer");
-        TLLM_CHECK_WITH_INFO(static_cast<SizeType32>(adapterSizes->getSize()) >= adapterSizesPtrOffset + beamWidth,
+        CHECK_WITH_INFO(static_cast<SizeType32>(adapterSizes->getSize()) >= adapterSizesPtrOffset + beamWidth,
             "Coding error attempting to write lora low ranks outside range of buffer");
 
         auto const writeWeightsPtr = weightsPointersPtr + weightsPointersPtrOffset;
@@ -99,13 +99,13 @@ void LoraManager::fillInputTensors(TensorPtr weightsPtrs, TensorPtr adapterSizes
         }
         std::fill_n(writeAdapterSizesPtr, beamWidth, adapterSize);
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void LoraManager::insertInputTensors(TensorMap& inputTensors, TensorPtr weightsPtrs, TensorPtr adapterSizes,
     ModelConfig const& modelConfig, WorldConfig const& worldConfig) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto localNbLayers = modelConfig.getNbAttentionLayers(worldConfig.getPipelineParallelism());
     auto firstLayerId = worldConfig.getPipelineParallelRank() * localNbLayers;
 
@@ -124,18 +124,18 @@ void LoraManager::insertInputTensors(TensorMap& inputTensors, TensorPtr weightsP
         utils::insertTensorSlices(inputTensors, weightsPtrsFieldName, weightPtrsModSlice, firstLayerId);
         utils::insertTensorSlices(inputTensors, lowRankFieldName, adapterSizesModSlice, firstLayerId);
 
-        TLLM_LOG_DEBUG("weightPtrsModSlice shape %s", ITensor::toString(weightPtrsModSlice->getShape()).c_str());
-        TLLM_LOG_DEBUG("adapterSizesModSlice shape %s", ITensor::toString(adapterSizesModSlice->getShape()).c_str());
-        TLLM_LOG_DEBUG("lora fields");
+        LOG_DEBUG("weightPtrsModSlice shape %s", ITensor::toString(weightPtrsModSlice->getShape()).c_str());
+        LOG_DEBUG("adapterSizesModSlice shape %s", ITensor::toString(adapterSizesModSlice->getShape()).c_str());
+        LOG_DEBUG("lora fields");
         for (auto i : inputTensors)
         {
             auto name = i.first;
             if (name.find("lora") != std::string::npos)
             {
-                TLLM_LOG_DEBUG("%s %s", name.c_str(), ITensor::toString(i.second->getShape()).c_str());
+                LOG_DEBUG("%s %s", name.c_str(), ITensor::toString(i.second->getShape()).c_str());
             }
         }
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 }

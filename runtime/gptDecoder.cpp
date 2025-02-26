@@ -32,7 +32,7 @@ GptDecoder<T>::GptDecoder(executor::DecodingMode const& mode, size_t maxBatchSiz
     , mVocabSizePadded(vocabSizePadded)
     , mDecodingMode{mode}
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const decodingDomain = suggestify::layers::DecoderDomain(
         maxBatchSize, maxBeamWidth, vocabSize, vocabSizePadded, speculativeDecodingModule);
     mDynamicDecodeLayer = std::make_shared<suggestify::layers::DynamicDecodeLayer<T>>(mode, decodingDomain, mManager);
@@ -40,14 +40,14 @@ GptDecoder<T>::GptDecoder(executor::DecodingMode const& mode, size_t maxBatchSiz
     mDecodingLayerWorkspace = std::make_unique<suggestify::runtime::DecodingLayerWorkspace>(
         mManager, decodingDomain, TRTDataType<T>::value, mDynamicDecodeLayer->getWorkspaceSize());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void GptDecoder<T>::disableLookahead(
     std::optional<SamplingConfig> const& samplingConfig, SizeType32 batchSize, TensorConstPtr batchSlots)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     mDecodingMode = executor::DecodingMode::TopKTopP();
     auto const decodingDomain
@@ -63,8 +63,8 @@ void GptDecoder<T>::disableLookahead(
     }
 
     mSamplingConfig = samplingConfig.value();
-    TLLM_CHECK_WITH_INFO(mSamplingConfig.validate(), "Sampling config is invalid");
-    TLLM_CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots are mandatory to set up the decoder.");
+    CHECK_WITH_INFO(mSamplingConfig.validate(), "Sampling config is invalid");
+    CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots are mandatory to set up the decoder.");
     auto penaltyParams = std::make_shared<tl::PenaltySetupParams>();
     penaltyParams->repetitionPenalty = mSamplingConfig.repetitionPenalty;
     penaltyParams->presencePenalty = mSamplingConfig.presencePenalty;
@@ -96,7 +96,7 @@ void GptDecoder<T>::disableLookahead(
     mDecodingLayerWorkspace->setDeviceBatchSlots(batchSlots);
     mDynamicDecodeLayer->disableLookahead(decodingDomain, batchSize, batchSlots, setupParams, mDecodingLayerWorkspace);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -104,13 +104,13 @@ void GptDecoder<T>::setup(SamplingConfig const& samplingConfig, size_t batchSize
     std::optional<DecodingOutput> const& output,
     std::optional<std::vector<decoder_batch::Request> const> const& requestsOpt)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     mSamplingConfig = samplingConfig;
     auto setupParams = std::make_shared<layers::DynamicDecodeSetupParams>();
 
-    TLLM_CHECK_WITH_INFO(mSamplingConfig.validate(), "Sampling config is invalid");
-    TLLM_CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots are mandatory to set up the decoder.");
+    CHECK_WITH_INFO(mSamplingConfig.validate(), "Sampling config is invalid");
+    CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots are mandatory to set up the decoder.");
 
     auto penaltyParams = std::make_shared<tl::PenaltySetupParams>();
     penaltyParams->repetitionPenalty = mSamplingConfig.repetitionPenalty;
@@ -168,23 +168,23 @@ void GptDecoder<T>::setup(SamplingConfig const& samplingConfig, size_t batchSize
     }
     else if (mDecodingMode.isExplicitDraftTokens())
     {
-        TLLM_CHECK_WITH_INFO(output.has_value(), "Output tensors must be provided for ExplicitDraftTokens");
+        CHECK_WITH_INFO(output.has_value(), "Output tensors must be provided for ExplicitDraftTokens");
         auto explicitDraftTokensParams = std::make_shared<tl::ExplicitDraftTokensSetupParams>();
         explicitDraftTokensParams->temperature = mSamplingConfig.temperature;
         explicitDraftTokensParams->randomDataSample = output->explicitDraftTokensBuffers->randomDataSample;
         explicitDraftTokensParams->temperatures = output->explicitDraftTokensBuffers->temperatures;
-        TLLM_CHECK(requestsOpt);
+        CHECK(requestsOpt);
         explicitDraftTokensParams->dtype = requestsOpt.value()[0].dtype;
 
         setupParams->decodingParams = explicitDraftTokensParams;
     }
     else if (mDecodingMode.isLookahead())
     {
-        TLLM_CHECK_WITH_INFO(output.has_value(), "Output tensors must be provided for Lookahead decoding");
-        TLLM_LOG_DEBUG("gptDecoder setup lookahead, batchSize=%d", batchSize);
+        CHECK_WITH_INFO(output.has_value(), "Output tensors must be provided for Lookahead decoding");
+        LOG_DEBUG("gptDecoder setup lookahead, batchSize=%d", batchSize);
         auto lookaheadParams = std::make_shared<tl::LookaheadSetupParams>();
 
-        TLLM_CHECK(requestsOpt);
+        CHECK(requestsOpt);
         auto& requests = requestsOpt.value();
         lookaheadParams->prompt.resize(0);
         lookaheadParams->prompt.reserve(batchSize);
@@ -193,7 +193,7 @@ void GptDecoder<T>::setup(SamplingConfig const& samplingConfig, size_t batchSize
         for (size_t bi = 0; bi < batchSize; bi++)
         {
             lookaheadParams->prompt.emplace_back(ITensor::slice(requests[bi].ids, 0, requests[bi].inputLen));
-            TLLM_CHECK(requests[bi].lookaheadRuntimeConfig);
+            CHECK(requests[bi].lookaheadRuntimeConfig);
             lookaheadParams->algoConfigs.emplace_back(requests[bi].lookaheadRuntimeConfig.value());
         }
         lookaheadParams->generationLengths = output->lookaheadOutputs->generationLengths;
@@ -215,7 +215,7 @@ void GptDecoder<T>::setup(SamplingConfig const& samplingConfig, size_t batchSize
     }
     else if (mDecodingMode.isEagle())
     {
-        TLLM_CHECK_WITH_INFO(output.has_value(), "Output tensors must be provided for Eagle");
+        CHECK_WITH_INFO(output.has_value(), "Output tensors must be provided for Eagle");
         auto eagleParams = std::make_shared<tl::EagleSetupParams>();
         eagleParams->temperature = mSamplingConfig.originalTemperature;
         eagleParams->randomDataSample = output->eagleBuffers->randomDataSample;
@@ -228,7 +228,7 @@ void GptDecoder<T>::setup(SamplingConfig const& samplingConfig, size_t batchSize
     mDecodingLayerWorkspace->setDeviceBatchSlots(batchSlots);
     mDynamicDecodeLayer->setup(batchSize, mSamplingConfig.beamWidth, batchSlots, setupParams, mDecodingLayerWorkspace);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 namespace
@@ -239,7 +239,7 @@ std::shared_ptr<tl::BanWordsDecodingInputs> prepareBanWordsInputs(DecodingInput 
     auto banWordsParams = std::make_shared<tl::BanWordsDecodingInputs>(input.batchSize);
     if (input.badWordsPtrs)
     {
-        TLLM_CHECK_WITH_INFO(input.badWordsPtrs, "Bad word lengths must be provided when badWordsPtrs is given");
+        CHECK_WITH_INFO(input.badWordsPtrs, "Bad word lengths must be provided when badWordsPtrs is given");
         banWordsParams->badWordsPtr = input.badWordsPtrs;
         banWordsParams->badWordsLengths = input.badWordsLens;
         banWordsParams->maxBadWordsLen = input.maxBadWordsLen;
@@ -253,7 +253,7 @@ std::shared_ptr<tl::StopCriteriaDecodingInputs> prepareStopCriteriaInputs(Decodi
     auto stopCriteriaParams = std::make_shared<tl::StopCriteriaDecodingInputs>(input.batchSize);
     if (input.stopWordsPtrs)
     {
-        TLLM_CHECK_WITH_INFO(input.stopWordsLens, "Stop word lengths must be provided when stopWordsPtrs is given");
+        CHECK_WITH_INFO(input.stopWordsLens, "Stop word lengths must be provided when stopWordsPtrs is given");
 
         stopCriteriaParams->stopWordsPtr = input.stopWordsPtrs;
         stopCriteriaParams->stopWordsLengths = input.stopWordsLens;
@@ -271,7 +271,7 @@ std::shared_ptr<tl::StopCriteriaDecodingInputs> prepareStopCriteriaInputs(Decodi
 void prepareMedusaInputs(
     DecodingInput const& inputs, size_t maxBatchSize, std::shared_ptr<tl::DecodingInputs>& baseInputs)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto inputParams = std::dynamic_pointer_cast<tl::MedusaDecodingInputs>(baseInputs);
 
@@ -303,13 +303,13 @@ void prepareMedusaInputs(
         }
         inputParams->medusaLogits = medusaLogits;
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void prepareExternalDraftTokensInputs(
     DecodingInput const& inputs, size_t maxBatchSize, std::shared_ptr<tl::DecodingInputs>& baseInputs)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto inputParams = std::dynamic_pointer_cast<tl::ExternalDraftTokensInputs>(baseInputs);
 
@@ -326,18 +326,18 @@ void prepareExternalDraftTokensInputs(
     inputParams->useDraftLogits = externalDraftTokensInputs.useDraftLogits;
     inputParams->useDraftLogitsHost = externalDraftTokensInputs.useDraftLogitsHost;
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void prepareExplicitDraftTokensInput(DecodingInput const& inputs, std::shared_ptr<tl::DecodingInputs>& baseInputs)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto inputParams = std::dynamic_pointer_cast<tl::ExplicitDraftTokensInputs>(baseInputs);
 
     auto& explicitDraftTokensInputs = inputs.explicitDraftTokensInputs;
 
-    TLLM_CHECK_WITH_INFO(explicitDraftTokensInputs.has_value(), "ExplicitDraftTokensInputs are not set");
+    CHECK_WITH_INFO(explicitDraftTokensInputs.has_value(), "ExplicitDraftTokensInputs are not set");
 
     inputParams->nextDraftTokens = explicitDraftTokensInputs->nextDraftTokens;
     inputParams->nextFlatTokens = explicitDraftTokensInputs->nextFlatTokens;
@@ -355,30 +355,30 @@ void prepareExplicitDraftTokensInput(DecodingInput const& inputs, std::shared_pt
     inputParams->maxGenLengthDevice = explicitDraftTokensInputs->maxGenLengthDevice;
     inputParams->seqSlots = explicitDraftTokensInputs->seqSlots;
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void prepareLookaheadInputs(
     DecodingInput const& inputs, size_t maxBatchSize, std::shared_ptr<tl::DecodingInputs>& baseInputs)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto inputParams = std::dynamic_pointer_cast<tl::LookaheadDecodingInputs>(baseInputs);
     auto const& lookaheadInputs = inputs.lookaheadInputs.value();
     inputParams->curTokensPerStep = lookaheadInputs.tokensPerStep;
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void prepareEagleInput(DecodingInput const& inputs, std::shared_ptr<tl::DecodingInputs>& baseInputs)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto inputParams = std::dynamic_pointer_cast<tl::EagleInputs>(baseInputs);
 
     auto& eagleInputs = inputs.eagleInputs;
 
-    TLLM_CHECK_WITH_INFO(eagleInputs.has_value(), "EagleInputs are not set");
+    CHECK_WITH_INFO(eagleInputs.has_value(), "EagleInputs are not set");
 
     inputParams->nextDraftTokens = eagleInputs->nextDraftTokens;
     inputParams->nextDraftLens = eagleInputs->nextDraftLens;
@@ -392,7 +392,7 @@ void prepareEagleInput(DecodingInput const& inputs, std::shared_ptr<tl::Decoding
     inputParams->chunkedContextNextTokens = eagleInputs->chunkedContextNextTokens;
     inputParams->seqSlots = eagleInputs->seqSlots;
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -401,7 +401,7 @@ std::shared_ptr<tl::BaseDecodingInputs> prepareInputs(
 {
     auto constexpr ite = 0;
 
-    TLLM_CHECK_WITH_INFO(input.batchSlots != nullptr, "Batch slots are mandatory to call the decoder.");
+    CHECK_WITH_INFO(input.batchSlots != nullptr, "Batch slots are mandatory to call the decoder.");
     std::shared_ptr<tl::DecodingInputs> forwardParams;
     if (decodingMode.isTopKorTopP())
     {
@@ -435,7 +435,7 @@ std::shared_ptr<tl::BaseDecodingInputs> prepareInputs(
     {
         auto& eagleInputs = input.eagleInputs;
 
-        TLLM_CHECK_WITH_INFO(eagleInputs.has_value(), "EagleInputs are not set");
+        CHECK_WITH_INFO(eagleInputs.has_value(), "EagleInputs are not set");
 
         forwardParams = std::make_shared<tl::EagleInputs>(input.endIds, input.batchSlots, input.batchSize,
             eagleInputs->nextDraftTokens, eagleInputs->nextDraftLens, eagleInputs->nextDraftPaths,
@@ -451,14 +451,14 @@ std::shared_ptr<tl::BaseDecodingInputs> prepareInputs(
             std::vector<TensorConstPtr> logitsVec;
             for (auto const& logits : input.logitsVec.value())
             {
-                TLLM_CHECK(logits->getDataType() == TRTDataType<T>::value);
+                CHECK(logits->getDataType() == TRTDataType<T>::value);
                 logitsVec.push_back(logits);
             }
             forwardParams->logitsVec = logitsVec;
         }
         else if (input.logits)
         {
-            TLLM_CHECK(input.logits->getDataType() == TRTDataType<T>::value);
+            CHECK(input.logits->getDataType() == TRTDataType<T>::value);
             forwardParams->logits = input.logits;
         }
     }
@@ -513,14 +513,14 @@ std::shared_ptr<tl::BaseDecodingInputs> prepareInputs(
         prepareEagleInput(input, forwardParams);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 
     return forwardParams;
 }
 
 void prepareBeamSearchOutputs(DecodingOutput& output, std::shared_ptr<tl::BaseDecodingOutputs>& baseOutputs)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto outputParams = std::dynamic_pointer_cast<tl::BeamSearchOutputs>(baseOutputs);
     outputParams->beamHypotheses = std::make_unique<suggestify::kernels::BeamHypotheses>();
@@ -562,18 +562,18 @@ void prepareBeamSearchOutputs(DecodingOutput& output, std::shared_ptr<tl::BaseDe
         outputParams->tgtCacheIndirection = output.cacheIndirection;
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void prepareSpeculativeDecodingOutputs(DecodingOutput& output, std::shared_ptr<tl::BaseDecodingOutputs>& baseOutputs,
     tle::DecodingMode const& decodingMode)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto outputParams = std::dynamic_pointer_cast<tl::SpeculativeDecodingOutputs>(baseOutputs);
 
     auto const& speculativeDecodingOutputs = output.speculativeDecodingOutputs;
-    TLLM_CHECK_WITH_INFO(speculativeDecodingOutputs.has_value(), "speculativeDecodingOutputs is not set");
+    CHECK_WITH_INFO(speculativeDecodingOutputs.has_value(), "speculativeDecodingOutputs is not set");
 
     outputParams->nextDraftTokens = speculativeDecodingOutputs->nextDraftTokens;
     outputParams->numNewTokens = speculativeDecodingOutputs->acceptedTokensLen;
@@ -592,7 +592,7 @@ void prepareSpeculativeDecodingOutputs(DecodingOutput& output, std::shared_ptr<t
     {
         auto outputParams = std::dynamic_pointer_cast<tl::ExplicitDraftTokensOutputs>(baseOutputs);
         auto const& explicitDraftTokensBuffers = output.explicitDraftTokensBuffers;
-        TLLM_CHECK_WITH_INFO(explicitDraftTokensBuffers.has_value(), "explicitDraftTokensBuffers is not set");
+        CHECK_WITH_INFO(explicitDraftTokensBuffers.has_value(), "explicitDraftTokensBuffers is not set");
         outputParams->packedMasks = explicitDraftTokensBuffers->packedMasks;
         outputParams->nextDraftPosIds = explicitDraftTokensBuffers->positionIds;
 
@@ -609,7 +609,7 @@ void prepareSpeculativeDecodingOutputs(DecodingOutput& output, std::shared_ptr<t
     }
     else if (decodingMode.isLookahead())
     {
-        TLLM_CHECK(output.lookaheadOutputs);
+        CHECK(output.lookaheadOutputs);
         auto outputParams = std::dynamic_pointer_cast<tl::LookaheadDecodingOutputs>(baseOutputs);
         outputParams->packedMasks = output.lookaheadOutputs->packedMasks;
         outputParams->positionIds = output.lookaheadOutputs->positionIds;
@@ -620,7 +620,7 @@ void prepareSpeculativeDecodingOutputs(DecodingOutput& output, std::shared_ptr<t
     {
         auto outputParams = std::dynamic_pointer_cast<tl::EagleOutputs>(baseOutputs);
         auto const& eagleBuffers = output.eagleBuffers;
-        TLLM_CHECK_WITH_INFO(eagleBuffers.has_value(), "eagleBuffers is not set");
+        CHECK_WITH_INFO(eagleBuffers.has_value(), "eagleBuffers is not set");
 
         outputParams->temperatures = eagleBuffers->temperatures;
         outputParams->unpackedNextDraftTokens = eagleBuffers->draftTokens;
@@ -640,12 +640,12 @@ void prepareSpeculativeDecodingOutputs(DecodingOutput& output, std::shared_ptr<t
         outputParams->eagleNetGenPastKeyValueLengthsHost = eagleBuffers->eagleNetGenPastKeyValueLengthsHost;
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 std::shared_ptr<tl::BaseDecodingOutputs> prepareOutputs(DecodingOutput& output, tle::DecodingMode const& decodingMode)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     std::shared_ptr<tl::BaseDecodingOutputs> outputParams;
 
     if (decodingMode.isBeamSearch())
@@ -717,7 +717,7 @@ std::shared_ptr<tl::BaseDecodingOutputs> prepareOutputs(DecodingOutput& output, 
         prepareSpeculativeDecodingOutputs(output, outputParams, decodingMode);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     return outputParams;
 }
 
@@ -726,25 +726,25 @@ std::shared_ptr<tl::BaseDecodingOutputs> prepareOutputs(DecodingOutput& output, 
 template <typename T>
 void GptDecoder<T>::forwardAsync(DecodingOutput& output, DecodingInput const& input)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto forwardParams = prepareInputs<T>(input, mMaxBatchSize, mDecodingMode);
     auto outputParams = prepareOutputs(output, mDecodingMode);
 
     mDynamicDecodeLayer->forwardAsync(outputParams, forwardParams, mDecodingLayerWorkspace);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void GptDecoder<T>::forwardSync(DecodingOutput& output, DecodingInput const& input)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto forwardParams = prepareInputs<T>(input, mMaxBatchSize, mDecodingMode);
     auto outputParams = prepareOutputs(output, mDecodingMode);
 
     mDynamicDecodeLayer->forwardSync(outputParams, forwardParams, mDecodingLayerWorkspace);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 namespace suggestify::runtime

@@ -75,7 +75,7 @@ public:
 
     runtime::ITensor::DimType64 offset(runtime::ITensor::Shape const& dims)
     {
-        TLLM_CHECK(mStrides.nbDims == dims.nbDims);
+        CHECK(mStrides.nbDims == dims.nbDims);
         runtime::ITensor::DimType64 result = 0;
         for (runtime::ITensor::DimType64 di = 0; di < mStrides.nbDims; di++)
         {
@@ -323,17 +323,17 @@ public:
 
     void print_tokens(void)
     {
-        TLLM_LOG_DEBUG(tokens());
+        LOG_DEBUG(tokens());
     }
 
     void print_values(void)
     {
-        TLLM_LOG_DEBUG(values());
+        LOG_DEBUG(values());
     }
 
     void print_shape(void)
     {
-        TLLM_LOG_DEBUG(shape());
+        LOG_DEBUG(shape());
     }
 
     template <typename T>

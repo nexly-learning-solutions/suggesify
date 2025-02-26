@@ -30,8 +30,8 @@ TransformerBuffers::TransformerBuffers()
 TransformerBuffers::TransformerBuffers(
     TllmRuntime const& runtime, runtime::ModelConfig const& modelConfig, runtime::WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
-    TLLM_CHECK(modelConfig.isTransformerBased());
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    CHECK(modelConfig.isTransformerBased());
     auto const& manager = runtime.getBufferManager();
     auto const& engine = runtime.getEngine();
 
@@ -80,13 +80,13 @@ TransformerBuffers::TransformerBuffers(
         presentKeysValsAlt = utils::createBufferVector(runtime, extraKeyValBufferNum, MemoryType::kGPU, kvDtype);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void TransformerBuffers::reshape(
     GenerationConfig const& generationConfig, ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto const batchSize = generationConfig.batchSize;
     auto const maxInputLength = generationConfig.maxInputLength;
     auto const maxAttentionWindow = generationConfig.maxAttentionWindow;
@@ -107,7 +107,7 @@ void TransformerBuffers::reshape(
         }
         else
         {
-            TLLM_LOG_DEBUG("kvCacheBlockOffsets not allocated yet");
+            LOG_DEBUG("kvCacheBlockOffsets not allocated yet");
         }
     }
     else
@@ -130,7 +130,7 @@ void TransformerBuffers::reshape(
         utils::reshapeBufferVector(presentKeysVals, kvCacheShape);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void TransformerBuffers::reshapeKvTensors(
@@ -160,7 +160,7 @@ void TransformerBuffers::setKvPoolMapping(BaseKVCacheManager const* kvCacheManag
 TransformerBuffers TransformerBuffers::sliceTo(
     GenerationConfig const& generationConfig, ModelConfig const& modelConfig, SizeType32 offset, SizeType32 batchSize)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     TransformerBuffers buffers;
     auto const generationBatchSize = generationConfig.batchSize;
     if (modelConfig.isPagedKVCache())
@@ -168,7 +168,7 @@ TransformerBuffers TransformerBuffers::sliceTo(
 
         auto const& realCacheBlockOffsetsShape = kvCacheBlockOffsetsHost->getShape();
         auto const numPools = realCacheBlockOffsetsShape.d[0];
-        TLLM_CHECK_WITH_INFO(numPools == 1,
+        CHECK_WITH_INFO(numPools == 1,
             "Deprecated transformerBuffers API does not support multiple cache pools, use the newer API instead");
         auto const maxBlocksPerSeq = realCacheBlockOffsetsShape.d[3];
 
@@ -202,14 +202,14 @@ TransformerBuffers TransformerBuffers::sliceTo(
     {
         buffers.presentKeysValsAlt = utils::sliceBufferVector(presentKeysValsAlt, offset, batchSize);
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     return buffers;
 }
 
 static std::vector<SizeType32> getPositionIdsContextPhaseGlm(SizeType32 const& batchSize,
     SizeType32 const& maxInputLength, SizeType32 const* pInputLengths, bool useGptAttentionPlugin, bool usePackedInput)
 {
-    TLLM_CHECK(pInputLengths != nullptr);
+    CHECK(pInputLengths != nullptr);
 
     std::vector<SizeType32> positionIdsVec(1, 0);
     if (useGptAttentionPlugin)
@@ -251,7 +251,7 @@ static std::vector<SizeType32> getPositionIdsContextPhaseGlm(SizeType32 const& b
     }
     else
     {
-        TLLM_THROW("Unsupported model without GPT Attention Plugin");
+        THROW("Unsupported model without GPT Attention Plugin");
     }
 
     return positionIdsVec;
@@ -261,7 +261,7 @@ void TransformerBuffers::prepareContextStep(RuntimeBuffers* runtimeBuffers, Tens
     TokenIdType const padId, BufferManager& manager, BaseKVCacheManager const* kvCacheManager,
     SizeType32 firstBatchSlotIdx, ModelConfig const& modelConfig, WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto& generationConfig = runtimeBuffers->generationConfig;
     auto& contextLengthsHost = runtimeBuffers->contextLengthsHost;
     auto& requestTypes = runtimeBuffers->requestTypes;
@@ -279,10 +279,10 @@ void TransformerBuffers::prepareContextStep(RuntimeBuffers* runtimeBuffers, Tens
     if (modelConfig.useGptAttentionPlugin())
     {
         auto* pastKeyValueLengthsPtr = bufferCast<SizeType32>(*pastKeyValueLengths);
-        TLLM_CHECK(pastKeyValueLengths->getSize() == static_cast<std::size_t>(batchSize));
+        CHECK(pastKeyValueLengths->getSize() == static_cast<std::size_t>(batchSize));
 
         auto* RequestTypesPtr = bufferCast<int32_t>(*requestTypes);
-        TLLM_CHECK(requestTypes->getSize() == static_cast<std::size_t>(batchSize));
+        CHECK(requestTypes->getSize() == static_cast<std::size_t>(batchSize));
         std::fill_n(RequestTypesPtr, batchSize, 0);
 
         auto* maxAttentionWindowsPtr = bufferCast<SizeType32>(*maxAttentionWindows);
@@ -330,7 +330,7 @@ void TransformerBuffers::prepareContextStep(RuntimeBuffers* runtimeBuffers, Tens
         }
         else
         {
-            TLLM_THROW("Unsupported model variant");
+            THROW("Unsupported model variant");
         }
 
         for (SizeType32 i = 0; i < batchSize; ++i)
@@ -394,13 +394,13 @@ void TransformerBuffers::prepareContextStep(RuntimeBuffers* runtimeBuffers, Tens
         manager.copy(*kvCacheBlockOffsetsHost, *kvCacheBlockOffsetsDevice);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 static std::vector<SizeType32> getPositionIdsGenerationPhaseGlm(SizeType32 const& batchSize, SizeType32 const& beamSize,
     SizeType32 const& step, SizeType32 const* pInputLengths, bool useGptAttentionPlugin)
 {
-    TLLM_CHECK(pInputLengths != nullptr);
+    CHECK(pInputLengths != nullptr);
 
     auto const size = 2 * batchSize * beamSize;
     std::vector<SizeType32> positionIdsVec(size, 0);
@@ -420,7 +420,7 @@ static std::vector<SizeType32> getPositionIdsGenerationPhaseGlm(SizeType32 const
     }
     else
     {
-        TLLM_THROW("Unsupported model without GPT Attention Plugin");
+        THROW("Unsupported model without GPT Attention Plugin");
     }
 
     return positionIdsVec;
@@ -429,7 +429,7 @@ static std::vector<SizeType32> getPositionIdsGenerationPhaseGlm(SizeType32 const
 void TransformerBuffers::copyAttentionMasks(
     RuntimeBuffers* runtimeBuffers, std::vector<RuntimeBuffers> const& contextBatches, BufferManager& manager)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto& generationConfig = runtimeBuffers->generationConfig;
     auto const batchSize = generationConfig.batchSize;
     auto const maxInputLength = generationConfig.maxInputLength;
@@ -446,19 +446,19 @@ void TransformerBuffers::copyAttentionMasks(
         manager.copy(*buffers.transformerBuffers->attentionMask, *attentionMaskSlice);
         offset += contextBatchSize;
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void TransformerBuffers::tile(RuntimeBuffers* runtimeBuffers, BufferManager& manager, ModelConfig const& modelConfig,
     WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto& generationConfig = runtimeBuffers->generationConfig;
     auto& logits = runtimeBuffers->logits;
     auto& contextLengthsDevice = runtimeBuffers->contextLengthsDevice;
     auto& contextLengthsHost = runtimeBuffers->contextLengthsHost;
     auto const beamWidth = generationConfig.beamWidth;
-    TLLM_CHECK_WITH_INFO(beamWidth > 1, "Tiling is only necessary for beam search.");
+    CHECK_WITH_INFO(beamWidth > 1, "Tiling is only necessary for beam search.");
 
     if (worldConfig.isLastPipelineParallelRank() && !modelConfig.computeContextLogits())
     {
@@ -491,14 +491,14 @@ void TransformerBuffers::tile(RuntimeBuffers* runtimeBuffers, BufferManager& man
             utils::tileBufferReplace(buffer, beamWidth, manager);
         }
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void TransformerBuffers::postContextStep(RuntimeBuffers* runtimeBuffers,
     std::vector<RuntimeBuffers> const& contextBuffers, BufferManager& manager, ModelConfig const& modelConfig,
     WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto& generationConfig = runtimeBuffers->generationConfig;
     auto& requestTypes = runtimeBuffers->requestTypes;
     auto const batchSize = generationConfig.batchSize;
@@ -535,14 +535,14 @@ void TransformerBuffers::postContextStep(RuntimeBuffers* runtimeBuffers,
         kvCacheBlockOffsetsDevice->reshape(cacheBlockOffsetsShape);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void TransformerBuffers::prepareNextStep(RuntimeBuffers* runtimeBuffers, SizeType32 const step, BufferManager& manager,
     BaseKVCacheManager* kvCacheManager, SizeType32 firstBatchSlotIdx, ModelConfig const& modelConfig,
     WorldConfig const& worldConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto& contextLengthsHost = runtimeBuffers->contextLengthsHost;
     auto& contextLengthsDevice = runtimeBuffers->contextLengthsDevice;
     auto& hiddenStates = runtimeBuffers->hiddenStates;
@@ -565,7 +565,7 @@ void TransformerBuffers::prepareNextStep(RuntimeBuffers* runtimeBuffers, SizeTyp
         auto* const pastKeyValueLengthsPtr = bufferCast<SizeType32>(*pastKeyValueLengths);
         auto const tensorBatchSize = static_cast<SizeType32>(pastKeyValueLengths->getSize());
         SizeType32 const srcStride{modelConfig.useGptAttentionPlugin() ? 1 : beamWidth};
-        TLLM_CHECK(static_cast<std::size_t>(tensorBatchSize * srcStride) == contextLengthsDevice->getSize());
+        CHECK(static_cast<std::size_t>(tensorBatchSize * srcStride) == contextLengthsDevice->getSize());
         for (SizeType32 i = 0; i < tensorBatchSize; ++i)
         {
             pastKeyValueLengthsPtr[i] = contextLengthsHostPtr[i * srcStride] + step;
@@ -597,7 +597,7 @@ void TransformerBuffers::prepareNextStep(RuntimeBuffers* runtimeBuffers, SizeTyp
         }
         else
         {
-            TLLM_THROW("Unsupported model variant");
+            THROW("Unsupported model variant");
         }
     }
     else
@@ -655,14 +655,14 @@ void TransformerBuffers::prepareNextStep(RuntimeBuffers* runtimeBuffers, SizeTyp
         kvCacheManager->getBlockOffsetsOfBatch(*kvCacheBlockOffsetsHost, firstBatchSlotIdx, batchSize, beamWidth);
         manager.copy(*kvCacheBlockOffsetsHost, *kvCacheBlockOffsetsDevice);
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void TransformerBuffers::getRuntimeBuffers(RuntimeBuffers const* runtimeBuffers, TensorMap& inputBuffers,
     TensorMap& outputBuffers, SizeType32 const step, TensorPtr const& inputIds, ModelConfig const& modelConfig,
     WorldConfig const& worldConfig) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     inputBuffers.clear();
     outputBuffers.clear();
 
@@ -771,5 +771,5 @@ void TransformerBuffers::getRuntimeBuffers(RuntimeBuffers const* runtimeBuffers,
         }
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }

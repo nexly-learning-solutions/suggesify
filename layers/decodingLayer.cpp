@@ -23,7 +23,7 @@ DecodingLayer<T>::DecodingLayer(executor::DecodingMode const& mode, DecoderDomai
     : BaseLayer(decoderDomain, bufferManager)
     , mDecodingMode(mode)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     if (mDecodingMode.isTopKorTopP())
     {
@@ -55,12 +55,12 @@ DecodingLayer<T>::DecodingLayer(executor::DecodingMode const& mode, DecoderDomai
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false,
+        CHECK_WITH_INFO(false,
             "Decoding mode is none of the supported {TopK, TopP, TopKTopP, BeamSearch, Medusa, Lookahead, "
             "ExplicitDraftTokens, ExternalDraftTokens, Eagle}");
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -68,58 +68,58 @@ void DecodingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, TensorC
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<DynamicDecodeSetupParams>(baseSetupParams);
 
-    TLLM_CHECK_WITH_INFO(setupParams->decodingParams, "decodingParams for setup is not set");
+    CHECK_WITH_INFO(setupParams->decodingParams, "decodingParams for setup is not set");
 
     if (mDecodingMode.isTopKorTopP())
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             beamWidth == 1, "Decoding mode is TopK and/or TopP, but beamWidth != 1 (%d != 1)", beamWidth);
         mDecodingLayer->setup(batchSize, beamWidth, batchSlots, setupParams->decodingParams, workspace);
     }
     else if (mDecodingMode.isBeamSearch())
     {
-        TLLM_CHECK_WITH_INFO(beamWidth > 1, "Decoding mode is beam search, but beamWidth <= 1 (%d <= 1)", beamWidth);
+        CHECK_WITH_INFO(beamWidth > 1, "Decoding mode is beam search, but beamWidth <= 1 (%d <= 1)", beamWidth);
         mDecodingLayer->setup(batchSize, beamWidth, batchSlots, setupParams->decodingParams, workspace);
     }
     else if (mDecodingMode.isMedusa())
     {
-        TLLM_CHECK_WITH_INFO(beamWidth == 1, "Decoding mode is Medusa, but beamWidth != 1 (%d != 1)", beamWidth);
+        CHECK_WITH_INFO(beamWidth == 1, "Decoding mode is Medusa, but beamWidth != 1 (%d != 1)", beamWidth);
         mDecodingLayer->setup(batchSize, beamWidth, batchSlots, setupParams->decodingParams, workspace);
     }
     else if (mDecodingMode.isLookahead())
     {
-        TLLM_CHECK_WITH_INFO(beamWidth == 1, "Decoding mode is Lookahead, but beamWidth != 1 (%d != 1)", beamWidth);
+        CHECK_WITH_INFO(beamWidth == 1, "Decoding mode is Lookahead, but beamWidth != 1 (%d != 1)", beamWidth);
         mDecodingLayer->setup(batchSize, beamWidth, batchSlots, setupParams->decodingParams, workspace);
     }
     else if (mDecodingMode.isExplicitDraftTokens())
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             beamWidth == 1, "Decoding mode is ExplicitDraftTokens, but beamWidth != 1 (%d != 1)", beamWidth);
         mDecodingLayer->setup(batchSize, beamWidth, batchSlots, setupParams->decodingParams, workspace);
     }
     else if (mDecodingMode.isExternalDraftTokens())
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             beamWidth == 1, "Decoding mode is external draft tokens, but beamWidth != 1 (%d != 1)", beamWidth);
         mDecodingLayer->setup(batchSize, beamWidth, batchSlots, setupParams->decodingParams, workspace);
     }
     else if (mDecodingMode.isEagle())
     {
-        TLLM_CHECK_WITH_INFO(beamWidth == 1, "Decoding mode is Eagle, but beamWidth != 1 (%d != 1)", beamWidth);
+        CHECK_WITH_INFO(beamWidth == 1, "Decoding mode is Eagle, but beamWidth != 1 (%d != 1)", beamWidth);
         mDecodingLayer->setup(batchSize, beamWidth, batchSlots, setupParams->decodingParams, workspace);
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false,
+        CHECK_WITH_INFO(false,
             "Decoding mode is none of the supported {TopK, TopP, TopKTopP, BeamSearch, Medusa, Lookahead, "
             "ExplicitDraftTokens, ExternalDraftTokens, Eagle}");
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -127,10 +127,10 @@ void DecodingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> const& 
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto [outputParams, inputParams] = prepareParams(baseOutputs, baseInputs);
     mDecodingLayer->forwardAsync(outputParams, inputParams, workspace);
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -138,10 +138,10 @@ void DecodingLayer<T>::forwardSync(std::shared_ptr<BaseDecodingOutputs> const& b
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto [outputParams, inputParams] = prepareParams(baseOutputs, baseInputs);
     mDecodingLayer->forwardSync(outputParams, inputParams, workspace);
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -155,7 +155,7 @@ std::tuple<std::shared_ptr<BaseDecodingOutputs>, std::shared_ptr<BaseDecodingInp
     std::shared_ptr<BaseDecodingOutputs> const& baseOutputs,
     std::shared_ptr<BaseDecodingInputs> const& baseInputs) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto params = std::dynamic_pointer_cast<DecodingInputs>(baseInputs);
 
     auto const localDecoderDomain = getLocalDecoderDomain(params, mDecoderDomain);
@@ -176,7 +176,7 @@ std::tuple<std::shared_ptr<BaseDecodingOutputs>, std::shared_ptr<BaseDecodingInp
         auto const step = params->step;
         auto const localBatchSize = static_cast<int64_t>(params->localBatchSize);
 
-        TLLM_CHECK_WITH_INFO(localDecoderDomain.getBeamWidth() == 1,
+        CHECK_WITH_INFO(localDecoderDomain.getBeamWidth() == 1,
             "Decoding mode is TopK and/or TopP, but beamWidth != 1 (%d != 1)", localDecoderDomain.getBeamWidth());
 
         TensorConstPtr logitsSlice = ITensor::slice(*params->logits, 0, localBatchSize);
@@ -197,7 +197,7 @@ std::tuple<std::shared_ptr<BaseDecodingOutputs>, std::shared_ptr<BaseDecodingInp
     }
     else if (mDecodingMode.isMedusa())
     {
-        TLLM_CHECK_WITH_INFO(localDecoderDomain.getBeamWidth() == 1,
+        CHECK_WITH_INFO(localDecoderDomain.getBeamWidth() == 1,
             "Decoding mode is Medusa, but beamWidth != 1 (%d != 1)", localDecoderDomain.getBeamWidth());
 
         preparedInputs = baseInputs;
@@ -220,7 +220,7 @@ std::tuple<std::shared_ptr<BaseDecodingOutputs>, std::shared_ptr<BaseDecodingInp
         auto const step = externalDraftTokenParams->step;
         auto const localBatchSize = static_cast<int64_t>(externalDraftTokenParams->localBatchSize);
 
-        TLLM_CHECK_WITH_INFO(localDecoderDomain.getBeamWidth() == 1,
+        CHECK_WITH_INFO(localDecoderDomain.getBeamWidth() == 1,
             "Decoding mode is TopK and/or TopP, but beamWidth != 1 (%d != 1)", localDecoderDomain.getBeamWidth());
 
         TensorConstPtr logitsSlice = ITensor::slice(*externalDraftTokenParams->logits, 0, localBatchSize);
@@ -258,11 +258,11 @@ std::tuple<std::shared_ptr<BaseDecodingOutputs>, std::shared_ptr<BaseDecodingInp
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false,
+        CHECK_WITH_INFO(false,
             "Decoding mode is none of the supported {TopK, TopP, TopKTopP, BeamSearch, Medusa, Lookahead, "
             "ExplicitDraftTokens, ExternalDraftTokens, Eagle}");
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     return {preparedOutputs, preparedInputs};
 }
 

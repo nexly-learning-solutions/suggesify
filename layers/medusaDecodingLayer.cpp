@@ -22,17 +22,17 @@ MedusaDecodingLayer<T>::MedusaDecodingLayer(
     DecoderDomain const& decoderDomain, std::shared_ptr<BufferManager> bufferManager)
     : BaseLayer(decoderDomain, bufferManager)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     allocateBuffer();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void MedusaDecodingLayer<T>::allocateBuffer()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const maxDraftPathLen = mDecoderDomain.getSpeculativeDecodingModule()->getMaxDraftPathLen();
     {
@@ -80,7 +80,7 @@ void MedusaDecodingLayer<T>::allocateBuffer()
         ITensor::makeShape({static_cast<SizeType32>(mDecoderDomain.getBatchSize() * maxDraftPathLen)}),
         TRTDataType<T*>::value);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -88,7 +88,7 @@ void MedusaDecodingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, T
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<MedusaSetupParams>(baseSetupParams);
 
@@ -125,7 +125,7 @@ void MedusaDecodingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, T
     auto prepareRuntimeTopK = [this, workspace](std::vector<SizeType32> const& runtimeTopK, SizeType32 batchSize,
                                   BufferConstPtr const& batchSlots, BufferPtr const& runtimeTopKDevice)
     {
-        TLLM_CHECK_WITH_INFO(runtimeTopK.size() == 1 || runtimeTopK.size() == batchSize,
+        CHECK_WITH_INFO(runtimeTopK.size() == 1 || runtimeTopK.size() == batchSize,
             fmtstr("runtimeTopK.size() (%lu) == batchSize (%d) is not satisfied!", runtimeTopK.size(), batchSize));
         SizeType32* topKSetupPtr = nullptr;
         if (runtimeTopK.size() > 1)
@@ -192,7 +192,7 @@ void MedusaDecodingLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, T
         mRuntimeMaxTopKPerRequestPerMedusaHead = std::max(mRuntimeMaxTopKPerRequestPerMedusaHead, curMaxTopK);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -200,7 +200,7 @@ void MedusaDecodingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> c
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(MedusaDecodingLayer_forwardAsync);
 
     auto inputs = std::dynamic_pointer_cast<MedusaDecodingInputs>(baseInputs);
@@ -216,7 +216,7 @@ void MedusaDecodingLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> c
 
     packAcceptedPaths(*outputs, *inputs, workspace);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -229,7 +229,7 @@ template <typename T>
 void MedusaDecodingLayer<T>::samplePrimeHeadTokens(SpeculativeDecodingOutputs const& outputs,
     MedusaDecodingInputs const& inputs, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputs.logits.value()->getDimension<0>();
 
@@ -238,8 +238,8 @@ void MedusaDecodingLayer<T>::samplePrimeHeadTokens(SpeculativeDecodingOutputs co
     auto* sequenceLengths = bufferCastOrNull<SizeType32>(outputs.sequenceLength);
     auto* tokensPerStepDevice = bufferCast<SizeType32>(*inputs.curTokensPerStep.value());
 
-    TLLM_CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(sequenceLengths != nullptr, "Sequence lengths must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(sequenceLengths != nullptr, "Sequence lengths must be provided for MedusaDecoding");
 
     TopKSamplingKernelParams<T> params;
     params.logProbs = logits;
@@ -258,14 +258,14 @@ void MedusaDecodingLayer<T>::samplePrimeHeadTokens(SpeculativeDecodingOutputs co
 
     invokeBatchTopKSampling(params, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void MedusaDecodingLayer<T>::acceptDraftTokens(SpeculativeDecodingOutputs const& outputs,
     MedusaDecodingInputs const& inputs, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputs.logits.value()->getDimension<0>();
     auto const maxSeqLen = outputs.outputIds->getDimension<-1>();
@@ -294,13 +294,13 @@ void MedusaDecodingLayer<T>::acceptDraftTokens(SpeculativeDecodingOutputs const&
 
     auto* draftIds = bufferCast<TokenIdType>(*outputs.nextDraftTokens);
 
-    TLLM_CHECK_WITH_INFO(draftIds != nullptr, "Draft ids must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(sequenceLengths != nullptr, "Sequence lengths must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(numNewTokens != nullptr, "Accepted lengths must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(draftIds != nullptr, "Draft ids must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(sequenceLengths != nullptr, "Sequence lengths must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(numNewTokens != nullptr, "Accepted lengths must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(
         curTokensPerStepDevice != nullptr, "Current tokens per step must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         targetTokensPerStepDevice != nullptr, "Target tokens per step must be provided for MedusaDecoding");
 
     auto* targetTokensDevicePtr = bufferCast<SizeType32>(*mTargetTokensDevice);
@@ -338,21 +338,21 @@ void MedusaDecodingLayer<T>::acceptDraftTokens(SpeculativeDecodingOutputs const&
 
     acceptDraftTokensByIdsWithPaths(params);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void MedusaDecodingLayer<T>::sampleNewDraftTokens(SpeculativeDecodingOutputs const& outputs,
     MedusaDecodingInputs const& inputs, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputs.logits.value()->getDimension<0>();
     auto const* batchSlots = bufferCast<SizeType32>(*inputs.batchSlots);
     auto* sequenceLengths = bufferCastOrNull<SizeType32>(outputs.sequenceLength);
 
-    TLLM_CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(sequenceLengths != nullptr, "Sequence lengths must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(sequenceLengths != nullptr, "Sequence lengths must be provided for MedusaDecoding");
 
     auto const maxDraftPathLen = mDecoderDomain.getSpeculativeDecodingModule()->getMaxDraftPathLen();
     auto const batchSizeHeadNums = batchSize * maxDraftPathLen;
@@ -396,39 +396,39 @@ void MedusaDecodingLayer<T>::sampleNewDraftTokens(SpeculativeDecodingOutputs con
 
     invokeBatchTopKSampling(params, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void MedusaDecodingLayer<T>::scatterNewDraftTokens(
     SpeculativeDecodingOutputs const& outputs, MedusaDecodingInputs const& inputs)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputs.logits.value()->getDimension<0>();
     auto const* batchSlots = bufferCast<SizeType32>(*inputs.batchSlots);
 
-    TLLM_CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
 
     auto* draftIds = bufferCastOrNull<TokenIdType>(outputs.nextDraftTokens);
     auto* tokensPerStepDevice = bufferCastOrNull<SizeType32>(inputs.curTokensPerStep);
     auto const* treeIds = bufferCastOrNull<SizeType32>(inputs.treeIds);
-    TLLM_CHECK_WITH_INFO(draftIds != nullptr, "Draft ids must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(tokensPerStepDevice != nullptr, "Tokens per step must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(treeIds != nullptr, "Tree ids must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(draftIds != nullptr, "Draft ids must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(tokensPerStepDevice != nullptr, "Tokens per step must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(treeIds != nullptr, "Tree ids must be provided for MedusaDecoding");
 
     auto* newDraftTokensDevice = bufferCastOrNull<TokenIdType>(mNewDraftTokensDevice);
     scatterMedusaDraftTokens(draftIds, newDraftTokensDevice, treeIds, tokensPerStepDevice, batchSlots,
         mDecoderDomain.getMaxDecodingTokens(), batchSize, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void MedusaDecodingLayer<T>::packAcceptedPaths(SpeculativeDecodingOutputs const& outputs,
     MedusaDecodingInputs const& inputs, std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputs.logits.value()->getDimension<0>();
     auto const* paths = bufferCast<SizeType32>(*inputs.paths);
@@ -438,15 +438,15 @@ void MedusaDecodingLayer<T>::packAcceptedPaths(SpeculativeDecodingOutputs const&
     auto* pathsOffsets = bufferCast<SizeType32>(*outputs.pathsOffsets);
     auto* bestPathIdsDevicePtr = bufferCastOrNull<SizeType32>(mBestPathIdsDevice);
 
-    TLLM_CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(numNewTokens != nullptr, "Accepted lengths must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(numNewTokensCumSum != nullptr, "numNewTokensCumSum must be provided for MedusaDecoding");
-    TLLM_CHECK_WITH_INFO(pathsOffsets != nullptr, "pathsOffsets must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(batchSlots != nullptr, "Batch slots must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(numNewTokens != nullptr, "Accepted lengths must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(numNewTokensCumSum != nullptr, "numNewTokensCumSum must be provided for MedusaDecoding");
+    CHECK_WITH_INFO(pathsOffsets != nullptr, "pathsOffsets must be provided for MedusaDecoding");
     invokePackAcceptedPaths(numNewTokensCumSum, pathsOffsets, numNewTokens, bestPathIdsDevicePtr, paths, batchSlots,
         batchSize, batchSize, mDecoderDomain.getMaxDecodingTokens(),
         mDecoderDomain.getSpeculativeDecodingModule()->getMaxPathLen(), false, getStream());
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template class MedusaDecodingLayer<float>;

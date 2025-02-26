@@ -20,7 +20,7 @@ StatefulGptDecoder::StatefulGptDecoder(std::size_t vocabSize, std::size_t vocabS
     , mStream{std::move(stream)}
     , mBufferManager{mStream}
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto constexpr nvTokenIdType = TRTDataType<TokenIdType>::value;
     auto constexpr nvSizeType = TRTDataType<SizeType32>::value;
     auto constexpr nvFloatType = TRTDataType<float>::value;
@@ -58,29 +58,29 @@ StatefulGptDecoder::StatefulGptDecoder(std::size_t vocabSize, std::size_t vocabS
 
     mFinishedSum = mBufferManager.pinnedPool(ITensor::makeShape({1}), nvSizeType);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void StatefulGptDecoder::setup(executor::DecodingMode const& mode, SizeType32 maxBatchSize, SizeType32 maxBeamWidth,
     SizeType32 maxAttentionWindow, SizeType32 sinkTokenLength, SizeType32 maxSequenceLength,
     SizeType32 maxTokensPerStep, nvinfer1::DataType dtype, ModelConfig const& modelConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
-    TLLM_CHECK(maxTokensPerStep == 1);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    CHECK(maxTokensPerStep == 1);
     mDecoder = IGptDecoder::create(
         mode, dtype, maxBatchSize, maxBeamWidth, mVocabSize, mVocabSizePadded, maxSequenceLength, mStream);
 
     reshapeBuffers(maxBatchSize, maxBeamWidth, maxAttentionWindow, sinkTokenLength, maxSequenceLength);
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void StatefulGptDecoder::reshapeBuffers(SizeType32 batchSize, SizeType32 beamWidth, SizeType32 maxAttentionWindow,
     SizeType32 sinkTokenLength, SizeType32 maxSequenceLength)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
-    TLLM_CHECK(batchSize > 0);
-    TLLM_CHECK(beamWidth > 0);
-    TLLM_CHECK(maxSequenceLength > 0);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    CHECK(batchSize > 0);
+    CHECK(beamWidth > 0);
+    CHECK(maxSequenceLength > 0);
 
     mMaxSequenceLength = maxSequenceLength;
     mMaxAttentionWindow = maxAttentionWindow;
@@ -138,13 +138,13 @@ void StatefulGptDecoder::reshapeBuffers(SizeType32 batchSize, SizeType32 beamWid
     mBufferManager.setZero(*dOutput.logProbsTiled);
 
     mNbSteps = 0;
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void StatefulGptDecoder::newBatch(GenerationInput const& inputs, GenerationOutput const& outputs,
     SamplingConfig const& samplingConfig, ModelConfig const&)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto& manager = mBufferManager;
     auto& stream = mStream;
 
@@ -158,9 +158,9 @@ void StatefulGptDecoder::newBatch(GenerationInput const& inputs, GenerationOutpu
 
     auto const& outputIdsShape = mDecodingOutput->ids->getShape();
     auto const maxBatchSize = outputIdsShape.d[0];
-    TLLM_CHECK(batchSize == maxBatchSize);
+    CHECK(batchSize == maxBatchSize);
     auto const maxBeamWidth = outputIdsShape.d[1];
-    TLLM_CHECK(beamWidth == maxBeamWidth);
+    CHECK(beamWidth == maxBeamWidth);
 
     auto const& inputIds = inputs.ids;
     auto const inputLengthsHost = manager.copyFrom(*inputLengths, MemoryType::kCPU);
@@ -175,7 +175,7 @@ void StatefulGptDecoder::newBatch(GenerationInput const& inputs, GenerationOutpu
         kernels::invokeInclusiveSum(*ITensor::slice(inputOffsets, 1), *inputLengths, manager, *stream);
     }
 
-    TLLM_CHECK(inputIds->getDataType() == TRTDataType<TokenIdType>::value);
+    CHECK(inputIds->getDataType() == TRTDataType<TokenIdType>::value);
     auto const endId = inputs.endId;
     auto const padId = inputs.padId;
 
@@ -235,7 +235,7 @@ void StatefulGptDecoder::newBatch(GenerationInput const& inputs, GenerationOutpu
     if (inputs.maxNewTokens)
     {
         auto const maxNewTokens = inputs.maxNewTokens.value();
-        TLLM_CHECK_WITH_INFO(maxInputLength + maxNewTokens <= mMaxSequenceLength,
+        CHECK_WITH_INFO(maxInputLength + maxNewTokens <= mMaxSequenceLength,
             tc::fmtstr("Input length (%d) + max new tokens (%d) must be less than max sequence length (%d).",
                 maxInputLength, maxNewTokens, mMaxSequenceLength));
         manager.copy(*inputLengths, const_cast<ITensor&>(*dInput.sequenceLimitLength));
@@ -284,28 +284,28 @@ void StatefulGptDecoder::newBatch(GenerationInput const& inputs, GenerationOutpu
         *dOutput.ids, *inputIds, *inputLengths, *inputOffsets, padId, endId, maxInputLength, inputs.packed, *stream);
 
     mNbSteps = 0;
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void StatefulGptDecoder::forwardAsync(decoder::Output& output, decoder::Input const& input)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto& logits = input.logits;
     auto const& logitsShape = logits->getShape();
 
     auto const& outputIdsShape = mDecodingOutput->ids->getShape();
     auto const batchSize = outputIdsShape.d[0];
-    TLLM_CHECK(logitsShape.d[0] == batchSize);
+    CHECK(logitsShape.d[0] == batchSize);
     auto const maxBeamWidth = outputIdsShape.d[1];
-    TLLM_CHECK(logitsShape.d[1] == maxBeamWidth);
-    TLLM_CHECK(static_cast<std::size_t>(logitsShape.d[2]) == mVocabSizePadded);
+    CHECK(logitsShape.d[1] == maxBeamWidth);
+    CHECK(static_cast<std::size_t>(logitsShape.d[2]) == mVocabSizePadded);
 
     auto& srcCacheIndirection = input.cacheIndirection;
     auto& tgtCacheIndirection = output.cacheIndirection;
-    TLLM_CHECK_WITH_INFO((srcCacheIndirection && tgtCacheIndirection) || (!srcCacheIndirection && !tgtCacheIndirection),
+    CHECK_WITH_INFO((srcCacheIndirection && tgtCacheIndirection) || (!srcCacheIndirection && !tgtCacheIndirection),
         "Specify both srcCacheIndirection and tgtCacheIndirection or neither.");
-    TLLM_CHECK(!srcCacheIndirection || srcCacheIndirection->getDataType() == TRTDataType<SizeType32>::value);
-    TLLM_CHECK(!tgtCacheIndirection || tgtCacheIndirection->getDataType() == TRTDataType<SizeType32>::value);
+    CHECK(!srcCacheIndirection || srcCacheIndirection->getDataType() == TRTDataType<SizeType32>::value);
+    CHECK(!tgtCacheIndirection || tgtCacheIndirection->getDataType() == TRTDataType<SizeType32>::value);
 
     auto& dInput = *mDecodingInput;
     auto& dOutput = *mDecodingOutput;
@@ -323,22 +323,22 @@ void StatefulGptDecoder::forwardAsync(decoder::Output& output, decoder::Input co
 
     dInput.step += 1;
     mNbSteps += 1;
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void StatefulGptDecoder::forwardSync()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     mDecodedEvent.synchronize();
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void StatefulGptDecoder::finalize(SamplingConfig const& samplingConfig) const
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto& outputIds = mDecodingOutput->ids;
     kernels::gatherTree(*mDecodingOutput, *mDecodingInput, mBufferManager, samplingConfig);
     mBufferManager.copy(*(mDecodingOutput->gatheredIds), *outputIds);
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     return;
 }

@@ -25,12 +25,12 @@ public:
 
     void* data() override
     {
-        return TLLM_LIKELY(getSize() > 0) ? mTensor.data_ptr() : nullptr;
+        return LIKELY(getSize() > 0) ? mTensor.data_ptr() : nullptr;
     }
 
     [[nodiscard]] void const* data() const override
     {
-        return TLLM_LIKELY(getSize() > 0) ? mTensor.data_ptr() : nullptr;
+        return LIKELY(getSize() > 0) ? mTensor.data_ptr() : nullptr;
     }
 
     [[nodiscard]] size_t getSize() const override
@@ -71,7 +71,7 @@ public:
         }
         catch (c10::Error const& e)
         {
-            TLLM_THROW("%s", e.what_without_backtrace());
+            THROW("%s", e.what_without_backtrace());
         }
         mDims = dims;
         if (auto const newSize = volumeNonNegative(dims); mCapacity < newSize)
@@ -86,7 +86,7 @@ private:
         , mDims{TorchUtils::shape(mTensor.sizes())}
         , mCapacity{static_cast<std::size_t>(mTensor.numel())}
     {
-        TLLM_CHECK(mTensor.is_contiguous());
+        CHECK(mTensor.is_contiguous());
     };
 
     at::Tensor mTensor;

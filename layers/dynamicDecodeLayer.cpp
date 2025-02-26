@@ -34,17 +34,17 @@ DynamicDecodeLayer<T>::DynamicDecodeLayer(executor::DecodingMode const& mode, De
     : BaseLayer(decoderDomain, bufferManager)
     , mDecodingMode(mode)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     initialize();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void DynamicDecodeLayer<T>::initialize()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     mOutputIdsPtrHost = mBufferManager->pinnedPool(ITensor::makeShape({}), TRTDataType<TokenIdType*>::value);
     mParentIdsPtrHost = mBufferManager->pinnedPool(ITensor::makeShape({}), TRTDataType<TokenIdType*>::value);
@@ -65,28 +65,28 @@ void DynamicDecodeLayer<T>::initialize()
         initializeLayers();
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void DynamicDecodeLayer<T>::allocateBuffer()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     mZeroParentIdsDevice
         = mBufferManager->gpu(ITensor::makeShape({2 * mDecoderDomain.getBatchSize()}), TRTDataType<TokenIdType>::value);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void DynamicDecodeLayer<T>::initializeLayers()
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     mLayers = createLayers<T>(mDecodingMode, mDecoderDomain, mBufferManager);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -94,7 +94,7 @@ void DynamicDecodeLayer<T>::disableLookahead(DecoderDomain const& decoderDomain,
     TensorConstPtr batchSlots, std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     mDecodingMode = executor::DecodingMode::TopKTopP();
     mDecoderDomain = std::move(decoderDomain);
@@ -104,7 +104,7 @@ void DynamicDecodeLayer<T>::disableLookahead(DecoderDomain const& decoderDomain,
         setup(batchSize, 1, batchSlots, baseSetupParams, workspace);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -112,13 +112,13 @@ void DynamicDecodeLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Te
     std::shared_ptr<BaseSetupParams> const& baseSetupParams,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto setupParams = std::dynamic_pointer_cast<DynamicDecodeSetupParams>(baseSetupParams);
     workspace->setDeviceBatchSlots(
         batchSlots);
 
-    TLLM_CHECK_WITH_INFO(setupParams->decodingParams, "decodingParams for setup is not set");
+    CHECK_WITH_INFO(setupParams->decodingParams, "decodingParams for setup is not set");
     if (setupParams->decodingParams->outputLogProbs)
     {
         mOutputLogProbs = std::any_of(setupParams->decodingParams->outputLogProbs->begin(),
@@ -128,7 +128,7 @@ void DynamicDecodeLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Te
 
     if (mConfiguredBeamWidth == -1)
     {
-        TLLM_CHECK(mDecodingMode.isAuto());
+        CHECK(mDecodingMode.isAuto());
         mConfiguredBeamWidth = beamWidth;
         mDecodingMode
             = mConfiguredBeamWidth == 1 ? executor::DecodingMode::TopKTopP() : executor::DecodingMode::BeamSearch();
@@ -137,10 +137,10 @@ void DynamicDecodeLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Te
         workspace->resize(workspaceSize);
     }
 
-    TLLM_CHECK_WITH_INFO((mConfiguredBeamWidth == 1 && beamWidth == 1)
+    CHECK_WITH_INFO((mConfiguredBeamWidth == 1 && beamWidth == 1)
             || (mConfiguredBeamWidth > 1 && beamWidth > 1 && beamWidth <= mConfiguredBeamWidth),
         "Decoder is configured with beam width %d, but %d was given", mConfiguredBeamWidth, beamWidth);
-    TLLM_CHECK_WITH_INFO(mConfiguredBeamWidth <= mDecoderDomain.getBeamWidth(),
+    CHECK_WITH_INFO(mConfiguredBeamWidth <= mDecoderDomain.getBeamWidth(),
         "Decoder is created with max beam width %d, but %d was given", mDecoderDomain.getBeamWidth(),
         mConfiguredBeamWidth);
 
@@ -149,7 +149,7 @@ void DynamicDecodeLayer<T>::setup(SizeType32 batchSize, SizeType32 beamWidth, Te
         layer->setup(batchSize, beamWidth, batchSlots, baseSetupParams, workspace);
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -157,21 +157,21 @@ void DynamicDecodeLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> co
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(DynamicDecodeLayer_forwardAsync);
 
     auto params = std::dynamic_pointer_cast<DecodingInputs>(baseInputs);
 
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         mDecodingMode.isExplicitDraftTokens() || mDecodingMode.isEagle() || params->logits || params->logitsVec,
         "If not Explicit Draft Tokens or Eagle mode, either logits or logitsVec have to be specified.");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         baseOutputs->sequenceLength.has_value(), "sequenceLength tensor is required in DynamicDecoderLayer.");
 
     auto const localDecoderDomain = getLocalDecoderDomain(params, mDecoderDomain);
     auto const maxSeqLen = baseOutputs->outputIds->getDimension<-1>();
 
-    TLLM_CHECK_WITH_INFO((mConfiguredBeamWidth == 1 && localDecoderDomain.getBeamWidth() == 1)
+    CHECK_WITH_INFO((mConfiguredBeamWidth == 1 && localDecoderDomain.getBeamWidth() == 1)
             || (mConfiguredBeamWidth > 1 && localDecoderDomain.getBeamWidth() > 1
                 && localDecoderDomain.getBeamWidth() <= mConfiguredBeamWidth),
         "Decoder is configured with beam width %d, but %d was given", mConfiguredBeamWidth,
@@ -204,7 +204,7 @@ void DynamicDecodeLayer<T>::forwardAsync(std::shared_ptr<BaseDecodingOutputs> co
     mCyclicStep += 1;
 
     sync_check_cuda_error();
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -212,21 +212,21 @@ void DynamicDecodeLayer<T>::forwardSync(std::shared_ptr<BaseDecodingOutputs> con
     std::shared_ptr<BaseDecodingInputs> const& baseInputs,
     std::shared_ptr<runtime::DecodingLayerWorkspace> const& workspace)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     NVTX3_SCOPED_RANGE(DynamicDecodeLayer_forwardSync);
 
     for (auto& layer : mLayers)
     {
         layer->forwardSync(baseOutputs, baseInputs, workspace);
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
 void DynamicDecodeLayer<T>::prepareIdsPtrs(std::shared_ptr<BaseDecodingOutputs> const& outputs,
     BufferConstPtr batchSlots, SizeType32 batchSize, SizeType32 beamWidth, SizeType32 maxSeqLen)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     TensorPtr outputIdsPtrHostSlice = ITensor::slice(mOutputIdsPtrHost, mCyclicStep, 1);
     TensorPtr parentIdsPtrHostSlice = ITensor::slice(mParentIdsPtrHost, mCyclicStep, 1);
     auto outputIdsPtrHost = runtime::bufferCast<TokenIdType*>(*outputIdsPtrHostSlice);
@@ -256,7 +256,7 @@ void DynamicDecodeLayer<T>::prepareIdsPtrs(std::shared_ptr<BaseDecodingOutputs> 
     mBufferManager->copy(*parentIdsPtrHostSlice, *mParentIdsPtrDevice);
     outputs->outputIdsPtr = ITensor::slice(mOutputIdsPtrDevice, 0, batchSize);
     outputs->parentIdsPtr = ITensor::slice(mParentIdsPtrDevice, 0, batchSize);
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -264,7 +264,7 @@ void DynamicDecodeLayer<T>::prepareOutputData(std::shared_ptr<BaseDecodingOutput
     BufferConstPtr batchSlots, SizeType32 batchSize, SizeType32 maxBatchSize, SizeType32 beamWidth,
     SizeType32 maxSeqLen, SizeType32 maxTokensPerStep, bool outputLogProbs, cudaStream_t stream)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto outputIdsPtrDevice = bufferCast<TokenIdType*>(*mOutputIdsPtrDevice);
     auto const numNewTokens = bufferCastOrNull<SizeType32>(outputs->numNewTokens);
     auto newTokensPtr = bufferCast<TokenIdType>(*outputs->newTokens);
@@ -283,7 +283,7 @@ void DynamicDecodeLayer<T>::prepareOutputData(std::shared_ptr<BaseDecodingOutput
         invokeTransposeLogProbs(outputLogProbsPtr, outputLogProbsTiledPtr, sequenceLengthsPtr, batchSlotsPtr, batchSize,
             maxBatchSize, beamWidth, logProbsMaxSeqLen, stream);
     }
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template class DynamicDecodeLayer<float>;

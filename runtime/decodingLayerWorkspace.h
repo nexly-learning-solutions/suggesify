@@ -55,11 +55,11 @@ public:
     {
         auto const sizeOfWorkspaceInBytes = workspace->getSizeInBytes();
         auto const sizeOfSrcInBytes = sizeof(T) * src.size();
-        TLLM_CHECK_WITH_INFO(sizeOfSrcInBytes <= sizeOfWorkspaceInBytes,
+        CHECK_WITH_INFO(sizeOfSrcInBytes <= sizeOfWorkspaceInBytes,
             "The size of the workspace (%zu bytes) is insufficient for the data (%zu bytes)", sizeOfWorkspaceInBytes,
             sizeOfSrcInBytes);
         auto const sizePerWorkspaceElement = BufferDataType(workspace->getDataType()).getSize();
-        TLLM_CHECK_WITH_INFO(sizePerWorkspaceElement == 1 || sizePerWorkspaceElement == sizeof(T),
+        CHECK_WITH_INFO(sizePerWorkspaceElement == 1 || sizePerWorkspaceElement == sizeof(T),
             "Copy to typed workspace, but element size mismatched (src: %zu, workspace: %zu)", sizeof(T),
             sizePerWorkspaceElement);
         runtime::IBuffer::SharedPtr workspaceSlice
@@ -119,7 +119,7 @@ public:
         std::size_t const numArgs = sizeof...(Args);
         std::size_t const sizeInBytes
             = lastTensorEndPtr - reinterpret_cast<std::int8_t*>(mWorkspaceDeviceBuffer->data());
-        TLLM_LOG_DEBUG("Borrowing %lu bytes of the workspace for %i tensors.", sizeInBytes, numArgs);
+        LOG_DEBUG("Borrowing %lu bytes of the workspace for %i tensors.", sizeInBytes, numArgs);
         return res;
     }
 
