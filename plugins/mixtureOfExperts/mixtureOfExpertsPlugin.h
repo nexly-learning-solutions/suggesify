@@ -10,7 +10,7 @@
 #include "../plugins/common/plugin.h"
 #include "../plugins/cudaStreamPlugin/cudaStreamPlugin.h"
 #include "../plugins/gemmPlugin/gemmPlugin.h"
-#include "suggestify/runtime/cudaStream.h"
+#include "../runtime/cudaStream.h"
 #include <cassert>
 #include <set>
 #include <string>

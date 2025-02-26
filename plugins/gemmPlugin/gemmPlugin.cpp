@@ -5,7 +5,7 @@
 #include "plugin.h"
 #include "pluginUtils.h"
 #include "../src/weightOnlyBatchedGemv/cudaCoreGemm.h"
-#include "suggestify/runtime/utils/debugUtils.h"
+#include "../runtime/utils/debugUtils.h"
 
 #include <NvInferRuntime.h>
 

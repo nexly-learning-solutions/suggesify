@@ -2,7 +2,7 @@
 #include "../src/decoderMaskedMultiheadAttention.h"
 #include "../src/gptKernels.h"
 #include "../src/unfusedAttentionKernels.h"
-#include "suggestify/runtime/iBuffer.h"
+#include "../runtime/iBuffer.h"
 
 using namespace nvinfer1;
 using namespace suggestify::kernels;

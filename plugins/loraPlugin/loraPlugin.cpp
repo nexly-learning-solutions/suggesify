@@ -4,7 +4,7 @@
 #include "pluginUtils.h"
 #include "suggestify/common/assert.h"
 #include "suggestify/common/cudaUtils.h"
-#include "suggestify/runtime/iBuffer.h"
+#include "../runtime/iBuffer.h"
 
 #include <algorithm>
 #include <vector>

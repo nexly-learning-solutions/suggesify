@@ -10,9 +10,9 @@
 #include "../plugins/common/plugin.h"
 #include "../plugins/gptAttentionCommon/gptAttentionCommon.h"
 #include "../plugins/gptAttentionCommon/gptAttentionCommonImpl.h"
-#include "suggestify/runtime/common.h"
-#include "suggestify/runtime/iBuffer.h"
-#include "suggestify/runtime/utils/debugUtils.h"
+#include "../runtime/common.h"
+#include "../runtime/iBuffer.h"
+#include "../runtime/utils/debugUtils.h"
 
 #include <NvInferRuntimeBase.h>
 #include <algorithm>

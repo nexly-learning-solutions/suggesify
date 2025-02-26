@@ -2,8 +2,8 @@
 #include "suggestify/common/cudaBf16Wrapper.h"
 #include "suggestify/common/dataType.h"
 #include "suggestify/common/quantization.h"
-#include "suggestify/runtime/iBuffer.h"
-#include "suggestify/runtime/utils/debugUtils.h"
+#include "../runtime/iBuffer.h"
+#include "../runtime/utils/debugUtils.h"
 #include <numeric>
 
 using namespace nvinfer1;

@@ -8,8 +8,8 @@
 #include "../src/speculativeDecoding/common.h"
 #include "../src/speculativeDecoding/eagleDecodingKernels.h"
 #include "../src/speculativeDecoding/medusaDecodingKernels.h"
-#include "suggestify/runtime/common.h"
-#include "suggestify/runtime/iTensor.h"
+#include "../runtime/common.h"
+#include "../runtime/iTensor.h"
 
 using namespace nvinfer1;
 using suggestify::plugins::EagleSampleAndAcceptDraftTokensPluginCreator;

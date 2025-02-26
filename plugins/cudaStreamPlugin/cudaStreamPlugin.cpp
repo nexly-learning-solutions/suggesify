@@ -1,6 +1,6 @@
 
 #include "cudaStreamPlugin.h"
-#include "suggestify/runtime/iBuffer.h"
+#include "../runtime/iBuffer.h"
 
 #include <cassert>
 

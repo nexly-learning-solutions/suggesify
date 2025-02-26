@@ -2,8 +2,8 @@
 
 #include "NvInferPlugin.h"
 #include "../plugins/common/plugin.h"
-#include "suggestify/runtime/cudaMemPool.h"
-#include "suggestify/runtime/utils/debugUtils.h"
+#include "../runtime/cudaMemPool.h"
+#include "../runtime/utils/debugUtils.h"
 #include <memory>
 #include <string>
 #include <vector>

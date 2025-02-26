@@ -1,6 +1,6 @@
 #include "identityPlugin.h"
-#include "suggestify/runtime/iBuffer.h"
-#include "suggestify/runtime/iTensor.h"
+#include "../runtime/iBuffer.h"
+#include "../runtime/iTensor.h"
 
 using namespace nvinfer1;
 using suggestify::plugins::IdentityPluginCreator;

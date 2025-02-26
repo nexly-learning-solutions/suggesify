@@ -1,7 +1,7 @@
 #include "../plugins/api/tllmPlugin.h"
 
 #include "suggestify/common/stringUtils.h"
-#include "suggestify/runtime/tllmLogger.h"
+#include "../runtime/tllmLogger.h"
 
 #include "../plugins/bertAttentionPlugin/bertAttentionPlugin.h"
 #include "../plugins/fp8RowwiseGemmPlugin/fp8RowwiseGemmPlugin.h"

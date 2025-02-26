@@ -4,8 +4,8 @@
 #include "suggestify/common/dataType.h"
 #include "suggestify/common/memoryUtils.h"
 #include "../src/speculativeDecoding/eagleDecodingKernels.h"
-#include "suggestify/runtime/common.h"
-#include "suggestify/runtime/iTensor.h"
+#include "../runtime/common.h"
+#include "../runtime/iTensor.h"
 
 using namespace nvinfer1;
 using suggestify::plugins::EaglePrepareDrafterInputsPluginCreator;

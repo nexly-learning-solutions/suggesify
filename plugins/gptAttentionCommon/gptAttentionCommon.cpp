@@ -11,8 +11,8 @@
 #include "../src/rmsnormKernels.h"
 #include "../src/unfusedAttentionKernels.h"
 #include "../plugins/common/checkMacrosPlugin.h"
-#include "suggestify/runtime/iBuffer.h"
-#include "suggestify/runtime/utils/debugUtils.h"
+#include "../runtime/iBuffer.h"
+#include "../runtime/utils/debugUtils.h"
 #include <NvInferRuntimePlugin.h>
 #include <algorithm>
 #include <cstdint>
