@@ -52,7 +52,7 @@ nvinfer1::IPluginCapability* EaglePrepareDrafterInputsPlugin::getCapabilityInter
         {
             return static_cast<nvinfer1::IPluginV3OneRuntime*>(this);
         }
-        TLLM_CHECK(type == nvinfer1::PluginCapabilityType::kCORE);
+        CHECK(type == nvinfer1::PluginCapabilityType::kCORE);
         return static_cast<nvinfer1::IPluginV3OneCore*>(this);
     }
     catch (std::exception const& e)
@@ -123,9 +123,9 @@ int32_t EaglePrepareDrafterInputsPlugin::getOutputShapes(nvinfer1::DimsExprs con
     nvinfer1::DimsExprs const* shapeInputs, int32_t nbShapeInputs, nvinfer1::DimsExprs* outputs, int32_t nbOutputs,
     nvinfer1::IExprBuilder& exprBuilder) noexcept
 {
-    TLLM_CHECK(nbOutputs == 11);
-    TLLM_CHECK(nbInputs == 15);
-    TLLM_CHECK(nbShapeInputs == 0);
+    CHECK(nbOutputs == 11);
+    CHECK(nbInputs == 15);
+    CHECK(nbShapeInputs == 0);
     auto const numTokens = inputs[getIdx(InputIdxEntry::INPUT_IDS)].d[0];
     auto const batchSizeExpr = inputs[getIdx(InputIdxEntry::PREV_DRAFT_PATHS)].d[0];
     auto const numGenRequestsExpr = inputs[getIdx(InputIdxEntry::SPEC_DECODING_GENERATION_LENGTHS)].d[0];
@@ -254,7 +254,7 @@ void EaglePrepareDrafterInputsPlugin::prepareCtxEagleNetData(nvinfer1::PluginTen
     nvinfer1::PluginTensorDesc const* outputDesc, void const* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream) noexcept
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputDesc[getIdx(InputIdxEntry::SEQUENCE_LENGTHS)].dims.d[0];
 
@@ -297,14 +297,14 @@ void EaglePrepareDrafterInputsPlugin::prepareCtxEagleNetData(nvinfer1::PluginTen
 
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 void EaglePrepareDrafterInputsPlugin::prepareGenEagleNetData(nvinfer1::PluginTensorDesc const* inputDesc,
     nvinfer1::PluginTensorDesc const* outputDesc, void const* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream) noexcept
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const batchSize = inputDesc[getIdx(InputIdxEntry::SEQUENCE_LENGTHS)].dims.d[0];
     auto const maxDecodingTokens = inputDesc[getIdx(InputIdxEntry::NEXT_DRAFT_PATHS)].dims.d[1];
@@ -401,7 +401,7 @@ void EaglePrepareDrafterInputsPlugin::prepareGenEagleNetData(nvinfer1::PluginTen
 
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 int EaglePrepareDrafterInputsPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
@@ -461,17 +461,17 @@ nvinfer1::IPluginV3* EaglePrepareDrafterInputsPluginCreator::createPlugin(
             char const* attrName = fc->fields[i].name;
             if (!strcmp(attrName, "layer_idx"))
             {
-                TLLM_CHECK(fc->fields[i].type == PluginFieldType::kINT32);
+                CHECK(fc->fields[i].type == PluginFieldType::kINT32);
                 layerIdx = *static_cast<int32_t const*>(fc->fields[i].data);
             }
             else if (!strcmp(attrName, "num_layers"))
             {
-                TLLM_CHECK(fc->fields[i].type == PluginFieldType::kINT32);
+                CHECK(fc->fields[i].type == PluginFieldType::kINT32);
                 numLayers = *static_cast<int32_t const*>(fc->fields[i].data);
             }
             else if (!strcmp(attrName, "max_non_leaves_per_layer"))
             {
-                TLLM_CHECK(fc->fields[i].type == PluginFieldType::kINT32);
+                CHECK(fc->fields[i].type == PluginFieldType::kINT32);
                 maxNonLeavesPerLayer = *static_cast<int32_t const*>(fc->fields[i].data);
             }
         }

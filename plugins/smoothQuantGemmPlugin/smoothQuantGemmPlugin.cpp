@@ -80,7 +80,7 @@ SmoothQuantGemmPlugin::SmoothQuantGemmPlugin(
 
     mPluginProfiler->deserialize(d, mDims, mGemmId);
 
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -125,10 +125,10 @@ nvinfer1::DimsExprs SmoothQuantGemmPlugin::getOutputDimensions(
 {
     try
     {
-        TLLM_CHECK(nbInputs == 4);
-        TLLM_CHECK(outputIndex == 0);
+        CHECK(nbInputs == 4);
+        CHECK(outputIndex == 0);
         int const nbDimsA = inputs[0].nbDims;
-        TLLM_CHECK(nbDimsA >= 2);
+        CHECK(nbDimsA >= 2);
         DimsExprs ret;
         ret.nbDims = nbDimsA;
         for (int ii = 0; ii < nbDimsA - 1; ++ii)
@@ -176,8 +176,8 @@ void SmoothQuantGemmPlugin::configurePlugin(nvinfer1::DynamicPluginTensorDesc co
     int const minK = in[0].min.d[in[0].min.nbDims - 1];
     int const minN = in[1].min.d[0];
 
-    TLLM_CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
-    TLLM_CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
+    CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
+    CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
 
     if (!mDims.isInitialized())
     {
@@ -203,9 +203,9 @@ int SmoothQuantGemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
     {
         m64 *= inputDesc[0].dims.d[ii];
     }
-    int const m = TLLM_INT32_CAST(m64);
-    int const n = TLLM_INT32_CAST(inputDesc[1].dims.d[0]);
-    int const k = TLLM_INT32_CAST(inputDesc[0].dims.d[inputDesc[0].dims.nbDims - 1]);
+    int const m = INT32_CAST(m64);
+    int const n = INT32_CAST(inputDesc[1].dims.d[0]);
+    int const k = INT32_CAST(inputDesc[0].dims.d[inputDesc[0].dims.nbDims - 1]);
     int const wsSize = m_sqGemmRunner->getWorkspaceSize(m, n, k);
     if (m <= 4)
     {
@@ -234,7 +234,7 @@ int SmoothQuantGemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
     else
     {
         auto const& bestTactic = mPluginProfiler->getBestConfig(m, mGemmId);
-        TLLM_CHECK_WITH_INFO(bestTactic, "No valid SQ GEMM tactic");
+        CHECK_WITH_INFO(bestTactic, "No valid SQ GEMM tactic");
         m_sqGemmRunner->gemm(reinterpret_cast<int8_t const*>(inputs[0]), reinterpret_cast<int8_t const*>(inputs[1]),
             mQuantMode, reinterpret_cast<float const*>(inputs[3]), reinterpret_cast<float const*>(inputs[2]),
             reinterpret_cast<void*>(outputs[0]), m, n, k, *bestTactic, reinterpret_cast<char*>(workspace), wsSize,
@@ -247,7 +247,7 @@ int SmoothQuantGemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 nvinfer1::DataType SmoothQuantGemmPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0);
+    CHECK(index == 0);
     return mType;
 }
 
@@ -340,17 +340,17 @@ IPluginV2* SmoothQuantGemmPluginCreator::createPlugin(char const* name, PluginFi
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "has_per_channel_scaling"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             perChannelScaling = static_cast<bool>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "has_per_token_scaling"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             perTokenScaling = static_cast<bool>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
     }

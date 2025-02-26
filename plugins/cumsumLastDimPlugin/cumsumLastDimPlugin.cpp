@@ -20,9 +20,9 @@ CumsumLastDimPlugin::CumsumLastDimPlugin(SizeType32 inputLength, nvinfer1::DataT
     , mTempStorageBytes(temp_storage_bytes)
     , mType(type)
 {
-    TLLM_CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16),
+    CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16),
         "Unsupported data type, pre SM 80 GPUs do not support bfloat16");
-    TLLM_CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF)
+    CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF)
             || (mType == DataType::kINT32),
         "Only support int, float, half, and bfloat16.");
     if (mTempStorageBytes == 0)
@@ -37,9 +37,9 @@ CumsumLastDimPlugin::CumsumLastDimPlugin(void const* data, size_t length)
     read(d, mInputLength);
     read(d, mTempStorageBytes);
     read(d, mType);
-    TLLM_CHECK(d == a + length);
-    TLLM_CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16), "Unsupported data type");
-    TLLM_CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF)
+    CHECK(d == a + length);
+    CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16), "Unsupported data type");
+    CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF)
             || (mType == DataType::kINT32),
         "Only support int, float, half, and bfloat16.");
 }
@@ -54,7 +54,7 @@ nvinfer1::IPluginV2DynamicExt* CumsumLastDimPlugin::clone() const noexcept
 nvinfer1::DimsExprs CumsumLastDimPlugin::getOutputDimensions(
     int outputIndex, nvinfer1::DimsExprs const* inputs, int nbInputs, nvinfer1::IExprBuilder& exprBuilder) noexcept
 {
-    TLLM_CHECK_WITH_INFO(outputIndex == 0, "Only one output.");
+    CHECK_WITH_INFO(outputIndex == 0, "Only one output.");
     return inputs[getInputTensorIdx()];
 }
 
@@ -146,7 +146,7 @@ int CumsumLastDimPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 nvinfer1::DataType CumsumLastDimPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK_WITH_INFO(index == 0, "Only one output.");
+    CHECK_WITH_INFO(index == 0, "Only one output.");
     return inputTypes[getInputTensorIdx()];
 }
 
@@ -227,12 +227,12 @@ IPluginV2* CumsumLastDimPluginCreator::createPlugin(char const* name, PluginFiel
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "input_length"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             inputLength = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
     }

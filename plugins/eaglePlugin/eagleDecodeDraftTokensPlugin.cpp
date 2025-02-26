@@ -29,7 +29,7 @@ EagleDecodeDraftTokensPlugin::EagleDecodeDraftTokensPlugin(
     , mNumEagleLayers(numEagleLayers)
     , mTopKSampling(topKSampling)
 {
-    TLLM_CHECK_WITH_INFO(mTopKSampling, "Multinomial sampling is not supported yet.");
+    CHECK_WITH_INFO(mTopKSampling, "Multinomial sampling is not supported yet.");
 }
 
 EagleDecodeDraftTokensPlugin::EagleDecodeDraftTokensPlugin(void const* data, size_t length)
@@ -39,7 +39,7 @@ EagleDecodeDraftTokensPlugin::EagleDecodeDraftTokensPlugin(void const* data, siz
     read(d, mLayerIdx);
     read(d, mNumEagleLayers);
     read(d, mTopKSampling);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -56,8 +56,8 @@ nvinfer1::IPluginV2DynamicExt* EagleDecodeDraftTokensPlugin::clone() const noexc
 nvinfer1::DimsExprs EagleDecodeDraftTokensPlugin::getOutputDimensions(
     int outputIndex, nvinfer1::DimsExprs const* inputs, int nbInputs, nvinfer1::IExprBuilder& exprBuilder) noexcept
 {
-    TLLM_CHECK(outputIndex < getNbOutputs());
-    TLLM_CHECK(nbInputs == 13);
+    CHECK(outputIndex < getNbOutputs());
+    CHECK(nbInputs == 13);
     auto const batchSizeExpr = inputs[getIdx(InputIdxEntry::PATHS)].d[0];
     auto const maxDecodingTokensExpr = inputs[getIdx(InputIdxEntry::PATHS)].d[1];
     auto const maxPathLengthExpr = inputs[getIdx(InputIdxEntry::PATHS)].d[2];
@@ -124,7 +124,7 @@ nvinfer1::DimsExprs EagleDecodeDraftTokensPlugin::getOutputDimensions(
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             false, "Wrong outputIndex %d in EagleDecodeDraftTokensPlugin::getOutputDimensions", outputIndex);
     }
     return ret;
@@ -133,8 +133,8 @@ nvinfer1::DimsExprs EagleDecodeDraftTokensPlugin::getOutputDimensions(
 bool EagleDecodeDraftTokensPlugin::supportsFormatCombination(
     int pos, nvinfer1::PluginTensorDesc const* inOut, int nbInputs, int nbOutputs) noexcept
 {
-    TLLM_CHECK(nbInputs == 13 && nbOutputs == getNbOutputs());
-    TLLM_CHECK(pos < nbInputs + nbOutputs);
+    CHECK(nbInputs == 13 && nbOutputs == getNbOutputs());
+    CHECK(pos < nbInputs + nbOutputs);
 
     if (pos == getIdx(InputIdxEntry::LOGITS))
     {
@@ -234,7 +234,7 @@ size_t EagleDecodeDraftTokensPlugin::getWorkspaceSizeType(nvinfer1::PluginTensor
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false, "Multinomial sampling is not supported yet.");
+        CHECK_WITH_INFO(false, "Multinomial sampling is not supported yet.");
     }
 
     return workspaceSize;
@@ -254,7 +254,7 @@ size_t EagleDecodeDraftTokensPlugin::getWorkspaceSize(nvinfer1::PluginTensorDesc
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false, "Unsupported logits type");
+        CHECK_WITH_INFO(false, "Unsupported logits type");
     }
     return 0;
 }
@@ -264,7 +264,7 @@ void EagleDecodeDraftTokensPlugin::doTopKSampling(nvinfer1::PluginTensorDesc con
     nvinfer1::PluginTensorDesc const* outputDesc, void const* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream) noexcept
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const numInputLogits = inputDesc[getIdx(InputIdxEntry::LOGITS)].dims.d[0];
     auto const vocabSizePadded = inputDesc[getIdx(InputIdxEntry::LOGITS)].dims.d[1];
@@ -296,11 +296,11 @@ void EagleDecodeDraftTokensPlugin::doTopKSampling(nvinfer1::PluginTensorDesc con
     {
         if (mLayerIdx == 0)
         {
-            TLLM_CHECK(batchSize == numInputLogits);
+            CHECK(batchSize == numInputLogits);
         }
         else
         {
-            TLLM_CHECK(batchSize * dynamicTreeMaxTopK == numInputLogits);
+            CHECK(batchSize * dynamicTreeMaxTopK == numInputLogits);
         }
     }
 
@@ -543,7 +543,7 @@ void EagleDecodeDraftTokensPlugin::doTopKSampling(nvinfer1::PluginTensorDesc con
         sync_check_cuda_error();
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -551,7 +551,7 @@ void EagleDecodeDraftTokensPlugin::enqueueType(nvinfer1::PluginTensorDesc const*
     nvinfer1::PluginTensorDesc const* outputDesc, void const* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream) noexcept
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     if (mTopKSampling)
     {
@@ -559,10 +559,10 @@ void EagleDecodeDraftTokensPlugin::enqueueType(nvinfer1::PluginTensorDesc const*
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false, "Multinomial sampling is not supported yet");
+        CHECK_WITH_INFO(false, "Multinomial sampling is not supported yet");
     }
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 int EagleDecodeDraftTokensPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
@@ -580,7 +580,7 @@ int EagleDecodeDraftTokensPlugin::enqueue(nvinfer1::PluginTensorDesc const* inpu
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false, "Unsupported logits type");
+        CHECK_WITH_INFO(false, "Unsupported logits type");
     }
 
     return 0;
@@ -589,8 +589,8 @@ int EagleDecodeDraftTokensPlugin::enqueue(nvinfer1::PluginTensorDesc const* inpu
 nvinfer1::DataType EagleDecodeDraftTokensPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index < getNbOutputs());
-    TLLM_CHECK(index < getNbOutputs());
+    CHECK(index < getNbOutputs());
+    CHECK(index < getNbOutputs());
     if (index == getIdx(OutputIdxEntry::OUTPUT_ALL_LAYERS_SCORES)
         || index == getIdx(OutputIdxEntry::OUTPUT_CURRENT_SCORES))
     {
@@ -637,7 +637,7 @@ void EagleDecodeDraftTokensPlugin::serialize(void* buffer) const noexcept
     write(d, mLayerIdx);
     write(d, mNumEagleLayers);
     write(d, mTopKSampling);
-    TLLM_CHECK(d == a + getSerializationSize());
+    CHECK(d == a + getSerializationSize());
 }
 
 void EagleDecodeDraftTokensPlugin::destroy() noexcept
@@ -684,22 +684,22 @@ IPluginV2* EagleDecodeDraftTokensPluginCreator::createPlugin(char const* name, P
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "layer_idx"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             layerIdx = *static_cast<int32_t const*>(fields[i].data);
         }
         else if (!strcmp(attrName, "num_eagle_layers"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             numEagleLayers = *static_cast<int32_t const*>(fields[i].data);
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "top_k_sampling"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             topKSampling = static_cast<bool>(*static_cast<int32_t const*>(fields[i].data));
         }
     }

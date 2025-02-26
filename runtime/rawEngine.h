@@ -48,7 +48,7 @@ public:
 
     [[nodiscard]] std::filesystem::path getPath() const
     {
-        TLLM_CHECK(mEnginePath.has_value());
+        CHECK(mEnginePath.has_value());
         return mEnginePath.value();
     }
 
@@ -75,19 +75,19 @@ public:
 
     [[nodiscard]] void const* getAddress() const
     {
-        TLLM_CHECK(mType == AddressWithSize);
+        CHECK(mType == AddressWithSize);
         return mEngineAddr;
     }
 
     [[nodiscard]] std::size_t getSize() const
     {
-        TLLM_CHECK(mType == AddressWithSize);
+        CHECK(mType == AddressWithSize);
         return mEngineSize;
     }
 
     [[nodiscard]] nvinfer1::IHostMemory const* getHostMemory() const
     {
-        TLLM_CHECK(mType == HostMemory);
+        CHECK(mType == HostMemory);
         return mEngineBuffer;
     }
 

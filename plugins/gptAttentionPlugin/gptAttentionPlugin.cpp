@@ -115,7 +115,7 @@ std::string GPTAttentionPlugin::toString(IdxEntry const& entry) const
     case IdxEntry::SKIP_ATTN: return "SKIP_ATTN";
     case IdxEntry::ENUM_SIZE: return "ENUM_SIZE";
     }
-    TLLM_LOG_TRACE(common::fmtstr("Missing string description for IdxEntry enum %lu.\n", static_cast<size_t>(entry)));
+    LOG_TRACE(common::fmtstr("Missing string description for IdxEntry enum %lu.\n", static_cast<size_t>(entry)));
     return "";
 }
 
@@ -184,7 +184,7 @@ void GPTAttentionPlugin::initEntryIdx()
 
 GPTAttentionPlugin::IndexType GPTAttentionPlugin::getIdx(IdxEntry const& entry) const
 {
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         isEntryUsed(entry), common::fmtstr("getIdx() should not be used with entry %s.\n", toString(entry).data()));
     return mEntryIdx[static_cast<size_t>(entry)];
 }
@@ -206,20 +206,20 @@ int GPTAttentionPlugin::getGenerationInputSequenceLength(
     {
         if (mIsSpecDecodingEnabled && mUseSpecDecoding)
         {
-            TLLM_CHECK_WITH_INFO(mCpSize <= 1, "Context Parallel does not support speculative decoding mode for now");
+            CHECK_WITH_INFO(mCpSize <= 1, "Context Parallel does not support speculative decoding mode for now");
             return inputDesc[getIdx(IdxEntry::SPEC_DECODING_POSITION_OFFSETS)].dims.d[1];
         }
         else
         {
             if (mCpSize > 1)
             {
-                TLLM_CHECK_WITH_INFO(localNbTokens == (localNbSeq + mCpSize - 1) / mCpSize,
+                CHECK_WITH_INFO(localNbTokens == (localNbSeq + mCpSize - 1) / mCpSize,
                     "Context Parallel does not support beamSize > 1 for non-speculative decoding mode, "
                     "localNbTokens=%d, localNbSeq=%d",
                     localNbTokens, localNbSeq);
                 return 1;
             }
-            TLLM_CHECK_WITH_INFO(localNbTokens % localNbSeq == 0,
+            CHECK_WITH_INFO(localNbTokens % localNbSeq == 0,
                 "seq_len should be same for all generation requests, localNbTokens=%d, localNbSeq=%d", localNbTokens,
                 localNbSeq);
             return localNbTokens / localNbSeq;
@@ -234,7 +234,7 @@ int GPTAttentionPlugin::getGenerationInputSequenceLength(
 nvinfer1::DimsExprs GPTAttentionPlugin::getOutputDimensions(
     int outputIndex, nvinfer1::DimsExprs const* inputs, int nbInputs, nvinfer1::IExprBuilder& exprBuilder) noexcept
 {
-    TLLM_CHECK(outputIndex == 0 || (!mPagedKVCache && useKVCache() && outputIndex == 1));
+    CHECK(outputIndex == 0 || (!mPagedKVCache && useKVCache() && outputIndex == 1));
     if (outputIndex == 0)
     {
         auto ret = inputs[getIdx(IdxEntry::QKV_TENSOR)];
@@ -379,7 +379,7 @@ bool GPTAttentionPlugin::supportsFormatCombination(
         posCaseLine = __LINE__;
         result = (inOut[pos].type == mType) && (inOut[pos].format == TensorFormat::kLINEAR);
     }
-    TLLM_LOG_DEBUG(
+    LOG_DEBUG(
         "%s: pos: %d, result: %d, posCaseLine: %d", __PRETTY_FUNCTION__, pos, static_cast<int>(result), posCaseLine);
     return result;
 }
@@ -388,7 +388,7 @@ template <typename T, typename KVCacheBuffer>
 void GPTAttentionPlugin::configurePluginImpl(nvinfer1::DynamicPluginTensorDesc const* in, int nbInputs,
     nvinfer1::DynamicPluginTensorDesc const* out, int nbOutputs) noexcept
 {
-    TLLM_CHECK(mHeadSize > 0);
+    CHECK(mHeadSize > 0);
 
     int beamWidth = -1;
     if (!isCrossAttention() && useKVCache())
@@ -401,7 +401,7 @@ void GPTAttentionPlugin::configurePluginImpl(nvinfer1::DynamicPluginTensorDesc c
     {
         beamWidth = 1;
     }
-    TLLM_CHECK(beamWidth != -1);
+    CHECK(beamWidth != -1);
 
     int max_encoder_context_len = isCrossAttention() ? in[getIdx(IdxEntry::CROSS_KV_LENGTH)].desc.dims.d[0] : 0;
     int const max_attention_window_size = isCrossAttention()
@@ -449,7 +449,7 @@ nullptr,
     prepareEnqueueGeneration<T, KVCacheBuffer>(enqueueParams);
 
     auto const& ctxLenTensor = in[getIdx(IdxEntry::CONTEXT_LENGTHS)];
-    TLLM_CHECK_DEBUG(ctxLenTensor.max.nbDims == 1);
+    CHECK_DEBUG(ctxLenTensor.max.nbDims == 1);
     int32_t const max_batch_beam = in[getIdx(IdxEntry::CONTEXT_LENGTHS)].max.d[0];
     reserveSemaphoreArray(mNumHeads * max_batch_beam);
 }
@@ -538,7 +538,7 @@ size_t GPTAttentionPlugin::getWorkspaceSize(nvinfer1::PluginTensorDesc const* in
 
 static size_t getStride(nvinfer1::Dims const& dims, int n)
 {
-    TLLM_CHECK(n >= 0 && n < dims.nbDims);
+    CHECK(n >= 0 && n < dims.nbDims);
     return std::accumulate(dims.d + n + 1, dims.d + dims.nbDims, 1, std::multiplies<size_t>{});
 }
 
@@ -547,7 +547,7 @@ int GPTAttentionPlugin::enqueueImpl(nvinfer1::PluginTensorDesc const* inputDesc,
     nvinfer1::PluginTensorDesc const* outputDesc, void const* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream)
 {
-    TLLM_LOG_TRACE("Attention plugin start at layer %d", mLayerIdx);
+    LOG_TRACE("Attention plugin start at layer %d", mLayerIdx);
 
     using runtime::RequestType;
 
@@ -576,12 +576,12 @@ int GPTAttentionPlugin::enqueueImpl(nvinfer1::PluginTensorDesc const* inputDesc,
 
     for (int32_t seqIdx = nbContextRequests; seqIdx < nbSeq; seqIdx++)
     {
-        TLLM_CHECK(reqTypes[seqIdx] == RequestType::kGENERATION);
+        CHECK(reqTypes[seqIdx] == RequestType::kGENERATION);
     }
 
     if (nbContextRequests != 0 && nbContextRequests != nbSeq)
     {
-        TLLM_CHECK(mRemovePadding && mPagedKVCache);
+        CHECK(mRemovePadding && mPagedKVCache);
     }
 
     if (nbContextRequests > 0)
@@ -605,7 +605,7 @@ int GPTAttentionPlugin::enqueueImpl(nvinfer1::PluginTensorDesc const* inputDesc,
     }
 
     sync_check_cuda_error();
-    TLLM_LOG_TRACE("Attention plugin stop at layer %d", mLayerIdx);
+    LOG_TRACE("Attention plugin stop at layer %d", mLayerIdx);
 
     return 0;
 }
@@ -973,7 +973,7 @@ int GPTAttentionPlugin::enqueueSome(int32_t seqIdxBeg, int32_t localNbSeq, int32
 
         {
             std::string const afterContexStr = "ctx attention at layer " + std::to_string(mLayerIdx);
-            TLLM_LOG_TRACE("GPTAttentionPlugin - %s", afterContexStr.c_str());
+            LOG_TRACE("GPTAttentionPlugin - %s", afterContexStr.c_str());
 
             auto progress = static_cast<batch_manager::ContextProgress* const*>(
                 inputs[getIdx(IdxEntry::HOST_CONTEXT_PROGRESS)])[0];
@@ -982,7 +982,7 @@ int GPTAttentionPlugin::enqueueSome(int32_t seqIdxBeg, int32_t localNbSeq, int32
                 progress->recordEvent(mLayerIdx, stream);
             }
 
-            TLLM_CHECK_DEBUG_WITH_INFO(
+            CHECK_DEBUG_WITH_INFO(
                 suggestify::runtime::utils::tensorHasInvalid(localNbTokens,
                     outputDesc[0].dims.d[getPackedTensorHiddenDimIndex(mRemovePadding)],
                     mFP8ContextFMHA ? nvinfer1::DataType::kFP8 : mType, context_buf_, stream, afterContexStr)
@@ -992,9 +992,9 @@ int GPTAttentionPlugin::enqueueSome(int32_t seqIdxBeg, int32_t localNbSeq, int32
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(useKVCache(), "KV-cache-less is only supported for context");
+        CHECK_WITH_INFO(useKVCache(), "KV-cache-less is only supported for context");
         int batch_beam = localNbSeq;
-        TLLM_CHECK(batch_beam % beamWidth == 0);
+        CHECK(batch_beam % beamWidth == 0);
         int32_t const num_requests = batch_beam / beamWidth;
 
         int const* cache_indir
@@ -1005,12 +1005,12 @@ int GPTAttentionPlugin::enqueueSome(int32_t seqIdxBeg, int32_t localNbSeq, int32
         int const input_seq_length = getGenerationInputSequenceLength(inputDesc, localNbSeq, localNbTokens);
         int const max_past_kv_length = isCrossAttention() ? max_encoder_context_len : max_context_kv_len;
         auto qkvDims = inputDesc[getIdx(IdxEntry::QKV_TENSOR)].dims;
-        TLLM_CHECK_WITH_INFO(input_seq_length == 1 || (mIsSpecDecodingEnabled && mUseSpecDecoding),
+        CHECK_WITH_INFO(input_seq_length == 1 || (mIsSpecDecodingEnabled && mUseSpecDecoding),
             "Only speculative decoding mode supports input length > 1 in the generation phase, input_seq_length=%d, "
             "mIsSpecDecodingEnabled=%s, nDims=%d, (" FMT_DIM ", " FMT_DIM ", " FMT_DIM ")",
             input_seq_length, mIsSpecDecodingEnabled ? "true" : "false", qkvDims.nbDims, qkvDims.d[0], qkvDims.d[1],
             qkvDims.d[2]);
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             input_seq_length == num_decoding_draft_tokens + 1, "The generation input length is not expected.");
         EnqueueGenerationParams<T> enqueue_params{attention_input, qkv_bias, attention_mask, rotary_inv_freq,
             input_seq_length, sequence_kv_length, max_past_kv_length, beamWidth, context_q_lengths, kv_scale_orig_quant,
@@ -1065,7 +1065,7 @@ int GPTAttentionPlugin::enqueueSome(int32_t seqIdxBeg, int32_t localNbSeq, int32
         {
             std::string const afterGenStr = "gen attention at layer " + std::to_string(mLayerIdx);
             {
-                TLLM_CHECK_DEBUG_WITH_INFO(
+                CHECK_DEBUG_WITH_INFO(
                     suggestify::runtime::utils::tensorHasInvalid(localNbTokens,
                         outputDesc[0].dims.d[getPackedTensorHiddenDimIndex(mRemovePadding)],
                         mFP8ContextFMHA ? nvinfer1::DataType::kFP8 : mType, context_buf_, stream, afterGenStr)
@@ -1145,7 +1145,7 @@ int GPTAttentionPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 nvinfer1::DataType GPTAttentionPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0 || (!mPagedKVCache && useKVCache() && index == 1));
+    CHECK(index == 0 || (!mPagedKVCache && useKVCache() && index == 1));
     if (index == 0)
     {
         return mFP8ContextFMHA && mEnableContextFMHA ? nvinfer1::DataType::kFP8

@@ -28,8 +28,8 @@ public:
         , endIds{std::move(endIds)}
         , batchSlots{std::move(batchSlots)}
     {
-        TLLM_CHECK_WITH_INFO(static_cast<bool>(this->logits), "Invalid logits tensor");
-        TLLM_CHECK_WITH_INFO(static_cast<bool>(this->endIds), "Invalid endIds tensor");
+        CHECK_WITH_INFO(static_cast<bool>(this->logits), "Invalid logits tensor");
+        CHECK_WITH_INFO(static_cast<bool>(this->endIds), "Invalid endIds tensor");
     }
 
 

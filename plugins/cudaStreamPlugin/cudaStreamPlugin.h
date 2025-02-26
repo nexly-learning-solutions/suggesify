@@ -26,7 +26,7 @@ public:
     {
         if (mWorkspacePtr)
         {
-            TLLM_CUDA_CHECK(cudaFreeAsync(mWorkspacePtr, mStream));
+            CUDA_CHECK(cudaFreeAsync(mWorkspacePtr, mStream));
         }
     }
 
@@ -34,7 +34,7 @@ public:
     {
         if (mWorkspacePtr && mWorkspaceSize < workspaceSize)
         {
-            TLLM_CUDA_CHECK(cudaFreeAsync(mWorkspacePtr, mStream));
+            CUDA_CHECK(cudaFreeAsync(mWorkspacePtr, mStream));
             mWorkspacePtr = nullptr;
         }
         if (!mWorkspacePtr)
@@ -42,7 +42,7 @@ public:
             mWorkspaceSize = workspaceSize;
             auto pool_ptr
                 = suggestify::runtime::CudaMemPool::getPrimaryPoolForDevice(suggestify::common::getDevice());
-            TLLM_CUDA_CHECK(cudaMallocFromPoolAsync(&mWorkspacePtr, mWorkspaceSize, pool_ptr->getPool(), mStream));
+            CUDA_CHECK(cudaMallocFromPoolAsync(&mWorkspacePtr, mWorkspaceSize, pool_ptr->getPool(), mStream));
         }
         return mWorkspacePtr;
     }
@@ -65,9 +65,9 @@ public:
     {
         if (init)
         {
-            TLLM_CUDA_CHECK(cudaStreamCreate(&mStream));
-            TLLM_CUDA_CHECK(cudaEventCreateWithFlags(&mMainEvent, cudaEventDisableTiming));
-            TLLM_CUDA_CHECK(cudaEventCreateWithFlags(&mSideEvent, cudaEventDisableTiming));
+            CUDA_CHECK(cudaStreamCreate(&mStream));
+            CUDA_CHECK(cudaEventCreateWithFlags(&mMainEvent, cudaEventDisableTiming));
+            CUDA_CHECK(cudaEventCreateWithFlags(&mSideEvent, cudaEventDisableTiming));
             mWorkspace = std::make_shared<SideWorkspace>(mStream);
         }
     }
@@ -77,10 +77,10 @@ public:
         if (mInit)
         {
             mWorkspace = nullptr;
-            TLLM_CUDA_CHECK(cudaStreamSynchronize(mStream));
-            TLLM_CUDA_CHECK(cudaStreamDestroy(mStream));
-            TLLM_CUDA_CHECK(cudaEventDestroy(mMainEvent));
-            TLLM_CUDA_CHECK(cudaEventDestroy(mSideEvent));
+            CUDA_CHECK(cudaStreamSynchronize(mStream));
+            CUDA_CHECK(cudaStreamDestroy(mStream));
+            CUDA_CHECK(cudaEventDestroy(mMainEvent));
+            CUDA_CHECK(cudaEventDestroy(mSideEvent));
             mInit = false;
         }
     }
@@ -136,14 +136,14 @@ public:
 
     void waitMainStreamOnSideStream(cudaStream_t const stream) const
     {
-        TLLM_CUDA_CHECK(cudaEventRecord(mMainEvent, stream));
-        TLLM_CUDA_CHECK(cudaStreamWaitEvent(mStream, mMainEvent));
+        CUDA_CHECK(cudaEventRecord(mMainEvent, stream));
+        CUDA_CHECK(cudaStreamWaitEvent(mStream, mMainEvent));
     }
 
     void waitSideStreamOnMainStream(cudaStream_t const stream) const
     {
-        TLLM_CUDA_CHECK(cudaEventRecord(mSideEvent, mStream));
-        TLLM_CUDA_CHECK(cudaStreamWaitEvent(stream, mSideEvent));
+        CUDA_CHECK(cudaEventRecord(mSideEvent, mStream));
+        CUDA_CHECK(cudaStreamWaitEvent(stream, mSideEvent));
     }
 
     void stallMainStream(char const* name, cudaStream_t const stream, std::optional<int> delay = std::nullopt) const

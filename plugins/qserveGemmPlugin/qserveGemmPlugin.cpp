@@ -44,7 +44,7 @@ QServeGemmPlugin::QServeGemmPlugin(void const* data, size_t length)
 
     init(type, groupSize);
 
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -63,7 +63,7 @@ void QServeGemmPlugin::init(nvinfer1::DataType dtype, int groupSize)
 
     if (arch < 80)
     {
-        TLLM_THROW("QServe W4A8 is unsupported on pre-Ampere (sm<80) architectures!");
+        THROW("QServe W4A8 is unsupported on pre-Ampere (sm<80) architectures!");
     }
 }
 
@@ -78,10 +78,10 @@ nvinfer1::DimsExprs QServeGemmPlugin::getOutputDimensions(
 {
     try
     {
-        TLLM_CHECK(nbInputs == 6);
-        TLLM_CHECK(outputIndex == 0);
+        CHECK(nbInputs == 6);
+        CHECK(outputIndex == 0);
         int const nbDimsA = inputs[0].nbDims;
-        TLLM_CHECK(nbDimsA >= 2);
+        CHECK(nbDimsA >= 2);
         DimsExprs ret;
         ret.nbDims = nbDimsA;
         for (int ii = 0; ii < nbDimsA - 1; ++ii)
@@ -157,8 +157,8 @@ void QServeGemmPlugin::configurePlugin(nvinfer1::DynamicPluginTensorDesc const* 
     int const minK = in[0].min.d[in[0].min.nbDims - 1];
     int const minN = in[1].min.d[0];
 
-    TLLM_CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
-    TLLM_CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
+    CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
+    CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
 
     if (!mDims.isInitialized())
     {
@@ -185,9 +185,9 @@ int QServeGemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinf
     {
         m64 *= inputDesc[0].dims.d[ii];
     }
-    int const m = TLLM_INT32_CAST(m64);
-    int const n = TLLM_INT32_CAST(inputDesc[1].dims.d[0]);
-    int const k = TLLM_INT32_CAST(inputDesc[0].dims.d[inputDesc[0].dims.nbDims - 1]);
+    int const m = INT32_CAST(m64);
+    int const n = INT32_CAST(inputDesc[1].dims.d[0]);
+    int const k = INT32_CAST(inputDesc[0].dims.d[inputDesc[0].dims.nbDims - 1]);
 
 
     if (mGroupSize != -1)
@@ -221,7 +221,7 @@ int QServeGemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinf
 nvinfer1::DataType QServeGemmPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0);
+    CHECK(index == 0);
     return mType;
 }
 
@@ -312,13 +312,13 @@ IPluginV2* QServeGemmPluginCreator::createPlugin(char const* name, PluginFieldCo
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             dtype = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
             assert(dtype == nvinfer1::DataType::kHALF);
         }
         else if (!strcmp(attrName, "group_size"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             group_size = *static_cast<int const*>(fields[i].data);
             assert(group_size == -1 || group_size == 128);
         }

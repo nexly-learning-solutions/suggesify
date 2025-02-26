@@ -88,7 +88,7 @@ public:
     static std::size_t volumeNonNegative(Shape const& shape)
     {
         auto const vol = volume(shape);
-        TLLM_CHECK_WITH_INFO(0 <= vol, "Invalid tensor shape");
+        CHECK_WITH_INFO(0 <= vol, "Invalid tensor shape");
         return static_cast<std::size_t>(vol);
     }
 
@@ -300,7 +300,7 @@ protected:
 
     static DimType64 castSize(size_t newSize)
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             newSize <= std::numeric_limits<DimType64>::max(), "New size is too large. Use reshape() instead.");
         return static_cast<DimType64>(newSize);
     }

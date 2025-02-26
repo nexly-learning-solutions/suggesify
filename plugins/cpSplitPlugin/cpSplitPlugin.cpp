@@ -296,12 +296,12 @@ nvinfer1::IPluginV3* CpSplitPluginCreator::createPlugin(
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "cp_size"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             cp_size = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "cp_rank"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             cp_rank = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
     }

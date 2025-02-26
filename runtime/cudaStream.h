@@ -22,8 +22,8 @@ public:
         : mDevice{suggestify::common::getDevice()}
     {
         cudaStream_t stream;
-        TLLM_CUDA_CHECK(::cudaStreamCreateWithPriority(&stream, flags, priority));
-        TLLM_LOG_TRACE("Created stream %p", stream);
+        CUDA_CHECK(::cudaStreamCreateWithPriority(&stream, flags, priority));
+        LOG_TRACE("Created stream %p", stream);
         bool constexpr ownsStream{true};
         mStream = StreamPtr{stream, Deleter{ownsStream}};
     }
@@ -31,7 +31,7 @@ public:
     explicit CudaStream(cudaStream_t stream, int device, bool ownsStream = true)
         : mDevice{device}
     {
-        TLLM_CHECK_WITH_INFO(stream != nullptr, "stream is nullptr");
+        CHECK_WITH_INFO(stream != nullptr, "stream is nullptr");
         mStream = StreamPtr{stream, Deleter{ownsStream}};
     }
 
@@ -52,12 +52,12 @@ public:
 
     void synchronize() const
     {
-        TLLM_CUDA_CHECK(::cudaStreamSynchronize(get()));
+        CUDA_CHECK(::cudaStreamSynchronize(get()));
     }
 
     void record(CudaEvent::pointer event) const
     {
-        TLLM_CUDA_CHECK(::cudaEventRecord(event, get()));
+        CUDA_CHECK(::cudaEventRecord(event, get()));
     }
 
     void record(CudaEvent const& event) const
@@ -67,7 +67,7 @@ public:
 
     void wait(CudaEvent::pointer event) const
     {
-        TLLM_CUDA_CHECK(::cudaStreamWaitEvent(get(), event));
+        CUDA_CHECK(::cudaStreamWaitEvent(get(), event));
     }
 
     void wait(CudaEvent const& event) const
@@ -93,8 +93,8 @@ private:
         {
             if (mOwnsStream && stream != nullptr)
             {
-                TLLM_CUDA_CHECK(::cudaStreamDestroy(stream));
-                TLLM_LOG_TRACE("Destroyed stream %p", stream);
+                CUDA_CHECK(::cudaStreamDestroy(stream));
+                LOG_TRACE("Destroyed stream %p", stream);
             }
         }
 

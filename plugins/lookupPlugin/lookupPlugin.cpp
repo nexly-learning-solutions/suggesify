@@ -29,7 +29,7 @@ LookupPlugin::LookupPlugin(void const* data, size_t length)
     char const *d = reinterpret_cast<char const*>(data), *a = d;
     read(d, mType);
     read(d, mRank);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -49,8 +49,8 @@ nvinfer1::DimsExprs LookupPlugin::getOutputDimensions(
 {
     try
     {
-        TLLM_CHECK(nbInputs == 2 || nbInputs == 3);
-        TLLM_CHECK(outputIndex == 0);
+        CHECK(nbInputs == 2 || nbInputs == 3);
+        CHECK(outputIndex == 0);
         DimsExprs ret;
         int const nbDimsInput = inputs[0].nbDims;
         int const nbDimsWeight = inputs[1].nbDims;
@@ -88,7 +88,7 @@ bool LookupPlugin::supportsFormatCombination(
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(mArch == 90, "int8 weight only lookupPlugin is only supported in SM 90 now.");
+        CHECK_WITH_INFO(mArch == 90, "int8 weight only lookupPlugin is only supported in SM 90 now.");
         switch (pos)
         {
         case 0: res = ((inOut[0].type == DataType::kINT32) && (inOut[0].format == TensorFormat::kLINEAR)); break;
@@ -190,7 +190,7 @@ int LookupPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfer1:
 nvinfer1::DataType LookupPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0);
+    CHECK(index == 0);
     return mType;
 }
 
@@ -271,12 +271,12 @@ IPluginV2* LookupPluginCreator::createPlugin(char const* name, PluginFieldCollec
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "rank"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             rank = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
     }

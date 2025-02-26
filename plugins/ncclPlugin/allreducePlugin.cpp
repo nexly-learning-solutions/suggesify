@@ -54,7 +54,7 @@ AllreducePlugin::AllreducePlugin(void const* data, size_t length)
         read(d, groupItem);
         mGroup.insert(groupItem);
     }
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -66,7 +66,7 @@ void AllreducePlugin::check() noexcept
 {
     if (mStrategy != AllReduceStrategyType::UB)
     {
-        TLLM_CHECK(mOp != AllReduceFusionOp::LAST_PROCESS_FOR_UB);
+        CHECK(mOp != AllReduceFusionOp::LAST_PROCESS_FOR_UB);
     }
 }
 
@@ -117,7 +117,7 @@ bool AllreducePlugin::supportsFormatCombination(
         }
     }
 
-    TLLM_CHECK(nbInputs == (base_inputs + fusion_op_extra_inputs));
+    CHECK(nbInputs == (base_inputs + fusion_op_extra_inputs));
 
     if (mStrategy != AllReduceStrategyType::NCCL && mStrategy != AllReduceStrategyType::UB && pos == 1)
     {
@@ -154,7 +154,7 @@ AllReduceStrategyType AllreducePlugin::selectImplementation(
     {
         if (!isAuto)
         {
-            TLLM_LOG_INFO("Since Peer to Peer not supported, fallback to AllReduceStrategy: NCCL");
+            LOG_INFO("Since Peer to Peer not supported, fallback to AllReduceStrategy: NCCL");
         }
         return AllReduceStrategyType::NCCL;
     }
@@ -206,7 +206,7 @@ AllReduceStrategyType AllreducePlugin::selectImplementation(
         {
             if (!isAuto)
             {
-                TLLM_LOG_WARNING("Since not alignment, fallback to AllReduceStrategy: NCCL");
+                LOG_WARNING("Since not alignment, fallback to AllReduceStrategy: NCCL");
             }
             strat = AllReduceStrategyType::NCCL;
         }
@@ -215,7 +215,7 @@ AllReduceStrategyType AllreducePlugin::selectImplementation(
     {
         if (!isAuto)
         {
-            TLLM_LOG_WARNING("Since messageSize > maxWorkspace, fallback to AllReduceStrategy: NCCL");
+            LOG_WARNING("Since messageSize > maxWorkspace, fallback to AllReduceStrategy: NCCL");
         }
         strat = AllReduceStrategyType::NCCL;
     }
@@ -259,22 +259,22 @@ int AllreducePlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfe
     {
     case AllReduceStrategyType::NCCL:
     {
-        TLLM_LOG_DEBUG("AllReducePlugin strategy for rank %d: NCCL", rank);
+        LOG_DEBUG("AllReducePlugin strategy for rank %d: NCCL", rank);
         break;
     }
     case AllReduceStrategyType::ONESHOT:
     {
-        TLLM_LOG_DEBUG("AllReducePlugin strategy for rank %d: ONESHOT", rank);
+        LOG_DEBUG("AllReducePlugin strategy for rank %d: ONESHOT", rank);
         break;
     }
     case AllReduceStrategyType::TWOSHOT:
     {
-        TLLM_LOG_DEBUG("AllReducePlugin strategy for rank %d: TWOSHOT", rank);
+        LOG_DEBUG("AllReducePlugin strategy for rank %d: TWOSHOT", rank);
         break;
     }
     case AllReduceStrategyType::UB:
     {
-        TLLM_LOG_DEBUG("AllReducePlugin strategy for rank %d: UB", rank);
+        LOG_DEBUG("AllReducePlugin strategy for rank %d: UB", rank);
         break;
     }
     default: break;
@@ -307,7 +307,7 @@ int AllreducePlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfe
             params.fusion_params.hidden_size = inputDesc[0].dims.d[inputDesc[0].dims.nbDims - 1];
             params.fusion_params.eps = mEps;
             params.fusion_params.intermediate_buffer = outputs[1];
-            TLLM_LOG_DEBUG("residualRmsNorm called");
+            LOG_DEBUG("residualRmsNorm called");
             suggestify::kernels::residualRmsNorm(params, mType, stream, mOp);
         }
         else
@@ -317,22 +317,22 @@ int AllreducePlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfe
     }
     else if (runtimeStrategy == AllReduceStrategyType::UB)
     {
-        TLLM_CHECK(!mBias);
+        CHECK(!mBias);
 
         auto const tpSize = mGroup.size();
         size_t dtype_size = suggestify::common::getDTypeSize(mType);
         int hidden_size = inputDesc[0].dims.d[inputDesc[0].dims.nbDims - 1];
 
-        TLLM_CHECK_WITH_INFO(suggestify::runtime::ub::ub_is_initialized(), "UserBuffer has not been initialized!");
+        CHECK_WITH_INFO(suggestify::runtime::ub::ub_is_initialized(), "UserBuffer has not been initialized!");
         auto ub_buffer0 = suggestify::runtime::ub::ub_get(0);
         auto ub_buffer1 = suggestify::runtime::ub::ub_get(1);
-        TLLM_CHECK(inputs[0] == ub_buffer0.addr);
+        CHECK(inputs[0] == ub_buffer0.addr);
         auto ub_comm = suggestify::runtime::ub::ub_comm();
         if (mOp == AllReduceFusionOp::RESIDUAL_RMS_NORM)
         {
-            TLLM_CHECK(mAffine);
-            TLLM_CHECK(mScale);
-            TLLM_CHECK(outputs[0] == ub_buffer1.addr);
+            CHECK(mAffine);
+            CHECK(mScale);
+            CHECK(outputs[0] == ub_buffer1.addr);
             void* residual = const_cast<void*>(inputs[1]);
             void* gamma = const_cast<void*>(inputs[2]);
             float* scale = const_cast<float*>(reinterpret_cast<float const*>(inputs[3]));
@@ -342,20 +342,20 @@ int AllreducePlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfe
         }
         else if (mOp == AllReduceFusionOp::LAST_PROCESS_FOR_UB)
         {
-            TLLM_CHECK(outputs[1] == ub_buffer1.addr);
+            CHECK(outputs[1] == ub_buffer1.addr);
             void* residual = const_cast<void*>(inputs[1]);
             suggestify::kernels::ub::allreduce2_userbuff_inplace_launcher(
                 ub_buffer0.handle, 0, size, mType, ub_comm, stream);
             suggestify::kernels::ub::allgather2_userbuff_residual_launcher(
                 ub_buffer1.handle, 0, size, hidden_size, residual, mType, ub_comm, stream);
-            TLLM_CUDA_CHECK(
+            CUDA_CHECK(
                 cudaMemcpyAsync(outputs[0], ub_buffer0.addr, size * dtype_size, cudaMemcpyDeviceToDevice, stream));
         }
         else
         {
             suggestify::kernels::ub::allreduce2_userbuff_inplace_launcher(
                 ub_buffer0.handle, 0, size, mType, ub_comm, stream);
-            TLLM_CUDA_CHECK(
+            CUDA_CHECK(
                 cudaMemcpyAsync(outputs[0], ub_buffer0.addr, size * dtype_size, cudaMemcpyDeviceToDevice, stream));
         }
     }
@@ -401,7 +401,7 @@ int AllreducePlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfe
                     = reinterpret_cast<void**>(const_cast<void*>(inputs[1]))[tpSize * 6 + i];
             }
         }
-        TLLM_LOG_DEBUG("customAllReduce called");
+        LOG_DEBUG("customAllReduce called");
         suggestify::kernels::customAllReduce(params, mType, runtimeStrategy, mConfig, mOp, stream);
     }
 
@@ -544,16 +544,16 @@ void AllreducePlugin::initGroupTopology() noexcept
 void AllreducePlugin::setGroupTopology() noexcept
 {
     auto const rank = COMM_SESSION.getRank();
-    TLLM_LOG_INFO("Detecting local TP group for rank %d", rank);
+    LOG_INFO("Detecting local TP group for rank %d", rank);
     std::set<int> localGroup = getLocalGroup(mGroup);
     if (mGroup.size() != localGroup.size())
     {
         mIsP2PSupported = false;
         mIsNVLINKSupported = false;
-        TLLM_LOG_INFO("Found inter-node TP group for rank %d", rank);
+        LOG_INFO("Found inter-node TP group for rank %d", rank);
         return;
     }
-    TLLM_LOG_INFO("TP group is intra-node for rank %d", rank);
+    LOG_INFO("TP group is intra-node for rank %d", rank);
 
     NvmlManager nvmlManager;
     std::unordered_set<int> visitedDevice;
@@ -570,7 +570,7 @@ void AllreducePlugin::setGroupTopology() noexcept
             }
 
             int canAccessPeer = 0;
-            TLLM_CUDA_CHECK(cudaDeviceCanAccessPeer(&canAccessPeer, firstDeviceId, secondDeviceId));
+            CUDA_CHECK(cudaDeviceCanAccessPeer(&canAccessPeer, firstDeviceId, secondDeviceId));
 
             if (!canAccessPeer)
             {
@@ -651,14 +651,14 @@ int AllreducePlugin::initialize() noexcept
         return 0;
     }
 
-    TLLM_LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
+    LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
     mNcclComm = getComm(mGroup);
     if (mStrategy != AllReduceStrategyType::NCCL)
     {
         initGroupTopology();
     }
 
-    TLLM_LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
+    LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
     return 0;
 }
 
@@ -744,7 +744,7 @@ IPluginV2* AllreducePluginCreator::createPlugin(char const* name, PluginFieldCol
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "group"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             auto const* r = static_cast<int const*>(fields[i].data);
             for (int j = 0; j < fields[i].length; ++j)
             {
@@ -754,47 +754,47 @@ IPluginV2* AllreducePluginCreator::createPlugin(char const* name, PluginFieldCol
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "strategy"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             strategy = static_cast<AllReduceStrategyType>(*static_cast<int8_t const*>(fields[i].data));
         }
         else if (!strcmp(attrName, "config"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             config = static_cast<AllReduceStrategyConfig>(*static_cast<int8_t const*>(fields[i].data));
         }
         else if (!strcmp(attrName, "fusion_op"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             fusion_op = static_cast<AllReduceFusionOp>(*static_cast<int8_t const*>(fields[i].data));
         }
         else if (!strcmp(attrName, "counter"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             counter = *static_cast<int32_t const*>(fields[i].data);
         }
         else if (!strcmp(attrName, "eps"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             eps = *static_cast<float const*>(fields[i].data);
         }
         else if (!strcmp(attrName, "affine"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             affine = *static_cast<int8_t const*>(fields[i].data);
         }
         else if (!strcmp(attrName, "bias"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             bias = *static_cast<int8_t const*>(fields[i].data);
         }
         else if (!strcmp(attrName, "scale"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             scale = *static_cast<int8_t const*>(fields[i].data);
         }
     }

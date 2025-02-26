@@ -26,7 +26,7 @@ SendPlugin::SendPlugin(void const* data, size_t length)
     char const *d = reinterpret_cast<char const*>(data), *a = d;
     read(d, mType);
     read(d, mTgtRank);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -76,9 +76,9 @@ int SendPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfer1::P
         size *= inputDesc[0].dims.d[i];
     }
 
-    TLLM_LOG_DEBUG("start ncclSend with size %d", size);
+    LOG_DEBUG("start ncclSend with size %d", size);
     NCCLCHECK(ncclSend(inputs[0], size, (*getDtypeMap())[inputDesc[0].type], 1, mComm, stream));
-    TLLM_LOG_DEBUG("end ncclSend with size %d", size);
+    LOG_DEBUG("end ncclSend with size %d", size);
     return 0;
 }
 
@@ -183,12 +183,12 @@ IPluginV2* SendPluginCreator::createPlugin(char const* name, PluginFieldCollecti
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "tgt_rank"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             tgtRank = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
     }

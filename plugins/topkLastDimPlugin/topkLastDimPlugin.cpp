@@ -18,9 +18,9 @@ TopkLastDimPlugin::TopkLastDimPlugin(nvinfer1::DataType type, int32_t k, bool is
     , mK(k)
     , mIsLargest(is_largest)
 {
-    TLLM_CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16),
+    CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16),
         "Unsupported data type, pre SM 80 GPUs do not support bfloat16");
-    TLLM_CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF)
+    CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF)
             || (mType == DataType::kINT32),
         "Only support int, float, half, and bfloat16.");
 }
@@ -31,9 +31,9 @@ TopkLastDimPlugin::TopkLastDimPlugin(void const* data, size_t length)
     read(d, mType);
     read(d, mK);
     read(d, mIsLargest);
-    TLLM_CHECK(d == a + length);
-    TLLM_CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16), "Unsupported data type");
-    TLLM_CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF)
+    CHECK(d == a + length);
+    CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16), "Unsupported data type");
+    CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF)
             || (mType == DataType::kINT32),
         "Only support int, float, half, and bfloat16.");
 }
@@ -48,7 +48,7 @@ nvinfer1::IPluginV2DynamicExt* TopkLastDimPlugin::clone() const noexcept
 nvinfer1::DimsExprs TopkLastDimPlugin::getOutputDimensions(
     int outputIndex, nvinfer1::DimsExprs const* inputs, int nbInputs, nvinfer1::IExprBuilder& exprBuilder) noexcept
 {
-    TLLM_CHECK_WITH_INFO(outputIndex < 2, "Only 2 outputs.");
+    CHECK_WITH_INFO(outputIndex < 2, "Only 2 outputs.");
     nvinfer1::DimsExprs output(inputs[0]);
     int numDim = output.nbDims;
     output.d[numDim - 1] = exprBuilder.constant(mK);
@@ -149,7 +149,7 @@ int TopkLastDimPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 nvinfer1::DataType TopkLastDimPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK_WITH_INFO(index < 2, "Only 2 outputs.");
+    CHECK_WITH_INFO(index < 2, "Only 2 outputs.");
     nvinfer1::DataType data_type;
     if (index == 1)
     {
@@ -241,17 +241,17 @@ IPluginV2* TopkLastDimPluginCreator::createPlugin(char const* name, PluginFieldC
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "k"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             k = static_cast<int32_t>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "is_largest"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             is_largest = static_cast<int32_t>(*(static_cast<int const*>(fields[i].data))) != 0;
         }
     }

@@ -121,7 +121,7 @@ public:
         , mManageWeightsType(ManageWeightsType::kDisabled)
         , mSkipCrossAttnBlocks(false)
     {
-        TLLM_CHECK_WITH_INFO(mNbLayers >= mNbAttentionLayers + mNbRnnLayers,
+        CHECK_WITH_INFO(mNbLayers >= mNbAttentionLayers + mNbRnnLayers,
             "Number of layers (%d) expected to be >= number of attention (%d) + number of rnn layers (%d)", mNbLayers,
             mNbAttentionLayers, mNbRnnLayers);
         setNbKvHeads(mNbHeads);
@@ -145,7 +145,7 @@ public:
     [[nodiscard]] SizeType32 countLocalLayers(
         LayerType layerType, SizeType32 pipelineParallelism = 1, SizeType32 pipelineParallelismRank = 0) const
     {
-        TLLM_CHECK_WITH_INFO(pipelineParallelism > 0, "Invalid pipelineParallelism: %d", pipelineParallelism);
+        CHECK_WITH_INFO(pipelineParallelism > 0, "Invalid pipelineParallelism: %d", pipelineParallelism);
         auto const numLocalLayers = mNbLayers / pipelineParallelism;
         auto const firstLocalLayerIt = mLayerTypes.cbegin() + (numLocalLayers * pipelineParallelismRank);
         return std::count(firstLocalLayerIt, firstLocalLayerIt + numLocalLayers, layerType);
@@ -169,7 +169,7 @@ public:
     {
         if (mLayerTypes.empty())
         {
-            TLLM_LOG_DEBUG("Assuming uniform distribution of attention layers between ranks");
+            LOG_DEBUG("Assuming uniform distribution of attention layers between ranks");
             return mNbAttentionLayers / pipelineParallelism;
         }
         return countLocalLayers(LayerType::kATTENTION, pipelineParallelism, pipelineParallelismRank);
@@ -180,7 +180,7 @@ public:
     {
         if (mLayerTypes.empty())
         {
-            TLLM_LOG_DEBUG("Assuming uniform distribution of recurrent layers between ranks");
+            LOG_DEBUG("Assuming uniform distribution of recurrent layers between ranks");
             return mNbRnnLayers / pipelineParallelism;
         }
         return countLocalLayers(LayerType::kRECURRENT, pipelineParallelism, pipelineParallelismRank);
@@ -193,7 +193,7 @@ public:
 
     [[nodiscard]] SizeType32 getNbKvHeads(SizeType32 layerIdx) const
     {
-        TLLM_CHECK_WITH_INFO(layerIdx < mNbAttentionLayers, "Layer index %d is out of bounds", layerIdx);
+        CHECK_WITH_INFO(layerIdx < mNbAttentionLayers, "Layer index %d is out of bounds", layerIdx);
         return mNumKvHeadsPerAttentionLayer[layerIdx];
     }
 
@@ -586,19 +586,19 @@ public:
 
     [[nodiscard]] SpeculativeDecodingModule const& getSpeculativeDecodingModule() const noexcept
     {
-        TLLM_CHECK_WITH_INFO(mSpeculativeDecodingModule, "Speculative decoding module is not set");
+        CHECK_WITH_INFO(mSpeculativeDecodingModule, "Speculative decoding module is not set");
         return *mSpeculativeDecodingModule;
     }
 
     [[nodiscard]] std::shared_ptr<SpeculativeDecodingModule const> getSpeculativeDecodingModulePtr() const noexcept
     {
-        TLLM_CHECK_WITH_INFO(mSpeculativeDecodingModule, "Speculative decoding module is not set");
+        CHECK_WITH_INFO(mSpeculativeDecodingModule, "Speculative decoding module is not set");
         return mSpeculativeDecodingModule;
     }
 
     [[nodiscard]] std::shared_ptr<SpeculativeDecodingModule> getSpeculativeDecodingModulePtr() noexcept
     {
-        TLLM_CHECK_WITH_INFO(mSpeculativeDecodingModule, "Speculative decoding module is not set");
+        CHECK_WITH_INFO(mSpeculativeDecodingModule, "Speculative decoding module is not set");
         return mSpeculativeDecodingModule;
     }
 
@@ -729,8 +729,8 @@ public:
     getNumKvHeadsPerLayerLocalRange(
         SizeType32 pipelineParallelism = 1, SizeType32 pipelineParallelismRank = 0, bool isCrossAttention = false) const
     {
-        TLLM_LOG_TRACE("%s start: %d", __PRETTY_FUNCTION__);
-        TLLM_CHECK_WITH_INFO(pipelineParallelism > 0, "Invalid pipelineParallelism: %d", pipelineParallelism);
+        LOG_TRACE("%s start: %d", __PRETTY_FUNCTION__);
+        CHECK_WITH_INFO(pipelineParallelism > 0, "Invalid pipelineParallelism: %d", pipelineParallelism);
 
         auto const numPrevAttnLayers
             = countLowerRankLayers(LayerType::kATTENTION, pipelineParallelism, pipelineParallelismRank);
@@ -739,14 +739,14 @@ public:
             : mNumKvHeadsPerAttentionLayer.cbegin() + numPrevAttnLayers;
         auto const numLocalAttentionLayers
             = countLocalLayers(LayerType::kATTENTION, pipelineParallelism, pipelineParallelismRank);
-        TLLM_LOG_TRACE("%s stop: %d", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s stop: %d", __PRETTY_FUNCTION__);
         return std::make_pair(firstLocalAttentionLayerIt, firstLocalAttentionLayerIt + numLocalAttentionLayers);
     }
 
     void setNumKvHeadsPerLayer(std::vector<SizeType32> const& headsPerLayer)
     {
         auto const numElems = static_cast<SizeType32>(headsPerLayer.size());
-        TLLM_CHECK_WITH_INFO(numElems == mNbAttentionLayers,
+        CHECK_WITH_INFO(numElems == mNbAttentionLayers,
             "Length of head_per_layer (%d) must match number of attention layers (%d)", numElems, mNbAttentionLayers);
         mNumKvHeadsPerAttentionLayer = headsPerLayer;
     }
@@ -754,7 +754,7 @@ public:
     void setNumKvHeadsPerCrossLayer(std::vector<SizeType32> const& headsPerLayer)
     {
         auto const numElems = static_cast<SizeType32>(headsPerLayer.size());
-        TLLM_CHECK_WITH_INFO(numElems == mNbAttentionLayers,
+        CHECK_WITH_INFO(numElems == mNbAttentionLayers,
             "Length of head_per_layer (%d) must match number of attention layers (%d)", numElems, mNbAttentionLayers);
         mNumKvHeadsPerCrossAttentionLayer = headsPerLayer;
     }

@@ -25,7 +25,7 @@ RecvPlugin::RecvPlugin(void const* data, size_t length)
     char const *d = reinterpret_cast<char const*>(data), *a = d;
     read(d, mType);
     read(d, mSrcRank);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -74,9 +74,9 @@ int RecvPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfer1::P
     {
         size *= inputDesc[0].dims.d[i];
     }
-    TLLM_LOG_DEBUG("start ncclRecv with size %d", size);
+    LOG_DEBUG("start ncclRecv with size %d", size);
     NCCLCHECK(ncclRecv(outputs[0], size, (*getDtypeMap())[inputDesc[0].type], 0, mComm, stream));
-    TLLM_LOG_DEBUG("end ncclRecv with size %d", size);
+    LOG_DEBUG("end ncclRecv with size %d", size);
 
     return 0;
 }
@@ -180,12 +180,12 @@ IPluginV2* RecvPluginCreator::createPlugin(char const* name, PluginFieldCollecti
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "src_rank"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             srcRank = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
     }

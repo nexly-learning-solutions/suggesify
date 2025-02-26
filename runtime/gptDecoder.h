@@ -114,7 +114,7 @@ inline std::unique_ptr<IGptDecoder> IGptDecoder::create(executor::DecodingMode c
         return std::make_unique<GptDecoder<half>>(mode, maxBatchSize, maxBeamWidth, vocabSize, vocabSizePadded,
             maxSequenceLength, stream, speculativeDecodingModule);
     default:
-        TLLM_THROW("Unsupported decoder data type: %d. Use either kFLOAT or kHALF.", static_cast<int>(dtype));
+        THROW("Unsupported decoder data type: %d. Use either kFLOAT or kHALF.", static_cast<int>(dtype));
         return nullptr;
     }
 }

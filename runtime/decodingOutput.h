@@ -52,7 +52,7 @@ public:
         : ids{std::move(ids)}
         , gatheredIds{std::move(gatheredIds)}
     {
-        TLLM_CHECK_WITH_INFO(static_cast<bool>(this->ids), "Invalid ids tensor");
+        CHECK_WITH_INFO(static_cast<bool>(this->ids), "Invalid ids tensor");
     }
 
     TensorPtr ids;

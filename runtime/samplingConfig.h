@@ -44,7 +44,7 @@ private:
                 auto const& configValue = accessor(ci);
                 if (configValue.has_value())
                 {
-                    TLLM_CHECK(configValue.value().size() == 1);
+                    CHECK(configValue.value().size() == 1);
                     value = configValue.value().front();
                 }
                 values.push_back(value);
@@ -84,7 +84,7 @@ private:
                     ss << "inf";
                 }
                 ss << "]";
-                TLLM_LOG_WARNING(valid, ss.str());
+                LOG_WARNING(valid, ss.str());
             }
         }
         return valid;
@@ -98,7 +98,7 @@ public:
 
     explicit SamplingConfig(std::vector<SamplingConfig> const& configs)
     {
-        TLLM_CHECK(configs.size() > 0);
+        CHECK(configs.size() > 0);
         beamWidth = configs.front().beamWidth;
         numReturnSequences = configs.front().numReturnSequences;
         normalizeLogProbs = configs.front().normalizeLogProbs;
@@ -206,7 +206,7 @@ public:
         valid &= (beamWidth > 0);
         if (!valid)
         {
-            TLLM_LOG_WARNING(
+            LOG_WARNING(
                 "Requested beam width %d is incorrect. Must be > 0. To de-activate beam searching set beamWidth to 1.",
                 beamWidth);
         }
@@ -216,13 +216,13 @@ public:
             valid &= (numReturnSequences.value() > 0);
             if (!valid)
             {
-                TLLM_LOG_WARNING(
+                LOG_WARNING(
                     "Requested numReturnSequences %d is incorrect. Must be > 0.", numReturnSequences.value());
             }
             valid &= (beamWidth == 1 || numReturnSequences.value() <= beamWidth);
             if (!valid)
             {
-                TLLM_LOG_WARNING(
+                LOG_WARNING(
                     "Requested numReturnSequences %d is incorrect. In beam search, numReturnSequences should not "
                     "exceed the beam width %d.",
                     numReturnSequences.value(), beamWidth);

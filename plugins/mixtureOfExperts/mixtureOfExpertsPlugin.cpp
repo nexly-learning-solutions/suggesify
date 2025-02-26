@@ -152,7 +152,7 @@ MixtureOfExpertsPlugin::MixtureOfExpertsPlugin(void const* data, size_t length,
         mLoraProfiler->deserialize(d, mDims, mLoraGemmId2);
     }
 
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -200,12 +200,12 @@ void MixtureOfExpertsPlugin::serialize(void* buffer) const noexcept
 
 void MixtureOfExpertsPlugin::init()
 {
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         mType == DataType::kFP8 || mOutputType == mType, "MOE plugin only supports a different output type for FP8");
-    TLLM_CHECK_WITH_INFO(mType != DataType::kFP8 || suggestify::common::getSMVersion() >= 89,
+    CHECK_WITH_INFO(mType != DataType::kFP8 || suggestify::common::getSMVersion() >= 89,
         "MoE FP8 is not supported for architectures less than SM89");
 
-    TLLM_CHECK_WITH_INFO(!hasLora() || mLoraType == mOutputType, "The LoraType need to keep same with moe OutputType.");
+    CHECK_WITH_INFO(!hasLora() || mLoraType == mOutputType, "The LoraType need to keep same with moe OutputType.");
 
     if (mWeightType == nvinfer1::DataType::kINT8 && mQuantMode.hasInt4Weights())
     {
@@ -248,7 +248,7 @@ void MixtureOfExpertsPlugin::init()
         switch (mOutputType)
         {
         case nvinfer1::DataType::kFP8:
-            TLLM_THROW("Outputting FP8 directly is not currently supported");
+            THROW("Outputting FP8 directly is not currently supported");
             break;
         case nvinfer1::DataType::kHALF:
             mMOERunner = std::make_unique<CutlassMoeFCRunner<__nv_fp8_e4m3, __nv_fp8_e4m3, half, half>>();
@@ -259,13 +259,13 @@ void MixtureOfExpertsPlugin::init()
                 = std::make_unique<CutlassMoeFCRunner<__nv_fp8_e4m3, __nv_fp8_e4m3, __nv_bfloat16, __nv_bfloat16>>();
             break;
 #endif
-        default: TLLM_THROW("Invalid output type specified for FP8");
+        default: THROW("Invalid output type specified for FP8");
         }
     }
 #endif
     else
     {
-        TLLM_THROW(
+        THROW(
             "Could not construct the mixture of experts plugin with the requested input combination Activation: %d "
             "Weight: %d",
             static_cast<int>(mType), static_cast<int>(mWeightType));
@@ -293,11 +293,11 @@ void MixtureOfExpertsPlugin::init()
         mLoraImpl2 = std::make_shared<LoraImpl>(
             mExpertInterSize, loraOutSizes2, false, true, 1, mLoraType, mMaxLowRank, cublasWrapper);
 
-        TLLM_CUDA_CHECK(cudaEventCreate(&mMemcpyEvent));
+        CUDA_CHECK(cudaEventCreate(&mMemcpyEvent));
     }
     mSideStreamPtr = nullptr;
-    mDebugStallMain = suggestify::runtime::utils::stallStream("TLLM_DEBUG_MOE_STALL_MAIN");
-    mDebugStallSide = suggestify::runtime::utils::stallStream("TLLM_DEBUG_MOE_STALL_SIDE");
+    mDebugStallMain = suggestify::runtime::utils::stallStream("DEBUG_MOE_STALL_MAIN");
+    mDebugStallSide = suggestify::runtime::utils::stallStream("DEBUG_MOE_STALL_SIDE");
 }
 
 nvinfer1::IPluginV2DynamicExt* MixtureOfExpertsPlugin::clone() const noexcept
@@ -317,9 +317,9 @@ nvinfer1::DimsExprs MixtureOfExpertsPlugin::getOutputDimensions(
 bool MixtureOfExpertsPlugin::supportsFormatCombination(
     int pos, nvinfer1::PluginTensorDesc const* inOut, int nbInputs, int nbOutputs) noexcept
 {
-    TLLM_CHECK(0 <= pos && pos < getNbInputs() + getNbOutputs());
-    TLLM_CHECK_WITH_INFO(nbInputs == getNbInputs(), "Required input to plugin is missing");
-    TLLM_CHECK_WITH_INFO(nbOutputs == getNbOutputs(), "Required output to plugin is missing");
+    CHECK(0 <= pos && pos < getNbInputs() + getNbOutputs());
+    CHECK_WITH_INFO(nbInputs == getNbInputs(), "Required input to plugin is missing");
+    CHECK_WITH_INFO(nbOutputs == getNbOutputs(), "Required output to plugin is missing");
 
     if (inOut[pos].format != TensorFormat::kLINEAR)
     {
@@ -404,8 +404,8 @@ bool MixtureOfExpertsPlugin::supportsFormatCombination(
 void MixtureOfExpertsPlugin::configurePlugin(nvinfer1::DynamicPluginTensorDesc const* in, int nbInputs,
     nvinfer1::DynamicPluginTensorDesc const* out, int nbOutputs) noexcept
 {
-    TLLM_CHECK_WITH_INFO(nbInputs == getNbInputs(), "Required input to plugin is missing");
-    TLLM_CHECK_WITH_INFO(nbOutputs == getNbOutputs(), "Required output to plugin is missing");
+    CHECK_WITH_INFO(nbInputs == getNbInputs(), "Required input to plugin is missing");
+    CHECK_WITH_INFO(nbOutputs == getNbOutputs(), "Required output to plugin is missing");
 
     auto in_tensor = in[getInputTensorIndex()];
 
@@ -422,9 +422,9 @@ void MixtureOfExpertsPlugin::configurePlugin(nvinfer1::DynamicPluginTensorDesc c
     int const minK = weights_1.min.d[inner_dim_idx];
     int const minN = weights_2.min.d[inner_dim_idx];
 
-    TLLM_CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
-    TLLM_CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
-    TLLM_CHECK_WITH_INFO(maxK == mExpertHiddenSize && maxN == mExpertInterSize,
+    CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
+    CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
+    CHECK_WITH_INFO(maxK == mExpertHiddenSize && maxN == mExpertInterSize,
         "Configured tensor sizes %dx%d does not match constructor param size %ldx%ld", maxK, maxN, mExpertHiddenSize,
         mExpertInterSize);
 
@@ -492,7 +492,7 @@ auto MixtureOfExpertsPlugin::setupWorkspace(void* base_ptr, int64_t num_tokens, 
 int64_t MixtureOfExpertsPlugin::getNumTokens(nvinfer1::PluginTensorDesc const* input_tensors) const
 {
     int ndim = input_tensors[getInputTensorIndex()].dims.nbDims;
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         3 == ndim || 2 == ndim, "hidden_state dimension should be either 2 [b*s, hidden], or 3 [b, s, hidden]");
     int64_t num_tokens = input_tensors[getInputTensorIndex()].dims.d[0];
     if (ndim == 3)
@@ -505,8 +505,8 @@ int64_t MixtureOfExpertsPlugin::getNumTokens(nvinfer1::PluginTensorDesc const* i
 size_t MixtureOfExpertsPlugin::getWorkspaceSize(nvinfer1::PluginTensorDesc const* inputs, int nbInputs,
     nvinfer1::PluginTensorDesc const* outputs, int nbOutputs) const noexcept
 {
-    TLLM_CHECK_WITH_INFO(nbInputs == getNbInputs(), "Required input to plugin is missing");
-    TLLM_CHECK_WITH_INFO(nbOutputs == getNbOutputs(), "Required output to plugin is missing");
+    CHECK_WITH_INFO(nbInputs == getNbInputs(), "Required input to plugin is missing");
+    CHECK_WITH_INFO(nbOutputs == getNbOutputs(), "Required output to plugin is missing");
 
     if (useSideStream())
     {
@@ -527,13 +527,13 @@ QuantParams suggestify::plugins::MixtureOfExpertsPlugin::getQuantParams(
 {
     if (hasExpertIntQuantScales())
     {
-        TLLM_CHECK(scale_1 && scale_2);
+        CHECK(scale_1 && scale_2);
         return QuantParams::Int(scale_1, scale_2);
     }
     else if (hasExpertFp8QuantScales())
     {
-        TLLM_CHECK(scale_1 && scale_2 && scale_3);
-        TLLM_CHECK(scale_4 || !hasExpertFp8FinalQuantScales());
+        CHECK(scale_1 && scale_2 && scale_3);
+        CHECK(scale_4 || !hasExpertFp8FinalQuantScales());
         return QuantParams::FP8(static_cast<float const*>(scale_1), static_cast<float const*>(scale_2),
             static_cast<float const*>(scale_3), static_cast<float const*>(scale_4), static_cast<float const*>(scale_5));
     }
@@ -551,7 +551,7 @@ int MixtureOfExpertsPlugin::getNumLoraRequests(nvinfer1::PluginTensorDesc const*
 LoraParams MixtureOfExpertsPlugin::getLoraParams(
     nvinfer1::PluginTensorDesc const* inputDesc, void const* const* inputs, void* workspace)
 {
-    TLLM_CHECK(hasLora());
+    CHECK(hasLora());
 
     int const num_reqs = getNumLoraRequests(inputDesc);
     int64_t const num_tokens = getNumTokens(inputDesc);
@@ -639,7 +639,7 @@ LoraParams MixtureOfExpertsPlugin::getLoraParams(
         }
     }
 
-    TLLM_CHECK_WITH_INFO(idx == num_tokens, fmtstr("idx %d num_tokens %ld", idx, num_tokens));
+    CHECK_WITH_INFO(idx == num_tokens, fmtstr("idx %d num_tokens %ld", idx, num_tokens));
 
     return LoraParams(num_reqs, mLoraExpandFC1Ranks.data(), mLoraExpandFC1WeightPtrs.data(), mLoraExpandFC2Ranks.data(),
         mLoraExpandFC2WeightPtrs.data(), mLoraImpl1, mLoraImpl2, workspace, &mMemcpyEvent, mLoraExpandGatedRanks.data(),
@@ -668,7 +668,7 @@ int MixtureOfExpertsPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
             mSideStreamPtr = reinterpret_cast<nvinfer1::pluginInternal::SideStream*>(
                 getPluginRegistry()->acquirePluginResource(resource_name, &side_stream));
         }
-        mSideStreamPtr->stallMainStream("TLLM_DEBUG_MOE_STALL_MAIN", stream, mDebugStallMain);
+        mSideStreamPtr->stallMainStream("DEBUG_MOE_STALL_MAIN", stream, mDebugStallMain);
         mSideStreamPtr->waitMainStreamOnSideStream(stream);
         size_t count = 1;
         for (int i = 0; i < inputDesc[getInputDummyTensorIndex()].dims.nbDims; ++i)
@@ -676,7 +676,7 @@ int MixtureOfExpertsPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
             count *= inputDesc[getInputDummyTensorIndex()].dims.d[i];
         }
         count *= suggestify::runtime::BufferDataType(inputDesc[getInputDummyTensorIndex()].type).getSize();
-        TLLM_CUDA_CHECK(cudaMemcpyAsync(outputs[getOutputDummyTensorIndex()], inputs[getInputDummyTensorIndex()], count,
+        CUDA_CHECK(cudaMemcpyAsync(outputs[getOutputDummyTensorIndex()], inputs[getInputDummyTensorIndex()], count,
             cudaMemcpyDeviceToDevice, stream));
         stream = mSideStreamPtr->getStream();
         auto const workspace_size = setupWorkspace(nullptr, num_tokens, num_reqs).size;
@@ -686,27 +686,27 @@ int MixtureOfExpertsPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 
     auto w1_desc = inputDesc[getExpertWeights1Index()];
     auto w2_desc = inputDesc[getExpertWeights2Index()];
-    TLLM_CHECK(w1_desc.dims.nbDims == 3);
+    CHECK(w1_desc.dims.nbDims == 3);
     size_t experts_per_node = mNumExperts / mParallelismConfig.ep_size;
-    TLLM_CHECK(w1_desc.dims.d[0] == experts_per_node);
-    TLLM_CHECK(w2_desc.dims.nbDims == 3);
-    TLLM_CHECK(w2_desc.dims.d[0] == experts_per_node);
+    CHECK(w1_desc.dims.d[0] == experts_per_node);
+    CHECK(w2_desc.dims.nbDims == 3);
+    CHECK(w2_desc.dims.d[0] == experts_per_node);
 
     int packed_elements = getWeightPackedElements();
     int inner_dim_idx = getGemmShapeInnerDimIndex();
     int outer_dim_idx = getGemmShapeOuterDimIndex();
-    TLLM_CHECK(w1_desc.dims.d[inner_dim_idx] == mExpertHiddenSize);
+    CHECK(w1_desc.dims.d[inner_dim_idx] == mExpertHiddenSize);
     if (isGatedActivation(mActivationType))
     {
-        TLLM_CHECK(w1_desc.dims.d[outer_dim_idx] * packed_elements == mExpertInterSize * 2);
+        CHECK(w1_desc.dims.d[outer_dim_idx] * packed_elements == mExpertInterSize * 2);
     }
     else
     {
-        TLLM_CHECK(w1_desc.dims.d[outer_dim_idx] * packed_elements == mExpertInterSize);
+        CHECK(w1_desc.dims.d[outer_dim_idx] * packed_elements == mExpertInterSize);
     }
 
-    TLLM_CHECK(w2_desc.dims.d[inner_dim_idx] == mExpertInterSize);
-    TLLM_CHECK(w2_desc.dims.d[outer_dim_idx] * packed_elements == mExpertHiddenSize);
+    CHECK(w2_desc.dims.d[inner_dim_idx] == mExpertInterSize);
+    CHECK(w2_desc.dims.d[outer_dim_idx] * packed_elements == mExpertHiddenSize);
 
     QuantParams quant_params{};
     if (hasExpertIntQuantScales())
@@ -750,7 +750,7 @@ int MixtureOfExpertsPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 
     if (useSideStream())
     {
-        mSideStreamPtr->stallSideStream("TLLM_DEBUG_MOE_STALL_SIDE", mDebugStallSide);
+        mSideStreamPtr->stallSideStream("DEBUG_MOE_STALL_SIDE", mDebugStallSide);
     }
 
     return 0;
@@ -759,8 +759,8 @@ int MixtureOfExpertsPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 nvinfer1::DataType MixtureOfExpertsPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == getOutputTensorIndex() || index == getOutputDummyTensorIndex());
-    TLLM_CHECK(inputTypes[getInputTensorIndex()] == mType);
+    CHECK(index == getOutputTensorIndex() || index == getOutputDummyTensorIndex());
+    CHECK(inputTypes[getInputTensorIndex()] == mType);
     if (useSideStream() && index == getOutputDummyTensorIndex())
     {
         return inputTypes[getInputDummyTensorIndex()];
@@ -810,7 +810,7 @@ void MixtureOfExpertsPlugin::destroy() noexcept
 {
     if (hasLora())
     {
-        TLLM_CUDA_CHECK(cudaEventDestroy(mMemcpyEvent));
+        CUDA_CHECK(cudaEventDestroy(mMemcpyEvent));
     }
     delete this;
 }
@@ -945,8 +945,8 @@ IPluginV2* MixtureOfExpertsPluginCreator::createPlugin(
         {
             if (!strcmp(item.key, attrName))
             {
-                TLLM_CHECK(fields[i].type == nvinfer1::PluginFieldType::kINT32);
-                TLLM_CHECK_WITH_INFO(!item.set, "Parameter %s was set twice", item.key);
+                CHECK(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                CHECK_WITH_INFO(!item.set, "Parameter %s was set twice", item.key);
                 item.field = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
                 item.set = true;
             }
@@ -954,14 +954,14 @@ IPluginV2* MixtureOfExpertsPluginCreator::createPlugin(
 
         if (!strcmp(attrName, "sparse_mixer_epsilon"))
         {
-            TLLM_CHECK(fields[i].type == nvinfer1::PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == nvinfer1::PluginFieldType::kFLOAT32);
             mSparseMixerEpsilon = *static_cast<float const*>(fields[i].data);
         }
     }
 
     for (auto& item : input_map)
     {
-        TLLM_CHECK_WITH_INFO(item.set || item.optional, "Parameter %s is required but not set", item.key);
+        CHECK_WITH_INFO(item.set || item.optional, "Parameter %s is required but not set", item.key);
     }
 
     if (mOutputType == INT_MAX)
@@ -971,14 +971,14 @@ IPluginV2* MixtureOfExpertsPluginCreator::createPlugin(
 
     if (mUseLora)
     {
-        TLLM_CHECK_WITH_INFO(mLoraType != INT_MAX && mMaxLowRank != 0,
+        CHECK_WITH_INFO(mLoraType != INT_MAX && mMaxLowRank != 0,
             "MoE fuse lora, lora_type_id and max_low_rank are required but not set");
     }
 
     if (static_cast<MOEExpertScaleNormalizationMode>(mNormalizationMode)
         == MOEExpertScaleNormalizationMode::SPARSE_MIXER)
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             mSparseMixerEpsilon > 0, "sparse_mixer_epsilon must be set when normalization mode is SPARSE_MIXER");
     }
 

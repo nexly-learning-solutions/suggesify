@@ -33,7 +33,7 @@ public:
     explicit Input(TensorPtr logits)
         : logits{std::move(logits)}
     {
-        TLLM_CHECK_WITH_INFO(static_cast<bool>(this->logits), "Invalid logits tensor");
+        CHECK_WITH_INFO(static_cast<bool>(this->logits), "Invalid logits tensor");
     }
 
     TensorPtr logits;

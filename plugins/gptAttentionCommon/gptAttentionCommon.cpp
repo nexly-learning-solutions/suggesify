@@ -226,7 +226,7 @@ bool GPTAttentionPluginCommon::convertMMHAParamsToXQAParams(suggestify::kernels:
     xqaParams.rotary_embedding_inv_freq_cache = generationsParams.rotary_inv_freq;
     if (!forConfigurePlugin)
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             !(mIsSpecDecodingEnabled && mUseSpecDecoding) || generationsParams.spec_decoding_packed_mask != nullptr,
             "Speculative decoding mode needs a valid packed_mask input tensor.");
     }
@@ -335,7 +335,7 @@ void fusedQKV_masked_attention_dispatch(Multihead_attention_params<T_MMHA, CROSS
     if (input_params.quant_option.hasStaticActivationScaling() || input_params.fp8_context_fmha)
     {
         params.qkv_scale_quant_orig = input_params.qkv_scale_out;
-        TLLM_CHECK_WITH_INFO(!input_params.fp8_context_fmha || input_params.attention_out_scale != nullptr,
+        CHECK_WITH_INFO(!input_params.fp8_context_fmha || input_params.attention_out_scale != nullptr,
             "attention output scale should be provided.");
         params.attention_out_scale_orig_quant = input_params.attention_out_scale;
     }
@@ -459,19 +459,19 @@ GPTAttentionPluginCommon::GPTAttentionPluginCommon(int layer_idx, int num_heads,
         mEnableContextFMHA = false;
         if (!(mType == nvinfer1::DataType::kHALF || mType == nvinfer1::DataType::kBF16))
         {
-            TLLM_LOG_WARNING("Fall back to unfused MHA because of unsupported data type.");
+            LOG_WARNING("Fall back to unfused MHA because of unsupported data type.");
         }
         else if (mPositionEmbeddingType == suggestify::kernels::PositionEmbeddingType::kRELATIVE)
         {
-            TLLM_LOG_WARNING("Fall back to unfused MHA because of relative position embedding.");
+            LOG_WARNING("Fall back to unfused MHA because of relative position embedding.");
         }
         else if (mSM == 70 && isALiBi())
         {
-            TLLM_LOG_WARNING("Alibi is not supported for FMHA on Volta.");
+            LOG_WARNING("Alibi is not supported for FMHA on Volta.");
         }
         else if (isCrossAttention() && !mPagedKVCache)
         {
-            TLLM_LOG_WARNING("Fall back to unfused MHA because of cross attention + contiguous kv cache.");
+            LOG_WARNING("Fall back to unfused MHA because of cross attention + contiguous kv cache.");
         }
         else
         {
@@ -481,35 +481,35 @@ GPTAttentionPluginCommon::GPTAttentionPluginCommon(int layer_idx, int num_heads,
 
     if (mFP8ContextFMHA)
     {
-        TLLM_CHECK_WITH_INFO(mEnableContextFMHA, "FP8 FMHA cannot be enabled because Context FMHA is not supported.");
-        TLLM_CHECK_WITH_INFO(mSM == 89 || mSM == 90, "FP8 FMHA cannot be enabled except on Ada or Hopper Arch.");
+        CHECK_WITH_INFO(mEnableContextFMHA, "FP8 FMHA cannot be enabled because Context FMHA is not supported.");
+        CHECK_WITH_INFO(mSM == 89 || mSM == 90, "FP8 FMHA cannot be enabled except on Ada or Hopper Arch.");
     }
 
-    TLLM_CHECK(isRoPE() == (rotary_embedding_dim != 0));
-    TLLM_CHECK_WITH_INFO((mSM >= 80) || (mType != nvinfer1::DataType::kBF16),
+    CHECK(isRoPE() == (rotary_embedding_dim != 0));
+    CHECK_WITH_INFO((mSM >= 80) || (mType != nvinfer1::DataType::kBF16),
         "Unsupported data type, pre SM 80 GPUs do not support bfloat16");
 
     if (mSM == 70 && mEnableContextFMHA)
     {
-        TLLM_CHECK_WITH_INFO(!mFMHAForceFP32Acc, "FP32 Acc is not supported on Volta");
+        CHECK_WITH_INFO(!mFMHAForceFP32Acc, "FP32 Acc is not supported on Volta");
     }
 
     if (!mmha_supported(getHeadSize()) && !mIsMLAEnabled)
     {
-        TLLM_CHECK_WITH_INFO(false, "Head size %d is not supported by MMHA.", getHeadSize());
+        CHECK_WITH_INFO(false, "Head size %d is not supported by MMHA.", getHeadSize());
     }
 
     if (mIsMLAEnabled)
     {
-        TLLM_CHECK_WITH_INFO(mEnableContextFMHA, "MLA(Deepseek v2) only support fmha");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(mEnableContextFMHA, "MLA(Deepseek v2) only support fmha");
+        CHECK_WITH_INFO(
             !mFP8ContextFMHA && !mDenseContextFMHA, "MLA(Deepseek v2) currently not support FP8 and dense fmha");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             mPagedKVCache && mUseKVCache && mRemovePadding, "MLA(Deepseek v2) only support paged kv cache");
-        TLLM_CHECK_WITH_INFO(!mCrossAttention, "MLA(Deepseek v2) do not support cross attention right now");
-        TLLM_CHECK_WITH_INFO(mMaskType != suggestify::kernels::AttentionMaskType::CUSTOM_MASK,
+        CHECK_WITH_INFO(!mCrossAttention, "MLA(Deepseek v2) do not support cross attention right now");
+        CHECK_WITH_INFO(mMaskType != suggestify::kernels::AttentionMaskType::CUSTOM_MASK,
             "MLA(Deepseek v2) do not support custom mask right now");
-        TLLM_CHECK_WITH_INFO(mMLAParams.qk_rope_head_dim == 64 && mMLAParams.kv_lora_rank == 512,
+        CHECK_WITH_INFO(mMLAParams.qk_rope_head_dim == 64 && mMLAParams.kv_lora_rank == 512,
             "MLA(Deepseek v2) only support fixed kv_lora_rank(512) and fixed qk_rope_head_dim(64) right now.");
     }
 }
@@ -518,7 +518,7 @@ int GPTAttentionPluginCommon::getHeadSize(bool checkInit) const
 {
     if (checkInit)
     {
-        TLLM_CHECK_WITH_INFO(mHeadSize > 0, "Trying to read mHeadSize before it's been initialized");
+        CHECK_WITH_INFO(mHeadSize > 0, "Trying to read mHeadSize before it's been initialized");
     }
     return mHeadSize;
 }
@@ -599,12 +599,12 @@ GPTAttentionPluginCommon::GPTAttentionPluginCommon(void const* data, size_t leng
         read(d, groupItem);
         mCpGroup.insert(groupItem);
     }
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
         (int) length, (int) (d - a));
-    TLLM_CHECK_WITH_INFO((mSM >= 80) || (mType != nvinfer1::DataType::kBF16),
+    CHECK_WITH_INFO((mSM >= 80) || (mType != nvinfer1::DataType::kBF16),
         "Unsupported data type, pre SM 80 GPUs do not support bfloat16");
 }
 
@@ -754,7 +754,7 @@ int GPTAttentionPluginCommon::mlaPreContext(
     mlaParams<T>& params, EnqueueContextParams<T> const& context_params, cudaStream_t stream)
 {
     auto cublasHandle = mCublasWrapper->getCublasHandle();
-    TLLM_CUDA_CHECK(cublasSetStream(cublasHandle, stream));
+    CUDA_CHECK(cublasSetStream(cublasHandle, stream));
     mCublasWrapper->setStream(stream);
     mCublasWrapper->setWorkspace(params.workspace);
     if constexpr (std::is_same_v<T, half>)
@@ -847,7 +847,7 @@ int GPTAttentionPluginCommon::mlaGeneration(
     }
 
     auto cublasHandle = mCublasWrapper->getCublasHandle();
-    TLLM_CUDA_CHECK(cublasSetStream(cublasHandle, stream));
+    CUDA_CHECK(cublasSetStream(cublasHandle, stream));
     mCublasWrapper->setStream(stream);
     mCublasWrapper->setWorkspace(params.workspace);
     if constexpr (std::is_same_v<T, half>)
@@ -1015,7 +1015,7 @@ int GPTAttentionPluginCommon::enqueueContext(EnqueueContextParams<T> const& para
     int* block_counter = nullptr;
 
     auto cublasHandle = mCublasWrapper->getCublasHandle();
-    TLLM_CUDA_CHECK(cublasSetStream(cublasHandle, stream));
+    CUDA_CHECK(cublasSetStream(cublasHandle, stream));
     mCublasWrapper->setStream(stream);
     mCublasWrapper->setWorkspace(params.workspace);
     if constexpr (std::is_same_v<T, half>)
@@ -1241,12 +1241,12 @@ int GPTAttentionPluginCommon::enqueueContext(EnqueueContextParams<T> const& para
         sync_check_cuda_error();
 
         bool const enablePagedKVContextFMHA = mPagedKVCache && mPagedContextFMHA;
-        TLLM_CHECK_WITH_INFO(!(mKVCacheQuantMode.hasInt8KvCache() && enablePagedKVContextFMHA),
+        CHECK_WITH_INFO(!(mKVCacheQuantMode.hasInt8KvCache() && enablePagedKVContextFMHA),
             "Paged Context FMHA doesn't work with int8 kv cache currently.");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             !(mKVCacheQuantMode.hasFp8KvCache() && !mKVCacheQuantMode.hasFp8Qdq() && enablePagedKVContextFMHA),
             "FP8 Paged Context FMHA only works with fp8 quantization workflow currently.");
-        TLLM_CHECK_WITH_INFO(!(params.sink_token_length > 0 && enablePagedKVContextFMHA),
+        CHECK_WITH_INFO(!(params.sink_token_length > 0 && enablePagedKVContextFMHA),
             "Cannot support StreamingLLM now when enabling paged KV context FMHA.");
 
         int const max_kv_seq_len = isCrossAttention() ? params.cross_kv_length : params.max_past_kv_len;
@@ -1301,7 +1301,7 @@ int GPTAttentionPluginCommon::enqueueContext(EnqueueContextParams<T> const& para
 
         {
             std::string const beforeRopeStr = "ctx attention before RoPE at layer " + std::to_string(mLayerIdx);
-            TLLM_CHECK_DEBUG_WITH_INFO(suggestify::runtime::utils::tensorHasInvalid(params.num_tokens,
+            CHECK_DEBUG_WITH_INFO(suggestify::runtime::utils::tensorHasInvalid(params.num_tokens,
                                            (local_hidden_units_qo + 2 * local_hidden_units_kv), mType,
                                            const_cast<T*>(attention_input), stream, beforeRopeStr)
                     == false,
@@ -1318,7 +1318,7 @@ int GPTAttentionPluginCommon::enqueueContext(EnqueueContextParams<T> const& para
         }
         {
             std::string const afterRopeStr = "ctx attention after RoPE at layer " + std::to_string(mLayerIdx);
-            TLLM_CHECK_DEBUG_WITH_INFO(suggestify::runtime::utils::tensorHasInvalid(params.num_tokens,
+            CHECK_DEBUG_WITH_INFO(suggestify::runtime::utils::tensorHasInvalid(params.num_tokens,
                                            (local_hidden_units_qo + 2 * local_hidden_units_kv), mType,
                                            const_cast<T*>(attention_input), stream, afterRopeStr)
                     == false,
@@ -1431,7 +1431,7 @@ int GPTAttentionPluginCommon::enqueueContext(EnqueueContextParams<T> const& para
     }
     else
     {
-        TLLM_CHECK_DEBUG_WITH_INFO(params.logn_scaling_ptr == nullptr, "Unfused MHA does not support logn scaling");
+        CHECK_DEBUG_WITH_INFO(params.logn_scaling_ptr == nullptr, "Unfused MHA does not support logn scaling");
         cudaMemsetAsync(k_buf_2_, 0,
             reinterpret_cast<int8_t*>(v_buf_2_) - reinterpret_cast<int8_t*>(k_buf_2_) + v_buf_2_size, stream);
 
@@ -1762,13 +1762,13 @@ int GPTAttentionPluginCommon::enqueueGeneration(EnqueueGenerationParams<T> const
                 xqaParams, params,false)
             && mDecoderXQARunner->shouldUse(xqaParams,false))
         {
-            TLLM_LOG_DEBUG("XQA kernels are selected in the generation phase.");
+            LOG_DEBUG("XQA kernels are selected in the generation phase.");
             mDecoderXQARunner->template dispatch<KVCacheBuffer>(xqaParams, kv_cache_buffer, stream);
             return 0;
         }
         else if (mIsSpecDecodingEnabled && mUseSpecDecoding)
         {
-            TLLM_CHECK_WITH_INFO(false, "No available XQA kernels are found for speculative decoding mode.");
+            CHECK_WITH_INFO(false, "No available XQA kernels are found for speculative decoding mode.");
         }
     }
 
@@ -1780,7 +1780,7 @@ int GPTAttentionPluginCommon::enqueueGeneration(EnqueueGenerationParams<T> const
     if (!mMultiBlockMode && !mForceMultiBlockWarned && estimated_min_multi_block_count > 1)
     {
         mForceMultiBlockWarned = true;
-        TLLM_LOG_WARNING(
+        LOG_WARNING(
             "Force using MultiBlockMode in MMHA as shared memory is not enough, "
             "MultiBlockMode may have different accuracy compared to non-MultiBlockMode.");
     }
@@ -2019,7 +2019,7 @@ void GPTAttentionPluginCommon::prepareEnqueueGeneration(EnqueueGenerationParams<
         && this->template convertMMHAParamsToXQAParams<T, KVCacheBuffer>(xqaParams, params,true)
         && mDecoderXQARunner->shouldUse(xqaParams,true))
     {
-        TLLM_LOG_DEBUG("Preparing XQA kernels in prepareEnqueueGeneration.");
+        LOG_DEBUG("Preparing XQA kernels in prepareEnqueueGeneration.");
         mDecoderXQARunner->prepare(xqaParams);
     }
 }
@@ -2069,7 +2069,7 @@ int GPTAttentionPluginCommon::initialize() noexcept
         }
         else
         {
-            TLLM_CHECK_WITH_INFO(false, "GPTAttentionPlugin received wrong data type.");
+            CHECK_WITH_INFO(false, "GPTAttentionPlugin received wrong data type.");
         }
 
         if (mFP8ContextFMHA)
@@ -2146,13 +2146,13 @@ int GPTAttentionPluginCommon::initialize() noexcept
             fmhaParams.tpRank = mTpRank;
             mDecoderFMHARunner.reset(new FusedMHARunnerV2(fmhaParams));
 
-            TLLM_CHECK_WITH_INFO(mFMHARunner->isFmhaSupported() && mDecoderFMHARunner->isFmhaSupported(),
+            CHECK_WITH_INFO(mFMHARunner->isFmhaSupported() && mDecoderFMHARunner->isFmhaSupported(),
                 "Deepseek should be supported by fmha in context and generation part.");
         }
 
         mEnableContextFMHA = mFMHARunner->isFmhaSupported();
 
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             !useCustomMask() || mEnableContextFMHA, "Only Context FMHA supports custom mask input currently.");
     }
 
@@ -2170,11 +2170,11 @@ int GPTAttentionPluginCommon::initialize() noexcept
         {
             xqa_runner_data_type = DATA_TYPE_BF16;
         }
-        TLLM_LOG_DEBUG("Enabling XQA kernels for GPTAttention.");
+        LOG_DEBUG("Enabling XQA kernels for GPTAttention.");
         if (mIsSpecDecodingEnabled)
         {
-            TLLM_CHECK_WITH_INFO(mNumHeads % mNumKVHeads == 0, "mNumHeads should be multiples of mNumKVHeads.");
-            TLLM_CHECK_WITH_INFO(!mMultiBlockMode, "Medusa doesn't support multi-block mode.");
+            CHECK_WITH_INFO(mNumHeads % mNumKVHeads == 0, "mNumHeads should be multiples of mNumKVHeads.");
+            CHECK_WITH_INFO(!mMultiBlockMode, "Medusa doesn't support multi-block mode.");
         }
 
         mDecoderXQARunner.reset(new DecoderXQARunner(
@@ -2182,7 +2182,7 @@ int GPTAttentionPluginCommon::initialize() noexcept
     }
     else if (mIsSpecDecodingEnabled)
     {
-        TLLM_CHECK_WITH_INFO(false, "Speculative decoding mode doesn't support the data type or cross attention.");
+        CHECK_WITH_INFO(false, "Speculative decoding mode doesn't support the data type or cross attention.");
     }
 
     if (mNbMultiBlockSemaphores != 0)
@@ -2197,9 +2197,9 @@ int GPTAttentionPluginCommon::initialize() noexcept
 #if ENABLE_MULTI_DEVICE
     if (mCpSize > 1 && COMM_SESSION.getSize() > 1)
     {
-        TLLM_LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
+        LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
         mCpNcclComm = getComm(mCpGroup);
-        TLLM_LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
+        LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
     }
 #endif
     return 0;
@@ -2322,17 +2322,17 @@ void GPTAttentionPluginCommon::reserveSemaphoreArray(int32_t size)
 void GPTAttentionPluginCommon::debugCheckSemaphores(cudaStream_t stream)
 {
 #ifdef NDEBUG
-    TLLM_CHECK_WITH_INFO(false, "debugCheckSemaphores should not be called in release build");
+    CHECK_WITH_INFO(false, "debugCheckSemaphores should not be called in release build");
 #endif
     if (mNbMultiBlockSemaphores == 0)
     {
         return;
     }
     std::vector<uint32_t> hostBuf(mNbMultiBlockSemaphores);
-    TLLM_CUDA_CHECK(cudaMemcpyAsync(hostBuf.data(), mMultiBlockSemaphores.get(),
+    CUDA_CHECK(cudaMemcpyAsync(hostBuf.data(), mMultiBlockSemaphores.get(),
         sizeof(uint32_t) * mNbMultiBlockSemaphores, cudaMemcpyDeviceToHost, stream));
-    TLLM_CUDA_CHECK(cudaStreamSynchronize(stream));
-    TLLM_CHECK(std::count(hostBuf.begin(), hostBuf.end(), 0U) == mNbMultiBlockSemaphores);
+    CUDA_CHECK(cudaStreamSynchronize(stream));
+    CHECK(std::count(hostBuf.begin(), hostBuf.end(), 0U) == mNbMultiBlockSemaphores);
 }
 
 

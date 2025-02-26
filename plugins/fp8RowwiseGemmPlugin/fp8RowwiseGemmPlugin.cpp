@@ -30,7 +30,7 @@ size_t Fp8RowwiseGemmPluginProfiler::getBytePerElement(nvinfer1::DataType type)
     }
     else
     {
-        TLLM_THROW("Not recognized/implemented");
+        THROW("Not recognized/implemented");
     }
     return bpe;
 }
@@ -112,7 +112,7 @@ Fp8RowwiseGemmPlugin::Fp8RowwiseGemmPlugin(
 
     mPluginProfiler->deserialize(d, mDims, mGemmId);
 
-    TLLM_CHECK(d == a + length);
+    CHECK(d == a + length);
 }
 
 void Fp8RowwiseGemmPlugin::init(nvinfer1::DataType type)
@@ -130,7 +130,7 @@ void Fp8RowwiseGemmPlugin::init(nvinfer1::DataType type)
 #endif
     else
     {
-        TLLM_THROW("Fp8 Rowwise Gemm plugin doesn't support this type now");
+        THROW("Fp8 Rowwise Gemm plugin doesn't support this type now");
     }
 
     mPluginProfiler->setQuantMode(mQuantMode);
@@ -149,10 +149,10 @@ nvinfer1::DimsExprs Fp8RowwiseGemmPlugin::getOutputDimensions(
 {
     try
     {
-        TLLM_CHECK(nbInputs == 4);
-        TLLM_CHECK(outputIndex == 0);
+        CHECK(nbInputs == 4);
+        CHECK(outputIndex == 0);
         int const nbDimsA = inputs[0].nbDims;
-        TLLM_CHECK(nbDimsA >= 2);
+        CHECK(nbDimsA >= 2);
         DimsExprs ret;
         ret.nbDims = nbDimsA;
         for (int ii = 0; ii < nbDimsA - 1; ++ii)
@@ -199,8 +199,8 @@ void Fp8RowwiseGemmPlugin::configurePlugin(nvinfer1::DynamicPluginTensorDesc con
     int const minK = in[0].min.d[in[0].min.nbDims - 1];
     int const minN = in[1].min.d[0];
 
-    TLLM_CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
-    TLLM_CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
+    CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
+    CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
 
     if (!mDims.isInitialized())
     {
@@ -231,7 +231,7 @@ int Fp8RowwiseGemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
     size_t const wsSize = mGemmRunner->getWorkspaceSize(m, n, k);
 
     auto const bestTactic = mPluginProfiler->getBestConfig(m, mGemmId);
-    TLLM_CHECK_WITH_INFO(bestTactic, "No valid GEMM tactic");
+    CHECK_WITH_INFO(bestTactic, "No valid GEMM tactic");
     mGemmRunner->gemm(outputs[0], inputs[0], inputs[1], nullptr, mQuantMode, m, n, k,
         reinterpret_cast<float const*>(inputs[2]), reinterpret_cast<float const*>(inputs[3]), *bestTactic,
         reinterpret_cast<char*>(workspace), wsSize, stream);
@@ -243,7 +243,7 @@ int Fp8RowwiseGemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 nvinfer1::DataType Fp8RowwiseGemmPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0);
+    CHECK(index == 0);
     return mType;
 }
 
@@ -287,7 +287,7 @@ void Fp8RowwiseGemmPlugin::serialize(void* buffer) const noexcept
     write(d, mDims);
 
     mPluginProfiler->serialize(d, mGemmId);
-    TLLM_CHECK(d == a + getSerializationSize());
+    CHECK(d == a + getSerializationSize());
 }
 
 void Fp8RowwiseGemmPlugin::destroy() noexcept
@@ -328,7 +328,7 @@ PluginFieldCollection const* Fp8RowwiseGemmPluginCreator::getFieldNames() noexce
 IPluginV2* Fp8RowwiseGemmPluginCreator::createPlugin(char const* name, PluginFieldCollection const* fc) noexcept
 {
     PluginField const* fields = fc->fields;
-    TLLM_CHECK(fc->nbFields == 3);
+    CHECK(fc->nbFields == 3);
     bool perTokenScaling, perChannelScaling;
     nvinfer1::DataType type;
     for (int i = 0; i < fc->nbFields; ++i)
@@ -336,17 +336,17 @@ IPluginV2* Fp8RowwiseGemmPluginCreator::createPlugin(char const* name, PluginFie
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "has_per_channel_scaling"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             perChannelScaling = static_cast<bool>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "has_per_token_scaling"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             perTokenScaling = static_cast<bool>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
     }

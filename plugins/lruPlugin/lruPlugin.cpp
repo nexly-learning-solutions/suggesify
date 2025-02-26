@@ -25,9 +25,9 @@ lruPlugin::lruPlugin(int dim, int block_size, nvinfer1::DataType type, bool remo
     , mFuseGateEnabled(fuseGateEnabled)
     , mGateBiasEnabled(gateBiasEnabled)
 {
-    TLLM_CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16),
+    CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16),
         "Unsupported data type, pre SM 80 GPUs do not support bfloat16");
-    TLLM_CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF),
+    CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF),
         "Only support float, half, and bfloat16.");
 }
 
@@ -43,9 +43,9 @@ lruPlugin::lruPlugin(void const* data, size_t length)
     read(d, mYBiasEnabled);
     read(d, mFuseGateEnabled);
     read(d, mGateBiasEnabled);
-    TLLM_CHECK(d == a + length);
-    TLLM_CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16), "Unsupported data type");
-    TLLM_CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF),
+    CHECK(d == a + length);
+    CHECK_WITH_INFO((getSMVersion() >= 80) || (mType != DataType::kBF16), "Unsupported data type");
+    CHECK_WITH_INFO((mType == DataType::kBF16) || (mType == DataType::kFLOAT) || (mType == DataType::kHALF),
         "Only support float, half, and bfloat16.");
 }
 
@@ -304,47 +304,47 @@ IPluginV2* lruPluginCreator::createPlugin(char const* name, PluginFieldCollectio
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "dim"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             dim = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         if (!strcmp(attrName, "block_size"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             block_size = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "remove_input_padding"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             removePadding = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "paged_state"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             pagedState = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "y_enabled"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             yEnabled = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "y_bias_enabled"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             yBiasEnabled = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "fuse_gate_enabled"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             fuseGateEnabled = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "gate_bias_enabled"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             gateBiasEnabled = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
     }

@@ -16,7 +16,7 @@ QuantizeTensorPlugin::QuantizeTensorPlugin() {}
 QuantizeTensorPlugin::QuantizeTensorPlugin(void const* data, size_t length)
 {
     char const *d = reinterpret_cast<char const*>(data), *a = d;
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -33,8 +33,8 @@ nvinfer1::DimsExprs QuantizeTensorPlugin::getOutputDimensions(
 {
     try
     {
-        TLLM_CHECK(nbInputs == 2);
-        TLLM_CHECK(outputIndex < 1);
+        CHECK(nbInputs == 2);
+        CHECK(outputIndex < 1);
         return inputs[0];
     }
     catch (std::exception const& e)
@@ -61,7 +61,7 @@ bool QuantizeTensorPlugin::supportsFormatCombination(
     case 2:
         return inOut[pos].type == nvinfer1::DataType::kINT8 && inOut[pos].format == TensorFormat::kLINEAR;
     default:
-        TLLM_CHECK(false);
+        CHECK(false);
         return false;
     }
 }
@@ -113,8 +113,8 @@ int QuantizeTensorPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 nvinfer1::DataType QuantizeTensorPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(nbInputs == 2);
-    TLLM_CHECK(index == 0);
+    CHECK(nbInputs == 2);
+    CHECK(index == 0);
     return nvinfer1::DataType::kINT8;
 }
 

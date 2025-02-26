@@ -30,7 +30,7 @@ CudaStreamPlugin::CudaStreamPlugin(void const* data, size_t length)
 
     init();
 
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -67,8 +67,8 @@ nvinfer1::DimsExprs CudaStreamPlugin::getOutputDimensions(
 bool CudaStreamPlugin::supportsFormatCombination(
     int pos, nvinfer1::PluginTensorDesc const* inOut, int nbInputs, int nbOutputs) noexcept
 {
-    TLLM_CHECK_WITH_INFO(nbInputs == mNbInputs, "CudaStreamPlugin only accepts mNbInputs inputs");
-    TLLM_CHECK_WITH_INFO(nbOutputs == 1, "CudaStreamPlugin only accepts 1 output");
+    CHECK_WITH_INFO(nbInputs == mNbInputs, "CudaStreamPlugin only accepts mNbInputs inputs");
+    CHECK_WITH_INFO(nbOutputs == 1, "CudaStreamPlugin only accepts 1 output");
 
     auto const& desc = inOut[pos];
     if (desc.format != TensorFormat::kLINEAR)
@@ -111,7 +111,7 @@ int CudaStreamPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinf
         count *= inputDesc[0].dims.d[i];
     }
     count *= suggestify::runtime::BufferDataType(inputDesc[0].type).getSize();
-    TLLM_CUDA_CHECK(cudaMemcpyAsync(outputs[0], inputs[0], count, cudaMemcpyDeviceToDevice, stream));
+    CUDA_CHECK(cudaMemcpyAsync(outputs[0], inputs[0], count, cudaMemcpyDeviceToDevice, stream));
 
     return 0;
 }
@@ -119,7 +119,7 @@ int CudaStreamPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinf
 nvinfer1::DataType CudaStreamPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0);
+    CHECK(index == 0);
     return mType;
 }
 
@@ -227,8 +227,8 @@ IPluginV2* CudaStreamPluginCreator::createPlugin(char const* name, PluginFieldCo
         {
             if (!strcmp(item.key, attrName))
             {
-                TLLM_CHECK(fields[i].type == nvinfer1::PluginFieldType::kINT32);
-                TLLM_CHECK_WITH_INFO(!item.set, "Parameter %s was set twice", item.key);
+                CHECK(fields[i].type == nvinfer1::PluginFieldType::kINT32);
+                CHECK_WITH_INFO(!item.set, "Parameter %s was set twice", item.key);
                 item.field = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
                 item.set = true;
             }
@@ -237,7 +237,7 @@ IPluginV2* CudaStreamPluginCreator::createPlugin(char const* name, PluginFieldCo
 
     for (auto& item : input_map)
     {
-        TLLM_CHECK_WITH_INFO(item.set || item.optional, "Parameter %s is required but not set", item.key);
+        CHECK_WITH_INFO(item.set || item.optional, "Parameter %s is required but not set", item.key);
     }
 
     try

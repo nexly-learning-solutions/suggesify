@@ -32,7 +32,7 @@ size_t GemmSwigluPluginProfiler::getBytePerElement(nvinfer1::DataType type)
     }
     else
     {
-        TLLM_THROW("Not recognized/implemented");
+        THROW("Not recognized/implemented");
     }
     return bpe;
 }
@@ -117,7 +117,7 @@ GemmSwigluPlugin::GemmSwigluPlugin(
 
     mPluginProfiler->deserialize(d, mDims, mGemmId);
 
-    TLLM_CHECK(d == a + length);
+    CHECK(d == a + length);
 }
 
 void GemmSwigluPlugin::init(nvinfer1::DataType type)
@@ -129,7 +129,7 @@ void GemmSwigluPlugin::init(nvinfer1::DataType type)
     }
     else
     {
-        TLLM_THROW("Gemm Swiglu plugin only supports fp8 now");
+        THROW("Gemm Swiglu plugin only supports fp8 now");
     }
 
     mPluginProfiler->setQuantMode(mQuantMode);
@@ -148,10 +148,10 @@ nvinfer1::DimsExprs GemmSwigluPlugin::getOutputDimensions(
 {
     try
     {
-        TLLM_CHECK(nbInputs == 3);
-        TLLM_CHECK(outputIndex == 0);
+        CHECK(nbInputs == 3);
+        CHECK(outputIndex == 0);
         int const nbDimsA = inputs[0].nbDims;
-        TLLM_CHECK(nbDimsA >= 2);
+        CHECK(nbDimsA >= 2);
         DimsExprs ret;
         ret.nbDims = nbDimsA;
         for (int ii = 0; ii < nbDimsA - 1; ++ii)
@@ -182,7 +182,7 @@ bool GemmSwigluPlugin::supportsFormatCombination(
     case 3:
         return inOut[pos].type == mType && inOut[pos].format == TensorFormat::kLINEAR;
     default:
-        TLLM_CHECK(false);
+        CHECK(false);
         return false;
     }
 }
@@ -198,8 +198,8 @@ void GemmSwigluPlugin::configurePlugin(nvinfer1::DynamicPluginTensorDesc const* 
     int const minK = in[0].min.d[in[0].min.nbDims - 1];
     int const minN = in[1].min.d[1];
 
-    TLLM_CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
-    TLLM_CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
+    CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
+    CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
 
     if (!mDims.isInitialized())
     {
@@ -229,7 +229,7 @@ int GemmSwigluPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinf
     size_t const wsSize = mGemmRunner->getWorkspaceSize(m, n, k);
 
     auto const bestTactic = mPluginProfiler->getBestConfig(m, mGemmId);
-    TLLM_CHECK_WITH_INFO(bestTactic, "No valid GEMM tactic");
+    CHECK_WITH_INFO(bestTactic, "No valid GEMM tactic");
     mGemmRunner->gemm(outputs[0], inputs[0], inputs[1], inputs[2], mQuantMode, m, n, k, mScaleD0, mScaleD1,
         mScaleOutput, *bestTactic, reinterpret_cast<char*>(workspace), wsSize, stream);
 
@@ -239,7 +239,7 @@ int GemmSwigluPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinf
 nvinfer1::DataType GemmSwigluPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0);
+    CHECK(index == 0);
     return mType;
 }
 
@@ -289,7 +289,7 @@ void GemmSwigluPlugin::serialize(void* buffer) const noexcept
     write(d, mDims);
 
     mPluginProfiler->serialize(d, mGemmId);
-    TLLM_CHECK(d == a + getSerializationSize());
+    CHECK(d == a + getSerializationSize());
 }
 
 void GemmSwigluPlugin::destroy() noexcept
@@ -333,7 +333,7 @@ PluginFieldCollection const* GemmSwigluPluginCreator::getFieldNames() noexcept
 IPluginV2* GemmSwigluPluginCreator::createPlugin(char const* name, PluginFieldCollection const* fc) noexcept
 {
     PluginField const* fields = fc->fields;
-    TLLM_CHECK(fc->nbFields == 5);
+    CHECK(fc->nbFields == 5);
     nvinfer1::DataType type;
     bool hasBias;
     float scale_d0;
@@ -344,27 +344,27 @@ IPluginV2* GemmSwigluPluginCreator::createPlugin(char const* name, PluginFieldCo
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "has_bias"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             hasBias = static_cast<bool>(*(static_cast<int8_t const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "scale_d0"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             scale_d0 = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "scale_d1"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             scale_d1 = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "scale_output"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             scale_output = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
     }

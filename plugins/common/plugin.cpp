@@ -32,7 +32,7 @@ namespace
 ncclUniqueId getUniqueId(std::set<int> const& group) noexcept
 {
     auto const rank = COMM_SESSION.getRank();
-    TLLM_LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, rank);
+    LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, rank);
     ncclUniqueId id;
     if (rank == *group.begin())
     {
@@ -46,7 +46,7 @@ ncclUniqueId getUniqueId(std::set<int> const& group) noexcept
     {
         COMM_SESSION.recvValue(id, *group.begin(), 0);
     }
-    TLLM_LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, rank);
+    LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, rank);
     return id;
 }
 }
@@ -54,7 +54,7 @@ ncclUniqueId getUniqueId(std::set<int> const& group) noexcept
 std::shared_ptr<ncclComm_t> getComm(std::set<int> const& group)
 {
     auto const rank = COMM_SESSION.getRank();
-    TLLM_LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, rank);
+    LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, rank);
     static std::map<std::set<int>, std::weak_ptr<ncclComm_t>> commMap;
     static std::mutex mutex;
     std::lock_guard<std::mutex> lock(mutex);
@@ -76,12 +76,12 @@ std::shared_ptr<ncclComm_t> getComm(std::set<int> const& group)
         auto ncclComm = it->second.lock();
         if (ncclComm)
         {
-            TLLM_LOG_TRACE("NCCL comm for group(%s) is cached for rank %d", groupStr.c_str(), rank);
+            LOG_TRACE("NCCL comm for group(%s) is cached for rank %d", groupStr.c_str(), rank);
             return ncclComm;
         }
     }
 
-    TLLM_LOG_TRACE("Init NCCL comm for group(%s) for rank %d", groupStr.c_str(), rank);
+    LOG_TRACE("Init NCCL comm for group(%s) for rank %d", groupStr.c_str(), rank);
     ncclUniqueId id = getUniqueId(group);
     int groupRank = 0;
     for (auto const& currentRank : group)
@@ -90,7 +90,7 @@ std::shared_ptr<ncclComm_t> getComm(std::set<int> const& group)
             break;
         ++groupRank;
     }
-    TLLM_CHECK(groupRank < group.size());
+    CHECK(groupRank < group.size());
     std::shared_ptr<ncclComm_t> ncclComm(new ncclComm_t,
         [](ncclComm_t* comm)
         {
@@ -100,7 +100,7 @@ std::shared_ptr<ncclComm_t> getComm(std::set<int> const& group)
     setenv("NCCL_RUNTIME_CONNECT", "0", 0);
     NCCLCHECK(ncclCommInitRank(ncclComm.get(), group.size(), id, groupRank));
     commMap[group] = ncclComm;
-    TLLM_LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, rank);
+    LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, rank);
     return ncclComm;
 }
 #endif
@@ -123,10 +123,10 @@ inline CUcontext getCurrentCudaCtx()
     CUresult err = cuCtxGetCurrent(&ctx);
     if (err == CUDA_ERROR_NOT_INITIALIZED || ctx == nullptr)
     {
-        TLLM_CUDA_CHECK(cudaFree(nullptr));
+        CUDA_CHECK(cudaFree(nullptr));
         err = cuCtxGetCurrent(&ctx);
     }
-    TLLM_CHECK(err == CUDA_SUCCESS);
+    CHECK(err == CUDA_SUCCESS);
     return ctx;
 }
 
@@ -238,12 +238,12 @@ std::shared_ptr<cublasHandle_t> getCublasHandle()
         []() -> auto
         {
             auto handle = std::unique_ptr<cublasHandle_t>(new cublasHandle_t);
-            TLLM_CUDA_CHECK(cublasCreate(handle.get()));
+            CUDA_CHECK(cublasCreate(handle.get()));
             return handle;
         },
         [](cublasHandle_t* handle)
         {
-            TLLM_CUDA_CHECK(cublasDestroy(*handle));
+            CUDA_CHECK(cublasDestroy(*handle));
             delete handle;
         });
     return creator();
@@ -255,12 +255,12 @@ std::shared_ptr<cublasLtHandle_t> getCublasLtHandle()
         []() -> auto
         {
             auto handle = std::unique_ptr<cublasLtHandle_t>(new cublasLtHandle_t);
-            TLLM_CUDA_CHECK(cublasLtCreate(handle.get()));
+            CUDA_CHECK(cublasLtCreate(handle.get()));
             return handle;
         },
         [](cublasLtHandle_t* handle)
         {
-            TLLM_CUDA_CHECK(cublasLtDestroy(*handle));
+            CUDA_CHECK(cublasLtDestroy(*handle));
             delete handle;
         });
     return creator();
@@ -331,7 +331,7 @@ std::optional<T> PluginFieldParser::getScalar(std::string_view const& name)
     }
     auto& record = mMap.at(name);
     auto const& f = mFields[record.index];
-    TLLM_CHECK(toFieldType<T>() == f.type && f.length == 1);
+    CHECK(toFieldType<T>() == f.type && f.length == 1);
     record.retrieved = true;
     return std::optional{*static_cast<T const*>(f.data)};
 }
@@ -358,7 +358,7 @@ std::optional<std::set<T>> PluginFieldParser::getSet(std::string_view const& nam
     }
     auto& record = mMap.at(name);
     auto const& f = mFields[record.index];
-    TLLM_CHECK(toFieldType<T>() == f.type);
+    CHECK(toFieldType<T>() == f.type);
     std::set<T> group;
     auto const* r = static_cast<T const*>(f.data);
     for (int j = 0; j < f.length; ++j)

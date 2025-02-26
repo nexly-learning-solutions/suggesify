@@ -21,7 +21,7 @@ GemmPluginProfiler<Config, RunnerPtr, GemmIdType, GemmIdHashType>::GemmPluginPro
     mSkip = (skipEnv != NULL && std::stoi(skipEnv));
     if (mSkip)
     {
-        TLLM_LOG_DEBUG(
+        LOG_DEBUG(
             "SKIP_GEMM_PLUGIN_PROFILINGS is set. Skipping GEMM plugin profilings. It could result in runtime error "
             "if default tactic is not defined.");
     }
@@ -155,7 +155,7 @@ std::optional<Config> GemmPluginProfiler<Config, RunnerPtr, GemmIdType, GemmIdHa
 
     if (mSkip)
     {
-        TLLM_LOG_TRACE("Skip is set, no best config is set for this instance");
+        LOG_TRACE("Skip is set, no best config is set for this instance");
         return std::nullopt;
     }
 
@@ -167,23 +167,23 @@ std::optional<Config> GemmPluginProfiler<Config, RunnerPtr, GemmIdType, GemmIdHa
 template <typename Config, typename RunnerPtr, typename GemmIdType, typename GemmIdHashType>
 void GemmPluginProfiler<Config, RunnerPtr, GemmIdType, GemmIdHashType>::allocateTmpData()
 {
-    TLLM_CHECK_WITH_INFO(mTmpWorkspaceSizeInBytes > 0, "tmpWorkspaceSizeInBytes must be larger than 0");
+    CHECK_WITH_INFO(mTmpWorkspaceSizeInBytes > 0, "tmpWorkspaceSizeInBytes must be larger than 0");
     auto const status = cudaMalloc(&mWorkspaceTmp, mTmpWorkspaceSizeInBytes);
-    TLLM_CHECK_WITH_INFO(status == cudaSuccess, "Can't allocate tmp workspace for GEMM tactics profiling.");
+    CHECK_WITH_INFO(status == cudaSuccess, "Can't allocate tmp workspace for GEMM tactics profiling.");
 }
 
 template <typename Config, typename RunnerPtr, typename GemmIdType, typename GemmIdHashType>
 void GemmPluginProfiler<Config, RunnerPtr, GemmIdType, GemmIdHashType>::freeTmpData()
 {
     auto const status = cudaFree(mWorkspaceTmp);
-    TLLM_CHECK_WITH_INFO(status == cudaSuccess, "Can't free tmp workspace for GEMM tactics profiling.");
+    CHECK_WITH_INFO(status == cudaSuccess, "Can't free tmp workspace for GEMM tactics profiling.");
 }
 
 template <typename Config, typename RunnerPtr, typename GemmIdType, typename GemmIdHashType>
 std::optional<Config> GemmPluginProfiler<Config, RunnerPtr, GemmIdType, GemmIdHashType>::profileTacticsForProblem(
     int m, int n, int k, std::vector<Config> const& tactics)
 {
-    TLLM_LOG_DEBUG(__PRETTY_FUNCTION__);
+    LOG_DEBUG(__PRETTY_FUNCTION__);
 
     float bestTime = std::numeric_limits<float>::max();
     Config bestConfig;
@@ -213,7 +213,7 @@ std::optional<Config> GemmPluginProfiler<Config, RunnerPtr, GemmIdType, GemmIdHa
             msg << "\n (for"
                 << " m=" << m << ", n=" << n << ", k=" << k << ")"
                 << ", reason: \"" << e.what() << "\". Skipped";
-            TLLM_LOG_TRACE(msg.str());
+            LOG_TRACE(msg.str());
             cudaGetLastError();
             continue;
         }
@@ -230,7 +230,7 @@ std::optional<Config> GemmPluginProfiler<Config, RunnerPtr, GemmIdType, GemmIdHa
         std::ostringstream msg;
         msg << "Have not found any valid GEMM config for shape ("
             << "m=" << m << ", n=" << n << ", k=" << k << "). Will try to use default or fail at runtime";
-        TLLM_LOG_WARNING(msg.str());
+        LOG_WARNING(msg.str());
         return std::nullopt;
     }
     return {bestConfig};

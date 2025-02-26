@@ -126,7 +126,7 @@ inline size_t typeSize(nvinfer1::DataType type)
     case nvinfer1::DataType::kINT64: return 8UL;
     }
 
-    TLLM_THROW("Unknown dtype %d", static_cast<int>(type));
+    THROW("Unknown dtype %d", static_cast<int>(type));
     return 0;
 }
 
@@ -139,7 +139,7 @@ inline cudaDataType_t trtToCublasDtype(nvinfer1::DataType type)
 #if defined(NV_TENSORRT_MAJOR) && NV_TENSORRT_MAJOR >= 9
     case nvinfer1::DataType::kBF16: return CUDA_R_16BF;
 #endif
-    default: TLLM_THROW("Not supported data type for cuBLAS");
+    default: THROW("Not supported data type for cuBLAS");
     }
 }
 

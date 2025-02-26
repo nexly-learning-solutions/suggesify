@@ -29,7 +29,7 @@ ReduceScatterPlugin::ReduceScatterPlugin(void const* data, size_t length)
         read(d, groupItem);
         mGroup.insert(groupItem);
     }
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -83,7 +83,7 @@ int ReduceScatterPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
         size *= outputDesc[0].dims.d[i];
     }
 
-    TLLM_CHECK_WITH_INFO(mNcclComm.get() != nullptr, "mNcclComm should be initialized before used");
+    CHECK_WITH_INFO(mNcclComm.get() != nullptr, "mNcclComm should be initialized before used");
     NCCLCHECK(ncclReduceScatter(
         inputs[0], outputs[0], size, (*getDtypeMap())[inputDesc[0].type], ncclSum, *mNcclComm, stream));
 
@@ -181,7 +181,7 @@ IPluginV2* ReduceScatterPluginCreator::createPlugin(char const* name, PluginFiel
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "group"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             auto const* r = static_cast<int const*>(fields[i].data);
             for (int j = 0; j < fields[i].length; ++j)
             {
@@ -191,7 +191,7 @@ IPluginV2* ReduceScatterPluginCreator::createPlugin(char const* name, PluginFiel
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
     }

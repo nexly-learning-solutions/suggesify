@@ -160,7 +160,7 @@ GemmPlugin::GemmPlugin(void const* data, size_t length, GemmPlugin::PluginProfil
 
     mPluginProfiler->deserialize(d, mDims, mGemmId);
 
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -228,8 +228,8 @@ nvinfer1::DimsExprs GemmPlugin::getOutputDimensions(
 {
     try
     {
-        TLLM_CHECK(nbInputs == 2);
-        TLLM_CHECK(outputIndex == 0);
+        CHECK(nbInputs == 2);
+        CHECK(outputIndex == 0);
         int const nbDimsA = inputs[0].nbDims;
         int const nbDimsB = inputs[1].nbDims;
         DimsExprs ret;
@@ -351,7 +351,7 @@ int GemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfer1::P
     std::string mnkStr = "MNK={" + std::to_string(M) + ", " + std::to_string(N) + ", " + std::to_string(K) + "}";
     {
         std::string const activationStr = "GEMM layer's activation before GEMM with " + mnkStr;
-        TLLM_CHECK_DEBUG_WITH_INFO(
+        CHECK_DEBUG_WITH_INFO(
             suggestify::runtime::utils::tensorHasInvalid(M, K, mType, inputs[0], stream, activationStr) == false,
             "Found invalid number (NaN or Inf) in " + activationStr);
     }
@@ -383,7 +383,7 @@ int GemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfer1::P
 
     {
         std::string const outputStr = "GEMM layer's output after GEMM with " + mnkStr;
-        TLLM_CHECK_DEBUG_WITH_INFO(
+        CHECK_DEBUG_WITH_INFO(
             suggestify::runtime::utils::tensorHasInvalid(M, N + mPadLdc, mType, outputs[0], stream, outputStr)
                 == false,
             "Found invalid number (NaN or Inf) in " + outputStr);
@@ -394,7 +394,7 @@ int GemmPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfer1::P
 nvinfer1::DataType GemmPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0);
+    CHECK(index == 0);
     return mType;
 }
 
@@ -494,42 +494,42 @@ IPluginV2* GemmPluginCreator::createPlugin(char const* name, PluginFieldCollecti
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "transa"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             transA = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "transb"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             transB = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "pad_lda"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             padLda = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "pad_ldb"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             padLdb = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "pad_ldc"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             padLdc = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "use_fp8"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             useFp8 = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "alpha"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             alpha = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
     }

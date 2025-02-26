@@ -29,7 +29,7 @@ AllgatherPlugin::AllgatherPlugin(void const* data, size_t length)
         read(d, groupItem);
         mGroup.insert(groupItem);
     }
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -83,7 +83,7 @@ int AllgatherPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfe
         size *= inputDesc[0].dims.d[i];
     }
 
-    TLLM_CHECK_WITH_INFO(mNcclComm.get() != nullptr, "mNcclComm should be initialized before used");
+    CHECK_WITH_INFO(mNcclComm.get() != nullptr, "mNcclComm should be initialized before used");
     NCCLCHECK(ncclAllGather(inputs[0], outputs[0], size, (*getDtypeMap())[inputDesc[0].type], *mNcclComm, stream));
 
     return 0;
@@ -118,9 +118,9 @@ int AllgatherPlugin::initialize() noexcept
     {
         return 0;
     }
-    TLLM_LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
+    LOG_TRACE("%s start for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
     mNcclComm = getComm(mGroup);
-    TLLM_LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
+    LOG_TRACE("%s stop for rank %d", __PRETTY_FUNCTION__, COMM_SESSION.getRank());
     return 0;
 }
 
@@ -182,7 +182,7 @@ IPluginV2* AllgatherPluginCreator::createPlugin(char const* name, PluginFieldCol
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "group"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             auto const* r = static_cast<int const*>(fields[i].data);
             for (int j = 0; j < fields[i].length; ++j)
             {
@@ -192,7 +192,7 @@ IPluginV2* AllgatherPluginCreator::createPlugin(char const* name, PluginFieldCol
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
     }

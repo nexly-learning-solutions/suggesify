@@ -79,35 +79,35 @@ public:
 
     [[nodiscard]] TensorPtr getIds(SizeType32 batchIdx) const override
     {
-        TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s start", __PRETTY_FUNCTION__);
         auto tensor = ITensor::slice(mJointDecodingOutput->ids, batchIdx, 1);
         tensor->squeeze(0);
-        TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
         return tensor;
     }
 
     [[nodiscard]] TensorPtr getIds() const override
     {
-        TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s start", __PRETTY_FUNCTION__);
         auto tensor = ITensor::slice(mJointDecodingOutput->ids, 0, mActualBatchSize);
-        TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
         return tensor;
     }
 
     [[nodiscard]] TensorPtr getGatheredIds(SizeType32 batchIdx) const override
     {
-        TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s start", __PRETTY_FUNCTION__);
         auto tensor = ITensor::slice(mJointDecodingOutput->gatheredIds, batchIdx, 1);
         tensor->squeeze(0);
-        TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
         return tensor;
     }
 
     [[nodiscard]] TensorPtr getGatheredIds() const override
     {
-        TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s start", __PRETTY_FUNCTION__);
         auto tensor = ITensor::slice(mJointDecodingOutput->gatheredIds, 0, mActualBatchSize);
-        TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
         return tensor;
     }
 

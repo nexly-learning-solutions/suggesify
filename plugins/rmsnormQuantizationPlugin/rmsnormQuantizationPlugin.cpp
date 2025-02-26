@@ -23,9 +23,9 @@ RmsnormQuantizationPlugin::RmsnormQuantizationPlugin(float eps, bool dynamicActi
     , mType(type)
     , mOutputType{outputType}
 {
-    TLLM_CHECK_WITH_INFO(mOutputType == nvinfer1::DataType::kINT8 || mOutputType == nvinfer1::DataType::kFP8,
+    CHECK_WITH_INFO(mOutputType == nvinfer1::DataType::kINT8 || mOutputType == nvinfer1::DataType::kFP8,
         "Only int8 or fp8 output type is allowed.");
-    TLLM_CHECK_WITH_INFO(mQuantMode.hasPerTokenScaling(), "The quant mode is not valid.");
+    CHECK_WITH_INFO(mQuantMode.hasPerTokenScaling(), "The quant mode is not valid.");
 }
 
 RmsnormQuantizationPlugin::RmsnormQuantizationPlugin(void const* data, size_t length)
@@ -38,7 +38,7 @@ RmsnormQuantizationPlugin::RmsnormQuantizationPlugin(void const* data, size_t le
     read(d, mQuantMode);
     read(d, mType);
     read(d, mOutputType);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -65,15 +65,15 @@ nvinfer1::DimsExprs RmsnormQuantizationPlugin::getOutputDimensions(
     {
         if (outputIndex == 1)
         {
-            TLLM_CHECK(mDynActScaling);
+            CHECK(mDynActScaling);
         }
         else if (outputIndex == 2)
         {
-            TLLM_CHECK(mSumPerToken);
+            CHECK(mSumPerToken);
         }
         else
         {
-            TLLM_CHECK(false);
+            CHECK(false);
         }
 
         DimsExprs ret;
@@ -97,8 +97,8 @@ bool RmsnormQuantizationPlugin::supportsFormatCombination(
 {
     int const totalPoses
         = 6 + static_cast<int>(mClampValEnabled) + static_cast<int>(mDynActScaling) + static_cast<int>(mSumPerToken);
-    TLLM_CHECK(0 <= pos && pos < totalPoses);
-    TLLM_CHECK(nbInputs == 4 + static_cast<int>(mClampValEnabled));
+    CHECK(0 <= pos && pos < totalPoses);
+    CHECK(nbInputs == 4 + static_cast<int>(mClampValEnabled));
     if (pos < nbInputs)
     {
         if (pos < 3)
@@ -127,7 +127,7 @@ bool RmsnormQuantizationPlugin::supportsFormatCombination(
         return (inOut[pos].type == nvinfer1::DataType::kFLOAT) && (inOut[pos].format == TensorFormat::kLINEAR);
     }
 
-    TLLM_CHECK_WITH_INFO(false, "The input/output is not supported.");
+    CHECK_WITH_INFO(false, "The input/output is not supported.");
     return false;
 }
 
@@ -165,8 +165,8 @@ int RmsnormQuantizationPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDe
     {
         m64 *= inputDesc[0].dims.d[i];
     }
-    int const m = TLLM_INT32_CAST(m64);
-    int const n = TLLM_INT32_CAST(inputDesc[1].dims.d[0]);
+    int const m = INT32_CAST(m64);
+    int const n = INT32_CAST(inputDesc[1].dims.d[0]);
 
     void const* input = inputs[0];
     void const* weight = inputs[1];
@@ -331,37 +331,37 @@ IPluginV2* RmsnormQuantizationPluginCreator::createPlugin(char const* name, Plug
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "quant_mode"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             quantMode = QuantMode(*(static_cast<int32_t const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "out_type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             outputType = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "clamp_enabled"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             clampValEnabled = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "eps"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             eps = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "dyn_act_scaling"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             dynamicActivationScaling = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "sum_per_token"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             sumPerToken = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
     }

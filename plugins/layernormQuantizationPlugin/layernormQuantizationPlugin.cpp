@@ -29,7 +29,7 @@ LayernormQuantizationPlugin::LayernormQuantizationPlugin(void const* data, size_
     read(d, mUseDiffOfSquares);
     read(d, mDynActScaling);
     read(d, mType);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -53,7 +53,7 @@ nvinfer1::DimsExprs LayernormQuantizationPlugin::getOutputDimensions(
 
     try
     {
-        TLLM_CHECK(outputIndex == 1);
+        CHECK(outputIndex == 1);
         DimsExprs ret;
         ret.nbDims = inputs[0].nbDims;
         for (int di = 0; di < ret.nbDims - 1; ++di)
@@ -74,8 +74,8 @@ bool LayernormQuantizationPlugin::supportsFormatCombination(
     int pos, nvinfer1::PluginTensorDesc const* inOut, int nbInputs, int nbOutputs) noexcept
 {
     int const totalPoses = 6 + static_cast<int>(mDynActScaling);
-    TLLM_CHECK(0 <= pos && pos < totalPoses);
-    TLLM_CHECK(nbInputs == 4);
+    CHECK(0 <= pos && pos < totalPoses);
+    CHECK(nbInputs == 4);
     if (pos < nbInputs)
     {
         switch (pos)
@@ -114,8 +114,8 @@ int LayernormQuantizationPlugin::enqueue(nvinfer1::PluginTensorDesc const* input
     {
         m64 *= inputDesc[0].dims.d[i];
     }
-    int const m = TLLM_INT32_CAST(m64);
-    int const n = TLLM_INT32_CAST(inputDesc[1].dims.d[0]);
+    int const m = INT32_CAST(m64);
+    int const n = INT32_CAST(inputDesc[1].dims.d[0]);
 
     float const* scale = reinterpret_cast<float const*>(inputs[3]);
     int8_t* output = reinterpret_cast<int8_t*>(outputs[0]);
@@ -244,22 +244,22 @@ IPluginV2* LayernormQuantizationPluginCreator::createPlugin(char const* name, Pl
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "eps"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             eps = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "dyn_act_scaling"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             dynamicActivationScaling = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "use_diff_of_squares"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             useDiffOfSquares = static_cast<bool>(*(static_cast<bool const*>(fields[i].data)));
         }
     }

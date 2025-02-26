@@ -34,11 +34,11 @@ BertAttentionPlugin::BertAttentionPlugin(int num_heads, int head_size, float q_s
         mEnableContextFMHA = false;
         if (!(mType == DataType::kHALF || mType == DataType::kBF16))
         {
-            TLLM_LOG_WARNING("Fall back to unfused MHA because of unsupported data type.");
+            LOG_WARNING("Fall back to unfused MHA because of unsupported data type.");
         }
         else if (mRelativeAttention)
         {
-            TLLM_LOG_WARNING("Fall back to unfused MHA because of relative position embedding.");
+            LOG_WARNING("Fall back to unfused MHA because of relative position embedding.");
         }
         else
         {
@@ -60,7 +60,7 @@ BertAttentionPlugin::BertAttentionPlugin(void const* data, size_t length)
     read(d, mRelativeAttention);
     read(d, mMaxDistance);
     read(d, mRemovePadding);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -78,7 +78,7 @@ nvinfer1::IPluginV2DynamicExt* BertAttentionPlugin::clone() const noexcept
 nvinfer1::DimsExprs BertAttentionPlugin::getOutputDimensions(
     int outputIndex, nvinfer1::DimsExprs const* inputs, int nbInputs, nvinfer1::IExprBuilder& exprBuilder) noexcept
 {
-    TLLM_CHECK(outputIndex == 0);
+    CHECK(outputIndex == 0);
     auto ret = inputs[0];
     ret.d[mRemovePadding ? 1 : 2] = exprBuilder.constant(ret.d[mRemovePadding ? 1 : 2]->getConstantValue() / 3);
     return ret;
@@ -179,7 +179,7 @@ int BertAttentionPlugin::enqueueImpl(nvinfer1::PluginTensorDesc const* inputDesc
     T* context_buf_ = (T*) (outputs[0]);
 
     auto cublasHandle = mCublasWrapper->getCublasHandle();
-    TLLM_CUDA_CHECK(cublasSetStream(cublasHandle, stream));
+    CUDA_CHECK(cublasSetStream(cublasHandle, stream));
     mCublasWrapper->setStream(stream);
     mCublasWrapper->setWorkspace(workspace);
     if (inputDesc[0].type == DataType::kHALF)
@@ -400,7 +400,7 @@ int BertAttentionPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 nvinfer1::DataType BertAttentionPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0);
+    CHECK(index == 0);
     return inputTypes[0];
 }
 
@@ -438,7 +438,7 @@ int BertAttentionPlugin::initialize() noexcept
         }
         else
         {
-            TLLM_CHECK_WITH_INFO(false, "GPTAttentionPlugin received wrong data type.");
+            CHECK_WITH_INFO(false, "GPTAttentionPlugin received wrong data type.");
         }
 
         MHARunnerFixedParams fmhaParams{};
@@ -535,42 +535,42 @@ IPluginV2* BertAttentionPluginCreator::createPlugin(char const* name, PluginFiel
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "num_heads"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             num_heads = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "head_size"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             head_size = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "q_scaling"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             q_scaling = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "context_fmha_type"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             context_fmha_type = static_cast<ContextFMHAType>(*(static_cast<int8_t const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "do_relative_attention"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             do_relative_attention = static_cast<bool>(*(static_cast<int8_t const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "max_distance"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             max_distance = static_cast<int>(*(static_cast<int const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "remove_padding"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             remove_padding = static_cast<bool>(*(static_cast<int8_t const*>(fields[i].data)));
         }
     }

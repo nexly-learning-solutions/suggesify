@@ -34,7 +34,7 @@ LoraPlugin::LoraPlugin(int in_hidden_size, std::vector<int> out_hidden_sizes, in
     , mMaxLowRank(max_low_rank)
     , mWeightIndex(weight_index)
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     mOutHiddenSizes.resize(mNumLoraModules);
     mOutHiddenSizes.assign(out_hidden_sizes.begin(), out_hidden_sizes.end());
     init();
@@ -43,7 +43,7 @@ LoraPlugin::LoraPlugin(int in_hidden_size, std::vector<int> out_hidden_sizes, in
 LoraPlugin::LoraPlugin(void const* data, size_t length, LoraPlugin::PluginProfilerPtr const& pluginProfiler)
     : mPluginProfiler(pluginProfiler)
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     char const *d = reinterpret_cast<char const*>(data), *a = d;
     read(d, mInHiddenSize);
     read(d, mTransA);
@@ -62,7 +62,7 @@ LoraPlugin::LoraPlugin(void const* data, size_t length, LoraPlugin::PluginProfil
 
     mPluginProfiler->deserialize(d, mDims, mGemmId);
 
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -71,7 +71,7 @@ LoraPlugin::LoraPlugin(void const* data, size_t length, LoraPlugin::PluginProfil
 
 void LoraPlugin::init()
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
 
     auto cublasHandle = getCublasHandle();
     auto cublasLtHandle = getCublasLtHandle();
@@ -86,7 +86,7 @@ void LoraPlugin::init()
 
 nvinfer1::IPluginV2DynamicExt* LoraPlugin::clone() const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     auto* plugin = new LoraPlugin(*this);
     return plugin;
 }
@@ -94,10 +94,10 @@ nvinfer1::IPluginV2DynamicExt* LoraPlugin::clone() const noexcept
 nvinfer1::DimsExprs LoraPlugin::getOutputDimensions(
     int outputIndex, nvinfer1::DimsExprs const* inputs, int nbInputs, nvinfer1::IExprBuilder& exprBuilder) noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     try
     {
-        TLLM_CHECK(outputIndex < mNumLoraModules);
+        CHECK(outputIndex < mNumLoraModules);
         int const nbDimsA = inputs[getInputTensorIdx()].nbDims;
         DimsExprs ret;
         ret.nbDims = nbDimsA;
@@ -123,7 +123,7 @@ nvinfer1::DimsExprs LoraPlugin::getOutputDimensions(
         }
 
         auto const* outHiddenSize = exprBuilder.constant(mOutHiddenSizes.at(outputIndex));
-        TLLM_CHECK(outHiddenSize != nullptr);
+        CHECK(outHiddenSize != nullptr);
         ret.d[ret.nbDims - 1] = outHiddenSize;
         return ret;
     }
@@ -137,7 +137,7 @@ nvinfer1::DimsExprs LoraPlugin::getOutputDimensions(
 bool LoraPlugin::supportsFormatCombination(
     int pos, nvinfer1::PluginTensorDesc const* inOut, int nbInputs, int nbOutputs) noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     if (pos == getHostRequestTypesIdx())
     {
         return inOut[pos].type == nvinfer1::DataType::kINT32;
@@ -163,7 +163,7 @@ bool LoraPlugin::supportsFormatCombination(
 void LoraPlugin::configurePlugin(nvinfer1::DynamicPluginTensorDesc const* in, int nbInputs,
     nvinfer1::DynamicPluginTensorDesc const* out, int nbOutputs) noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
 
     auto const input = in[getInputTensorIdx()];
 
@@ -181,13 +181,13 @@ void LoraPlugin::configurePlugin(nvinfer1::DynamicPluginTensorDesc const* in, in
     mGemmId.n = N;
     mGemmId.k = K;
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 size_t LoraPlugin::getWorkspaceSize(nvinfer1::PluginTensorDesc const* inputs, int nbInputs,
     nvinfer1::PluginTensorDesc const* outputs, int nbOutputs) const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
 
     int const nbReq = inputs[getLoraRanksIdx()].dims.d[0];
     auto const type = inputs[getInputTensorIdx()].type;
@@ -198,7 +198,7 @@ size_t LoraPlugin::getWorkspaceSize(nvinfer1::PluginTensorDesc const* inputs, in
 int64_t LoraPlugin::getNumTokens(nvinfer1::PluginTensorDesc const* input_tensors) const
 {
     int ndim = input_tensors[getInputTensorIdx()].dims.nbDims;
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         3 == ndim || 2 == ndim, "hidden_state dimension should be either 2 [numTokens, hidden], or 3 [b, s, hidden]");
     int64_t num_tokens = input_tensors[getInputTensorIdx()].dims.d[0];
     if (ndim == 3)
@@ -211,7 +211,7 @@ int64_t LoraPlugin::getNumTokens(nvinfer1::PluginTensorDesc const* input_tensors
 int LoraPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfer1::PluginTensorDesc const* outputDesc,
     void const* const* inputs, void* const* outputs, void* workspace, cudaStream_t stream) noexcept
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     if (isBuilding())
     {
@@ -262,7 +262,7 @@ int LoraPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfer1::P
                 }
             }
         }
-        TLLM_CHECK_WITH_INFO(idx == numTokens,
+        CHECK_WITH_INFO(idx == numTokens,
             fmtstr("LoraParams and input dims don't match, lora tokens %d input tokens %d", idx, numTokens));
     }
 
@@ -271,40 +271,40 @@ int LoraPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc, nvinfer1::P
     mLoraImpl->run(numTokens, numReqs, input, mExpandLoraRanks.data(), mExpandLoraWeightPtrs.data(), mWeightIndex,
         outputs, workspace, stream);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     return 0;
 }
 
 nvinfer1::DataType LoraPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
-    TLLM_CHECK(index < mNumLoraModules);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    CHECK(index < mNumLoraModules);
     return mType;
 }
 
 
 char const* LoraPlugin::getPluginType() const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     return LORA_PLUGIN_NAME;
 }
 
 char const* LoraPlugin::getPluginVersion() const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     return LORA_PLUGIN_VERSION;
 }
 
 int LoraPlugin::getNbOutputs() const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     return mNumLoraModules;
 }
 
 int LoraPlugin::initialize() noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     if (!mDims.isInitialized())
     {
         return 0;
@@ -318,13 +318,13 @@ int LoraPlugin::initialize() noexcept
 
 void LoraPlugin::destroy() noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     delete this;
 }
 
 size_t LoraPlugin::getSerializationSize() const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     return sizeof(mInHiddenSize) + sizeof(mTransA) + sizeof(mTransB) + sizeof(mNumLoraModules) + sizeof(mType)
         + mPluginProfiler->getSerializationSize(mGemmId) + sizeof(mRemoveInputPadding) + sizeof(mMaxLowRank)
         + sizeof(mWeightIndex) + sizeof(int) * mNumLoraModules;
@@ -332,7 +332,7 @@ size_t LoraPlugin::getSerializationSize() const noexcept
 
 void LoraPlugin::serialize(void* buffer) const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     char *d = static_cast<char*>(buffer), *a = d;
     write(d, mInHiddenSize);
     write(d, mTransA);
@@ -355,7 +355,7 @@ void LoraPlugin::terminate() noexcept {}
 
 LoraPluginCreator::LoraPluginCreator()
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     mPluginAttributes.clear();
     mPluginAttributes.emplace_back(PluginField("transA", nullptr, PluginFieldType::kINT32, 1));
     mPluginAttributes.emplace_back(PluginField("transB", nullptr, PluginFieldType::kINT32, 1));
@@ -368,25 +368,25 @@ LoraPluginCreator::LoraPluginCreator()
 
 char const* LoraPluginCreator::getPluginName() const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     return LORA_PLUGIN_NAME;
 }
 
 char const* LoraPluginCreator::getPluginVersion() const noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     return LORA_PLUGIN_VERSION;
 }
 
 PluginFieldCollection const* LoraPluginCreator::getFieldNames() noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     return &mFC;
 }
 
 IPluginV2* LoraPluginCreator::createPlugin(char const* name, PluginFieldCollection const* fc) noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
 
     PluginField const* fields = fc->fields;
     nvinfer1::DataType type;
@@ -400,42 +400,42 @@ IPluginV2* LoraPluginCreator::createPlugin(char const* name, PluginFieldCollecti
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "in_hidden_size"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             in_hidden_size = *(static_cast<int32_t const*>(fields[i].data));
         }
         else if (!strcmp(attrName, "transa"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             transA = *(static_cast<int const*>(fields[i].data));
         }
         else if (!strcmp(attrName, "transb"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             transB = *(static_cast<int const*>(fields[i].data));
         }
         else if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "remove_input_padding"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT8);
+            CHECK(fields[i].type == PluginFieldType::kINT8);
             remove_input_padding = static_cast<bool>(*(static_cast<int8_t const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "max_low_rank"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             max_low_rank = *(static_cast<int const*>(fields[i].data));
         }
         else if (!strcmp(attrName, "num_lora_modules"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             num_lora_modules = *(static_cast<int const*>(fields[i].data));
         }
         else if (!strcmp(attrName, "weight_index"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             weight_index = *(static_cast<int const*>(fields[i].data));
         }
     }
@@ -448,7 +448,7 @@ IPluginV2* LoraPluginCreator::createPlugin(char const* name, PluginFieldCollecti
         {
             if (!strcmp(attrName, fmtstr("out_hidden_size_%d", j).c_str()))
             {
-                TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+                CHECK(fields[i].type == PluginFieldType::kINT32);
                 out_hidden_sizes.at(j) = *(static_cast<int const*>(fields[i].data));
             }
         }
@@ -470,7 +470,7 @@ IPluginV2* LoraPluginCreator::createPlugin(char const* name, PluginFieldCollecti
 
 IPluginV2* LoraPluginCreator::deserializePlugin(char const* name, void const* serialData, size_t serialLength) noexcept
 {
-    TLLM_LOG_DEBUG("%s", __PRETTY_FUNCTION__);
+    LOG_DEBUG("%s", __PRETTY_FUNCTION__);
     try
     {
         auto pluginProfiler = gemmPluginProfileManager.createGemmPluginProfiler( true, true);

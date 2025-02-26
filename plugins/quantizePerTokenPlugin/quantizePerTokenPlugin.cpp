@@ -19,9 +19,9 @@ QuantizePerTokenPlugin::QuantizePerTokenPlugin(
     , mClampValEnabled{clampValEnabled}
     , mSumPerToken{sumPerToken}
 {
-    TLLM_CHECK_WITH_INFO(mOutputType == nvinfer1::DataType::kINT8 || mOutputType == nvinfer1::DataType::kFP8,
+    CHECK_WITH_INFO(mOutputType == nvinfer1::DataType::kINT8 || mOutputType == nvinfer1::DataType::kFP8,
         "Only int8 or fp8 output type is allowed.");
-    TLLM_CHECK_WITH_INFO(mQuantMode.hasPerTokenScaling(), "The quant mode is not valid.");
+    CHECK_WITH_INFO(mQuantMode.hasPerTokenScaling(), "The quant mode is not valid.");
 }
 
 QuantizePerTokenPlugin::QuantizePerTokenPlugin(void const* data, size_t length)
@@ -31,7 +31,7 @@ QuantizePerTokenPlugin::QuantizePerTokenPlugin(void const* data, size_t length)
     read(d, mQuantMode);
     read(d, mClampValEnabled);
     read(d, mSumPerToken);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -50,11 +50,11 @@ nvinfer1::DimsExprs QuantizePerTokenPlugin::getOutputDimensions(
 {
     try
     {
-        TLLM_CHECK(nbInputs <= 2);
-        TLLM_CHECK(outputIndex <= 2);
+        CHECK(nbInputs <= 2);
+        CHECK(outputIndex <= 2);
         if (outputIndex == 2)
         {
-            TLLM_CHECK(mSumPerToken);
+            CHECK(mSumPerToken);
         }
 
         if (outputIndex == 0)
@@ -104,7 +104,7 @@ bool QuantizePerTokenPlugin::supportsFormatCombination(
     }
     else if (pos == 3 + int(mClampValEnabled))
     {
-        TLLM_CHECK(mSumPerToken);
+        CHECK(mSumPerToken);
         return inOut[pos].type == nvinfer1::DataType::kFLOAT && inOut[pos].format == TensorFormat::kLINEAR;
     }
 
@@ -188,11 +188,11 @@ int QuantizePerTokenPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
 nvinfer1::DataType QuantizePerTokenPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(nbInputs >= 1);
-    TLLM_CHECK(index <= 2);
+    CHECK(nbInputs >= 1);
+    CHECK(index <= 2);
     if (index == 2)
     {
-        TLLM_CHECK(mSumPerToken);
+        CHECK(mSumPerToken);
     }
     return index == 0 ? mOutputType : nvinfer1::DataType::kFLOAT;
 }

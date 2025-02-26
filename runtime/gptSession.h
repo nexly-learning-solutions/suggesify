@@ -109,7 +109,7 @@ public:
             end.synchronize();
 
             float result;
-            TLLM_CUDA_CHECK(::cudaEventElapsedTime(&result, start.get(), end.get()));
+            CUDA_CHECK(::cudaEventElapsedTime(&result, start.get(), end.get()));
 
             return result;
         }
@@ -233,7 +233,7 @@ private:
             }
             catch (std::exception& e)
             {
-                TLLM_LOG_EXCEPTION(e);
+                LOG_EXCEPTION(e);
             }
         }
 

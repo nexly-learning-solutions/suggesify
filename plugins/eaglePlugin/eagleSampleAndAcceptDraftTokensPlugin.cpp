@@ -33,7 +33,7 @@ EagleSampleAndAcceptDraftTokensPlugin::EagleSampleAndAcceptDraftTokensPlugin(voi
 {
     char const *d = reinterpret_cast<char const*>(data), *a = d;
     read(d, mDtype);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -50,8 +50,8 @@ nvinfer1::IPluginV2DynamicExt* EagleSampleAndAcceptDraftTokensPlugin::clone() co
 nvinfer1::DimsExprs EagleSampleAndAcceptDraftTokensPlugin::getOutputDimensions(
     int outputIndex, nvinfer1::DimsExprs const* inputs, int nbInputs, nvinfer1::IExprBuilder& exprBuilder) noexcept
 {
-    TLLM_CHECK(nbInputs == 9);
-    TLLM_CHECK(outputIndex < 7);
+    CHECK(nbInputs == 9);
+    CHECK(outputIndex < 7);
     auto const batchSizeExpr = inputs[getIdx(InputIdxEntry::PATHS)].d[0];
     auto const maxDecodingDraftTokensExpr = inputs[getIdx(InputIdxEntry::DRAFT_TOKEN_IDS)].d[1];
     auto const maxDecodingTokensExpr = inputs[getIdx(InputIdxEntry::PATHS)].d[1];
@@ -172,7 +172,7 @@ size_t EagleSampleAndAcceptDraftTokensPlugin::getWorkspaceSize(nvinfer1::PluginT
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false, "Unsupported logits type");
+        CHECK_WITH_INFO(false, "Unsupported logits type");
     }
     return 0;
 }
@@ -182,7 +182,7 @@ void EagleSampleAndAcceptDraftTokensPlugin::samplePrimeHeadTokens(nvinfer1::Plug
     nvinfer1::PluginTensorDesc const* outputDesc, void const* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream) noexcept
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const maxNumTokens = inputDesc[getIdx(InputIdxEntry::LOGITS)].dims.d[0];
     auto const vocabSizePadded = inputDesc[getIdx(InputIdxEntry::LOGITS)].dims.d[1];
@@ -228,7 +228,7 @@ void EagleSampleAndAcceptDraftTokensPlugin::samplePrimeHeadTokens(nvinfer1::Plug
 
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -236,7 +236,7 @@ void EagleSampleAndAcceptDraftTokensPlugin::doTypicalAcceptance(nvinfer1::Plugin
     nvinfer1::PluginTensorDesc const* outputDesc, void const* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream) noexcept
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const maxNumTokens = inputDesc[getIdx(InputIdxEntry::LOGITS)].dims.d[0];
     auto const vocabSizePadded = inputDesc[getIdx(InputIdxEntry::LOGITS)].dims.d[1];
@@ -288,7 +288,7 @@ void EagleSampleAndAcceptDraftTokensPlugin::doTypicalAcceptance(nvinfer1::Plugin
     {
         auto const deviceId = suggestify::common::getDevice();
         cudaDeviceProp prop{};
-        TLLM_CUDA_CHECK(cudaGetDeviceProperties(&prop, deviceId));
+        CUDA_CHECK(cudaGetDeviceProperties(&prop, deviceId));
         mSmCnt = prop.multiProcessorCount;
     }
     params.smCnt = mSmCnt;
@@ -299,7 +299,7 @@ void EagleSampleAndAcceptDraftTokensPlugin::doTypicalAcceptance(nvinfer1::Plugin
 
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -307,7 +307,7 @@ void EagleSampleAndAcceptDraftTokensPlugin::acceptDraftTokens(nvinfer1::PluginTe
     nvinfer1::PluginTensorDesc const* outputDesc, void const* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream) noexcept
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const maxNumTokens = inputDesc[getIdx(InputIdxEntry::LOGITS)].dims.d[0];
     auto const vocabSizePadded = inputDesc[getIdx(InputIdxEntry::LOGITS)].dims.d[1];
@@ -350,7 +350,7 @@ void EagleSampleAndAcceptDraftTokensPlugin::acceptDraftTokens(nvinfer1::PluginTe
 
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <typename T>
@@ -358,7 +358,7 @@ void EagleSampleAndAcceptDraftTokensPlugin::enqueueType(nvinfer1::PluginTensorDe
     nvinfer1::PluginTensorDesc const* outputDesc, void const* const* inputs, void* const* outputs, void* workspace,
     cudaStream_t stream) noexcept
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     auto const greedySampling = reinterpret_cast<SizeType32 const*>(inputs[getIdx(InputIdxEntry::GREEDY_SAMPLING)])[0];
     if (greedySampling)
@@ -372,7 +372,7 @@ void EagleSampleAndAcceptDraftTokensPlugin::enqueueType(nvinfer1::PluginTensorDe
 
     acceptDraftTokens<T>(inputDesc, outputDesc, inputs, outputs, workspace, stream);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 int EagleSampleAndAcceptDraftTokensPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputDesc,
@@ -390,7 +390,7 @@ int EagleSampleAndAcceptDraftTokensPlugin::enqueue(nvinfer1::PluginTensorDesc co
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(false, "Unsupported logits type");
+        CHECK_WITH_INFO(false, "Unsupported logits type");
     }
 
     return 0;
@@ -399,7 +399,7 @@ int EagleSampleAndAcceptDraftTokensPlugin::enqueue(nvinfer1::PluginTensorDesc co
 nvinfer1::DataType EagleSampleAndAcceptDraftTokensPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index < 7);
+    CHECK(index < 7);
     return inputTypes[getIdx(InputIdxEntry::DRAFT_TOKEN_IDS)];
 }
 
@@ -477,7 +477,7 @@ IPluginV2* EagleSampleAndAcceptDraftTokensPluginCreator::createPlugin(
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
     }

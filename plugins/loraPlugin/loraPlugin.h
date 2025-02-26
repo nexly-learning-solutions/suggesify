@@ -80,7 +80,7 @@ private:
 
     IndexType getHostContextLengthsIdx() const
     {
-        TLLM_CHECK(mRemoveInputPadding);
+        CHECK(mRemoveInputPadding);
         return 2 + mNumLoraModules + mNumLoraModules;
     }
 

@@ -71,7 +71,7 @@ static size_t getBytePerElement(nvinfer1::DataType type)
     }
     else
     {
-        TLLM_THROW("Not recognized/implemented");
+        THROW("Not recognized/implemented");
     }
     return bpe;
 }
@@ -141,7 +141,7 @@ LowLatencyGemmSwigluPlugin::LowLatencyGemmSwigluPlugin(
 
     init(type);
     mPluginProfiler->deserialize(d, mDims, mGemmId);
-    TLLM_CHECK_WITH_INFO(d == a + length,
+    CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
         "caused by using different TensorRT-LLM version to build "
         "engine and run engine.",
@@ -159,7 +159,7 @@ void LowLatencyGemmSwigluPlugin::init(nvinfer1::DataType type)
     }
     else
     {
-        TLLM_THROW("Unsupported data type");
+        THROW("Unsupported data type");
     }
     mGemmId = GemmIdCore(mDims.n, mDims.k, mType);
 }
@@ -175,10 +175,10 @@ nvinfer1::DimsExprs LowLatencyGemmSwigluPlugin::getOutputDimensions(
 {
     try
     {
-        TLLM_CHECK(nbInputs == 2);
-        TLLM_CHECK(outputIndex == 0);
+        CHECK(nbInputs == 2);
+        CHECK(outputIndex == 0);
         int const nbDimsA = inputs[0].nbDims;
-        TLLM_CHECK(nbDimsA >= 2);
+        CHECK(nbDimsA >= 2);
         DimsExprs ret;
         ret.nbDims = nbDimsA;
         for (int ii = 0; ii < nbDimsA - 1; ++ii)
@@ -207,7 +207,7 @@ bool LowLatencyGemmSwigluPlugin::supportsFormatCombination(
     case 2:
         return inOut[pos].type == mType && inOut[pos].format == TensorFormat::kLINEAR;
     default:
-        TLLM_CHECK(false);
+        CHECK(false);
         return false;
     }
 }
@@ -223,8 +223,8 @@ void LowLatencyGemmSwigluPlugin::configurePlugin(nvinfer1::DynamicPluginTensorDe
     int const minK = in[0].min.d[in[0].min.nbDims - 1];
     int const minN = in[1].min.d[1];
 
-    TLLM_CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
-    TLLM_CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
+    CHECK_WITH_INFO(minN == maxN, "Variable out channels is not allowed");
+    CHECK_WITH_INFO(minK == maxK, "Variable in channels is not allowed");
 
     if (!mDims.isInitialized())
     {
@@ -252,20 +252,20 @@ int LowLatencyGemmSwigluPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputD
     {
         m64 *= inputDesc[0].dims.d[ii];
     }
-    int const m = TLLM_INT32_CAST(m64);
-    int const n = TLLM_INT32_CAST(inputDesc[1].dims.d[1]);
-    int const k = TLLM_INT32_CAST(inputDesc[0].dims.d[inputDesc[0].dims.nbDims - 1]);
+    int const m = INT32_CAST(m64);
+    int const n = INT32_CAST(inputDesc[1].dims.d[1]);
+    int const k = INT32_CAST(inputDesc[0].dims.d[inputDesc[0].dims.nbDims - 1]);
     int const wsSize = mLowLatencyGemmSwigluRunner->getWorkspaceSize(m, n, k);
     auto const& bestTactic = mPluginProfiler->getBestConfig(m, mGemmId);
-    TLLM_CHECK_WITH_INFO(bestTactic, "No valid Low Latency GEMM SWIGLU tactic");
+    CHECK_WITH_INFO(bestTactic, "No valid Low Latency GEMM SWIGLU tactic");
 
-    auto env_pdl_overlap_ratio = getFloatEnv("TRTLLM_PDL_OVERLAP_RATIO");
-    auto env_prefetch_ratio = getFloatEnv("TRTLLM_PREFETCH_RATIO");
+    auto env_pdl_overlap_ratio = getFloatEnv("TRPDL_OVERLAP_RATIO");
+    auto env_prefetch_ratio = getFloatEnv("TRPREFETCH_RATIO");
     auto valid_ratio = [](std::optional<float>& env_val, float default_val)
     {
         if (env_val.has_value())
         {
-            TLLM_CHECK_WITH_INFO(env_val.value() <= 1.0f, "Valid ratio should be less than or equal to 1.0");
+            CHECK_WITH_INFO(env_val.value() <= 1.0f, "Valid ratio should be less than or equal to 1.0");
             return env_val.value();
         }
         return default_val;
@@ -283,7 +283,7 @@ int LowLatencyGemmSwigluPlugin::enqueue(nvinfer1::PluginTensorDesc const* inputD
 nvinfer1::DataType LowLatencyGemmSwigluPlugin::getOutputDataType(
     int index, nvinfer1::DataType const* inputTypes, int nbInputs) const noexcept
 {
-    TLLM_CHECK(index == 0);
+    CHECK(index == 0);
     return mType;
 }
 
@@ -327,7 +327,7 @@ void LowLatencyGemmSwigluPlugin::serialize(void* buffer) const noexcept
     write(d, mScaleD1);
     write(d, mDims);
     mPluginProfiler->serialize(d, mGemmId);
-    TLLM_CHECK(d == a + getSerializationSize());
+    CHECK(d == a + getSerializationSize());
 }
 
 void LowLatencyGemmSwigluPlugin::destroy() noexcept
@@ -371,7 +371,7 @@ PluginFieldCollection const* LowLatencyGemmSwigluPluginCreator::getFieldNames() 
 IPluginV2* LowLatencyGemmSwigluPluginCreator::createPlugin(char const* name, PluginFieldCollection const* fc) noexcept
 {
     PluginField const* fields = fc->fields;
-    TLLM_CHECK(fc->nbFields == 4);
+    CHECK(fc->nbFields == 4);
     nvinfer1::DataType type;
     float scale_output;
     float scale_d0;
@@ -381,22 +381,22 @@ IPluginV2* LowLatencyGemmSwigluPluginCreator::createPlugin(char const* name, Plu
         char const* attrName = fields[i].name;
         if (!strcmp(attrName, "type_id"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kINT32);
+            CHECK(fields[i].type == PluginFieldType::kINT32);
             type = static_cast<nvinfer1::DataType>(*(static_cast<nvinfer1::DataType const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "scale_output"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             scale_output = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "scale_d0"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             scale_d0 = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
         else if (!strcmp(attrName, "scale_d1"))
         {
-            TLLM_CHECK(fields[i].type == PluginFieldType::kFLOAT32);
+            CHECK(fields[i].type == PluginFieldType::kFLOAT32);
             scale_d1 = static_cast<float>(*(static_cast<float const*>(fields[i].data)));
         }
     }
