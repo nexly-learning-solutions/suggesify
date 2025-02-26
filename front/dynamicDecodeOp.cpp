@@ -1,7 +1,7 @@
 
 #include "dynamicDecodeOp.h"
 
-#include "suggestify/executor/types.h"
+#include "../types.h"
 #include "../src/decodingCommon.h"
 #include "../bufferManager.h"
 #include "../common.h"

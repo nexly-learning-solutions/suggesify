@@ -2,7 +2,7 @@
 #pragma once
 
 #include "suggestify/common/assert.h"
-#include "suggestify/executor/executor.h"
+#include "../executor.h"
 #include "../src/beamSearchKernels.h"
 #include "iTensor.h"
 #include <common.h>

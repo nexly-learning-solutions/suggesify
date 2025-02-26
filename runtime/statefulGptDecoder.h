@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "suggestify/executor/types.h"
+#include "../types.h"
 #include "bufferManager.h"
 #include "cudaEvent.h"
 #include "gptDecoder.h"

@@ -6,7 +6,7 @@
 #include "suggestify/common/mpiUtils.h"
 #include "suggestify/common/nvtxUtils.h"
 #include "suggestify/common/safetensors.h"
-#include "suggestify/executor/tensor.h"
+#include "../tensor.h"
 #include "../src/userbuffers/ub_interface.h"
 #include "tllmLogger.h"
 

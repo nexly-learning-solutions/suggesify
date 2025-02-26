@@ -2,7 +2,7 @@
 #include "lookaheadAlgorithm.h"
 #include "suggestify/common/assert.h"
 #include "suggestify/common/logger.h"
-#include "suggestify/executor/executor.h"
+#include "../executor.h"
 #include "decodingParams.h"
 #include "lookaheadDecodingUtils.h"
 #include "common.h"

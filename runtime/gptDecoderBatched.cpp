@@ -2,7 +2,7 @@
 #include "suggestify/batch_manager/llmRequest.h"
 
 #include "suggestify/common/assert.h"
-#include "suggestify/executor/types.h"
+#include "../types.h"
 #include "../src/decodingCommon.h"
 #include "../src/decodingKernels.h"
 #include "bufferManager.h"

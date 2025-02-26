@@ -3,7 +3,7 @@
 
 #include <curand_kernel.h>
 
-#include "suggestify/executor/types.h"
+#include "../types.h"
 #include "baseLayer.h"
 #include "decodingParams.h"
 

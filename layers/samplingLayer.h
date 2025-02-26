@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "suggestify/executor/types.h"
+#include "../types.h"
 #include "baseLayer.h"
 #include "decodingParams.h"
 #include "common.h"

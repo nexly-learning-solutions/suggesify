@@ -2,7 +2,7 @@
 #pragma once
 
 #include "suggestify/common/assert.h"
-#include "suggestify/executor/types.h"
+#include "../types.h"
 #include "speculativeDecodingModule.h"
 
 namespace suggestify::runtime
