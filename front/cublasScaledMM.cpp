@@ -1,4 +1,4 @@
-#include "suggestify/common/cudaUtils.h"
+#include "../common/cudaUtils.h"
 #include "../plugins/common/plugin.h"
 #include "../plugins/gemmPlugin/gemmPlugin.h"
 #include "../torchUtils.h"

@@ -1,5 +1,5 @@
 
-#include "suggestify/common/workspace.h"
+#include "../common/workspace.h"
 #include "../src/cutlass_kernels/moe_gemm/moe_gemm_kernels.h"
 #include "../src/mixtureOfExperts/moe_kernels.h"
 #include "../torchUtils.h"

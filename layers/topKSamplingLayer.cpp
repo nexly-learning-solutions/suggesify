@@ -1,7 +1,7 @@
 
 #include "topKSamplingLayer.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/nvtxUtils.h"
+#include "../common/logger.h"
+#include "../common/nvtxUtils.h"
 #include "../src/decodingCommon.h"
 #include "../src/samplingTopKKernels.h"
 #include "defaultDecodingParams.h"

@@ -1,5 +1,5 @@
 
-#include "suggestify/common/mathUtils.h"
+#include "../common/mathUtils.h"
 #include "../src/contextFusedMultiHeadAttention/fmhaPackedMask.h"
 #include "thUtils.h"
 

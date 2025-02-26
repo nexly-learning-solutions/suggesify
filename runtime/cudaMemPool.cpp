@@ -1,8 +1,8 @@
 
 #include "cudaMemPool.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/logger.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
+#include "../common/logger.h"
 #include <array>
 #include <cuda_runtime_api.h>
 #include <memory>

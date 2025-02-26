@@ -9,8 +9,8 @@
 
 #include "utils/debugUtils.h"
 
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/memoryUtils.h"
+#include "../common/cudaUtils.h"
+#include "../common/memoryUtils.h"
 #include <cfloat>
 #include <string>
 

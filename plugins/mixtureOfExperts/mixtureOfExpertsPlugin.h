@@ -2,8 +2,8 @@
 #define TRT_MIXTURE_OF_EXPERTS_PLUGIN_H
 
 #include "NvInferPlugin.h"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/quantization.h"
+#include "../common/cudaUtils.h"
+#include "../common/quantization.h"
 #include "../src/lora/lora.h"
 #include "../src/mixtureOfExperts/moe_kernels.h"
 #include "../plugins/common/gemmPluginProfiler.h"

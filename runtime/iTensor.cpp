@@ -1,8 +1,8 @@
 
 #include "iTensor.h"
 
-#include "suggestify/common/memoryUtils.h"
-#include "suggestify/common/stringUtils.h"
+#include "../common/memoryUtils.h"
+#include "../common/stringUtils.h"
 #include "bufferManager.h"
 #include "tensorView.h"
 #include "tllmBuffers.h"

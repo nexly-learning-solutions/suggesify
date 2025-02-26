@@ -1,5 +1,5 @@
 
-#include "suggestify/common/cudaBf16Wrapper.h"
+#include "../common/cudaBf16Wrapper.h"
 #include "../src/cutlass_kernels/cutlass_preprocessors.h"
 #include "thUtils.h"
 

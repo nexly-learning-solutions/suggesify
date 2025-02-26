@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pluginUtils.h"
-#include "suggestify/common/logger.h"
+#include "../common/logger.h"
 
 #include <cuda_runtime.h>
 

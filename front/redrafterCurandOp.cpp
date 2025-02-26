@@ -1,8 +1,8 @@
 
-#include "suggestify/common/cudaUtils.h"
+#include "../common/cudaUtils.h"
 #include "../src/decodingCommon.h"
 #include "../src/speculativeDecoding/explicitDraftTokensKernels.h"
-#include "suggestify/layers/defaultDecodingParams.h"
+#include "../layers/defaultDecodingParams.h"
 #include "../common.h"
 #include "thUtils.h"
 

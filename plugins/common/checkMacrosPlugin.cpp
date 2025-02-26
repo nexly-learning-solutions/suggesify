@@ -1,7 +1,7 @@
 
 #include "checkMacrosPlugin.h"
 
-#include "suggestify/common/logger.h"
+#include "../common/logger.h"
 
 namespace suggestify::plugins
 {

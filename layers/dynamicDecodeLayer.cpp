@@ -1,6 +1,6 @@
 
 #include "dynamicDecodeLayer.h"
-#include "suggestify/common/nvtxUtils.h"
+#include "../common/nvtxUtils.h"
 #include "../src/decodingKernels.h"
 #include "layerUtils.h"
 #include "layersFactory.h"

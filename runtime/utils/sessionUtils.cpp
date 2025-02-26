@@ -1,7 +1,7 @@
 
 #include "sessionUtils.h"
 
-#include "suggestify/common/assert.h"
+#include "../common/assert.h"
 #include "runtimeKernels.h"
 #include "tllmRuntime.h"
 

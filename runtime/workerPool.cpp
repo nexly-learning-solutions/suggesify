@@ -1,6 +1,6 @@
 
 #include "workerPool.h"
-#include "suggestify/common/cudaUtils.h"
+#include "../common/cudaUtils.h"
 
 namespace suggestify::runtime
 {

@@ -1,6 +1,6 @@
 
 #include "../plugins/common/gemmPluginProfiler.h"
-#include "suggestify/common/cublasMMWrapper.h"
+#include "../common/cublasMMWrapper.h"
 #include "../src/cutlass_kernels/fp8_rowwise_gemm/fp8_rowwise_gemm.h"
 #include "../src/cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm.h"
 #include "../src/cutlass_kernels/fused_gated_gemm/fused_gated_gemm.h"

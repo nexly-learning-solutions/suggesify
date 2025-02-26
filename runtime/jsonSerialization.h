@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "suggestify/common/jsonSerializeOptional.h"
+#include "../common/jsonSerializeOptional.h"
 #include "common.h"
 #include "runtimeDefaults.h"
 #include <nlohmann/json.hpp>

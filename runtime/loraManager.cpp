@@ -1,8 +1,8 @@
 
 #include "loraManager.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/memoryUtils.h"
+#include "../common/assert.h"
+#include "../common/logger.h"
+#include "../common/memoryUtils.h"
 #include "common.h"
 #include "iBuffer.h"
 #include "iTensor.h"

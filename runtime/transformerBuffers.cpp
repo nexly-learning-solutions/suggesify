@@ -1,9 +1,9 @@
 
 #include "transformerBuffers.h"
 #include "iTensor.h"
-#include "suggestify/batch_manager/kvCacheManager.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/stlUtils.h"
+#include "../batch_manager/kvCacheManager.h"
+#include "../common/logger.h"
+#include "../common/stlUtils.h"
 #include "runtimeBuffers.h"
 #include "runtimeKernels.h"
 #include "utils/sessionUtils.h"

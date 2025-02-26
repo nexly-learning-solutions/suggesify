@@ -1,5 +1,5 @@
 #include "allgatherPlugin.h"
-#include "suggestify/common/mpiUtils.h"
+#include "../common/mpiUtils.h"
 
 #include <nccl.h>
 

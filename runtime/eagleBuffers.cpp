@@ -1,9 +1,9 @@
 
 #include "eagleBuffers.h"
-#include "suggestify/batch_manager/llmRequest.h"
+#include "../batch_manager/llmRequest.h"
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
 #include "../src/speculativeDecoding/eagleDecodingKernels.h"
 #include "../src/speculativeDecoding/explicitDraftTokensKernels.h"
 #include "common.h"

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "suggestify/common/cublasMMWrapper.h"
-#include "suggestify/common/quantization.h"
+#include "../common/cublasMMWrapper.h"
+#include "../common/quantization.h"
 #include "../src/contextFusedMultiHeadAttention/fmhaRunner.h"
 #include "../src/gptKernels.h"
 #include "../plugins/common/plugin.h"

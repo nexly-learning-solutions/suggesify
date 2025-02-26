@@ -1,5 +1,5 @@
 
-#include "suggestify/common/cudaUtils.h"
+#include "../common/cudaUtils.h"
 #include "../src/beamSearchKernels.h"
 #include "../src/decodingCommon.h"
 #include "../src/decodingKernels.h"

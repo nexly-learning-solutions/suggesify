@@ -1,7 +1,7 @@
 #include "../plugins/mixtureOfExperts/mixtureOfExpertsPlugin.h"
-#include "suggestify/common/cudaBf16Wrapper.h"
-#include "suggestify/common/dataType.h"
-#include "suggestify/common/quantization.h"
+#include "../common/cudaBf16Wrapper.h"
+#include "../common/dataType.h"
+#include "../common/quantization.h"
 #include "../runtime/iBuffer.h"
 #include "../runtime/utils/debugUtils.h"
 #include <numeric>

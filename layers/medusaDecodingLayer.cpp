@@ -1,6 +1,6 @@
 
 #include "medusaDecodingLayer.h"
-#include "suggestify/common/nvtxUtils.h"
+#include "../common/nvtxUtils.h"
 #include "../src/decodingCommon.h"
 #include "../src/samplingTopKKernels.h"
 #include "../src/speculativeDecoding/medusaDecodingKernels.h"

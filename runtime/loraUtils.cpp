@@ -1,6 +1,6 @@
 
 #include "loraUtils.h"
-#include "suggestify/common/assert.h"
+#include "../common/assert.h"
 #include "common.h"
 #include "iTensor.h"
 #include "modelConfig.h"

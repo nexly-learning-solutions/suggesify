@@ -1,8 +1,8 @@
 
 
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/memoryUtils.h"
-#include "suggestify/common/reduceKernelUtils.cuh"
+#include "../common/cudaUtils.h"
+#include "../common/memoryUtils.h"
+#include "../common/reduceKernelUtils.cuh"
 #include "../src/speculativeDecoding/kvCacheUpdateKernels.h"
 #include "runtimeKernels.h"
 

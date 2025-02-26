@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "suggestify/common/mpiUtils.h"
+#include "../common/mpiUtils.h"
 #include "cudaStream.h"
 #include "iBuffer.h"
 #include "worldConfig.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "suggestify/common/quantization.h"
+#include "../common/quantization.h"
 #include "../plugins/common/gemmPluginProfiler.h"
 #include "../plugins/common/plugin.h"
 #include <memory>

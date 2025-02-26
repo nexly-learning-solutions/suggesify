@@ -1,10 +1,10 @@
 
 #include "utils/numpyUtils.h"
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/memoryUtils.h"
-#include "suggestify/common/stringUtils.h"
+#include "../common/assert.h"
+#include "../common/logger.h"
+#include "../common/memoryUtils.h"
+#include "../common/stringUtils.h"
 #include "bufferManager.h"
 #include "iTensor.h"
 #include <NvInferRuntime.h>

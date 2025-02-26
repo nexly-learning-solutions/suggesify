@@ -1,6 +1,6 @@
 
-#include "suggestify/common/cudaBf16Wrapper.h"
-#include "suggestify/common/cudaFp8Utils.h"
+#include "../common/cudaBf16Wrapper.h"
+#include "../common/cudaFp8Utils.h"
 #include "thUtils.h"
 
 #if defined(TORCH_VERSION_MAJOR)                                                                                       \

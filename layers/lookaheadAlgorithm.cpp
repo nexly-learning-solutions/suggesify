@@ -1,7 +1,7 @@
 
 #include "lookaheadAlgorithm.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/logger.h"
+#include "../common/assert.h"
+#include "../common/logger.h"
 #include "../executor.h"
 #include "decodingParams.h"
 #include "lookaheadDecodingUtils.h"

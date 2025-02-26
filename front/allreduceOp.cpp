@@ -1,8 +1,8 @@
 
-#include "suggestify/common/customAllReduceUtils.h"
-#include "suggestify/common/dataType.h"
-#include "suggestify/common/mpiUtils.h"
-#include "suggestify/common/opUtils.h"
+#include "../common/customAllReduceUtils.h"
+#include "../common/dataType.h"
+#include "../common/mpiUtils.h"
+#include "../common/opUtils.h"
 #include "../src/customAllReduceKernels.h"
 #include "../torchUtils.h"
 #include "thUtils.h"

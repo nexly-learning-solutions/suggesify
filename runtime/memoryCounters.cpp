@@ -1,7 +1,7 @@
 
 #include "memoryCounters.h"
 
-#include "suggestify/common/stringUtils.h"
+#include "../common/stringUtils.h"
 
 #include <array>
 #include <cmath>

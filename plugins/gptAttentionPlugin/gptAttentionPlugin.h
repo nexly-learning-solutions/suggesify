@@ -1,10 +1,10 @@
 #pragma once
 
 #include "checkMacrosPlugin.h"
-#include "suggestify/common/cublasMMWrapper.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/quantization.h"
-#include "suggestify/common/stringUtils.h"
+#include "../common/cublasMMWrapper.h"
+#include "../common/logger.h"
+#include "../common/quantization.h"
+#include "../common/stringUtils.h"
 #include "../src/contextFusedMultiHeadAttention/fmhaRunner.h"
 #include "../src/contextFusedMultiHeadAttention/fused_multihead_attention_common.h"
 #include "../src/gptKernels.h"

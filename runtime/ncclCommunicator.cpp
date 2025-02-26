@@ -1,7 +1,7 @@
 
 #include "ncclCommunicator.h"
 
-#include "suggestify/common/logger.h"
+#include "../common/logger.h"
 #include "utils/multiDeviceUtils.h"
 
 #if ENABLE_MULTI_DEVICE

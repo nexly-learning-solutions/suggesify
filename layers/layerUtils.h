@@ -8,7 +8,7 @@
 
 #include <cuda_runtime.h>
 
-#include "suggestify/common/assert.h"
+#include "../common/assert.h"
 #include "decodingParams.h"
 #include "bufferManager.h"
 #include "common.h"

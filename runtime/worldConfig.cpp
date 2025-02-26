@@ -1,11 +1,11 @@
 
 #include "worldConfig.h"
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/mpiUtils.h"
-#include "suggestify/common/stringUtils.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
+#include "../common/logger.h"
+#include "../common/mpiUtils.h"
+#include "../common/stringUtils.h"
 
 #include <algorithm>
 #include <numeric>

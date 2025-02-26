@@ -3,8 +3,8 @@
 
 #include "../src/decodingKernels.h"
 #include "../src/speculativeDecoding/externalDraftTokensKernels.h"
-#include "suggestify/layers/decodingParams.h"
-#include "suggestify/layers/dynamicDecodeLayer.h"
+#include "../layers/decodingParams.h"
+#include "../layers/dynamicDecodeLayer.h"
 #include "decodingLayerWorkspace.h"
 
 #include <memory>

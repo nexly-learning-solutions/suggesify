@@ -1,6 +1,6 @@
 #pragma once
 
-#include "suggestify/common/quantization.h"
+#include "../common/quantization.h"
 #include "../src/cutlass_kernels/fpA_intB_gemm/fpA_intB_gemm.h"
 #include "../src/weightOnlyBatchedGemv/kernelLauncher.h"
 #include "../plugins/common/gemmPluginProfiler.h"

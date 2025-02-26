@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "suggestify/common/cublasMMWrapper.h"
-#include "suggestify/common/workspace.h"
+#include "../common/cublasMMWrapper.h"
+#include "../common/workspace.h"
 #include "../plugins/api/tllmPlugin.h"
 #include "../plugins/common/checkMacrosPlugin.h"
 

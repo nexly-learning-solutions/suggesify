@@ -1,6 +1,6 @@
 
 #include "mambaConv1dPlugin.h"
-#include "suggestify/common/assert.h"
+#include "../common/assert.h"
 #include <algorithm>
 
 using namespace nvinfer1;

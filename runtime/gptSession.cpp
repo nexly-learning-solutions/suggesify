@@ -3,9 +3,9 @@
 
 #include "common.h"
 #include "iBuffer.h"
-#include "suggestify/batch_manager/kvCacheManager.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/stringUtils.h"
+#include "../batch_manager/kvCacheManager.h"
+#include "../common/logger.h"
+#include "../common/stringUtils.h"
 #include "gptDecoderBatched.h"
 #include "ipcUtils.h"
 #include "ncclCommunicator.h"
@@ -72,7 +72,7 @@ GptSession::GptSession(Config const& sessionConfig, ModelConfig const& modelConf
 {
     LOG_WARNING(
         "GptSession is deprecated and will be removed in a future release."
-        " Please use the executor API instead (cpp/include/suggestify/executor).");
+        " Please use the executor API instead (cpp/include/../executor).");
     if (mWorldConfig.isTensorParallel())
     {
         mRuntime->initializeUserBuffer(mWorldConfig.getTensorParallelism(), mModelConfig.getMaxBatchSize(),

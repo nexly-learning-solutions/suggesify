@@ -1,6 +1,6 @@
 
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/nvtxUtils.h"
+#include "../common/cudaUtils.h"
+#include "../common/nvtxUtils.h"
 #include "../src/decodingCommon.h"
 #include "topKSamplingLayer.h"
 #include "topPSamplingLayer.h"

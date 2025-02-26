@@ -1,8 +1,8 @@
 #include "allreducePlugin.h"
 
-#include "suggestify/common/customAllReduceUtils.h"
-#include "suggestify/common/dataType.h"
-#include "suggestify/common/mpiUtils.h"
+#include "../common/customAllReduceUtils.h"
+#include "../common/dataType.h"
+#include "../common/mpiUtils.h"
 #include "../src/customAllReduceKernels.h"
 #include "../src/userbuffers/ub_interface.h"
 #include <nccl.h>

@@ -1,7 +1,7 @@
 #ifndef TRT_GEMM_PLUGIN_H
 #define TRT_GEMM_PLUGIN_H
 
-#include "suggestify/common/cublasMMWrapper.h"
+#include "../common/cublasMMWrapper.h"
 #include "../plugins/common/gemmPluginProfiler.h"
 #include "../plugins/common/plugin.h"
 

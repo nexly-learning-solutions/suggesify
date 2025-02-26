@@ -3,8 +3,8 @@
 
 #include "common.h"
 #include "modelConfig.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/logger.h"
+#include "../common/assert.h"
+#include "../common/logger.h"
 #include "eagleModule.h"
 #include "explicitDraftTokensModule.h"
 #include "jsonSerialization.h"

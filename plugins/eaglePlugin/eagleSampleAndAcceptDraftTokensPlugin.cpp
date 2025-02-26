@@ -1,9 +1,9 @@
 #include "eagleSampleAndAcceptDraftTokensPlugin.h"
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/dataType.h"
-#include "suggestify/common/memoryUtils.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
+#include "../common/dataType.h"
+#include "../common/memoryUtils.h"
 #include "../src/samplingTopKKernels.h"
 #include "../src/speculativeDecoding/common.h"
 #include "../src/speculativeDecoding/eagleDecodingKernels.h"

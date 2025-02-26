@@ -1,9 +1,9 @@
 
 
 #include "lowLatencyGemmSwigluPlugin.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaFp8Utils.h"
-#include "suggestify/common/logger.h"
+#include "../common/assert.h"
+#include "../common/cudaFp8Utils.h"
+#include "../common/logger.h"
 #include "../src/internal_cutlass_kernels/include/low_latency_gemm_swiglu.h"
 #include <NvInferRuntime.h>
 #include <NvInferRuntimeBase.h>

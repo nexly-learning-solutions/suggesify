@@ -1,6 +1,6 @@
 #include "../plugins/common/plugin.h"
 
-#include "suggestify/common/mpiUtils.h"
+#include "../common/mpiUtils.h"
 
 #include "checkMacrosPlugin.h"
 #include "cuda.h"

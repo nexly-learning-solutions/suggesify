@@ -1,7 +1,7 @@
 #include "gptDecoderBatched.h"
-#include "suggestify/batch_manager/llmRequest.h"
+#include "../batch_manager/llmRequest.h"
 
-#include "suggestify/common/assert.h"
+#include "../common/assert.h"
 #include "../types.h"
 #include "../src/decodingCommon.h"
 #include "../src/decodingKernels.h"

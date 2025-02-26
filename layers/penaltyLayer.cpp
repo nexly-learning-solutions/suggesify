@@ -1,7 +1,7 @@
 
 #include "penaltyLayer.h"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/nvtxUtils.h"
+#include "../common/cudaUtils.h"
+#include "../common/nvtxUtils.h"
 #include "../src/penaltyKernels.h"
 #include "../src/penaltyTypes.h"
 #include "defaultDecodingParams.h"

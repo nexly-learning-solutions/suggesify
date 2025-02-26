@@ -1,7 +1,7 @@
 #include "recvPlugin.h"
 
-#include "suggestify/common/logger.h"
-#include "suggestify/common/mpiUtils.h"
+#include "../common/logger.h"
+#include "../common/mpiUtils.h"
 
 #include <nccl.h>
 

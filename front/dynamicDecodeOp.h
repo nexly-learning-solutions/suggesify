@@ -1,6 +1,6 @@
 
-#include "suggestify/common/cudaBf16Wrapper.h"
-#include "suggestify/layers/dynamicDecodeLayer.h"
+#include "../common/cudaBf16Wrapper.h"
+#include "../layers/dynamicDecodeLayer.h"
 #include "../iTensor.h"
 #include "thUtils.h"
 

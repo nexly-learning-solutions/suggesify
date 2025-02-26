@@ -1,6 +1,6 @@
 
-#include "suggestify/common/mpiUtils.h"
-#include "suggestify/common/opUtils.h"
+#include "../common/mpiUtils.h"
+#include "../common/opUtils.h"
 #include "../torchUtils.h"
 
 #include <NvInferRuntime.h>

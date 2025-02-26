@@ -1,8 +1,8 @@
 
 #include "topPSamplingLayer.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/memoryUtils.h"
-#include "suggestify/common/nvtxUtils.h"
+#include "../common/logger.h"
+#include "../common/memoryUtils.h"
+#include "../common/nvtxUtils.h"
 #include "../src/decodingCommon.h"
 #include "../src/samplingTopKKernels.h"
 #include "../src/samplingTopPKernels.h"

@@ -1,6 +1,6 @@
 
 #include "cumsumLastDimPlugin.h"
-#include "suggestify/common/assert.h"
+#include "../common/assert.h"
 
 using namespace nvinfer1;
 using namespace suggestify::kernels;

@@ -1,8 +1,8 @@
 
 #include "gptAttentionPlugin.h"
 
-#include "suggestify/batch_manager/contextProgress.h"
-#include "suggestify/common/logger.h"
+#include "../batch_manager/contextProgress.h"
+#include "../common/logger.h"
 #include "../src/decoderMaskedMultiheadAttention.h"
 #include "../src/gptKernels.h"
 #include "../src/unfusedAttentionKernels.h"

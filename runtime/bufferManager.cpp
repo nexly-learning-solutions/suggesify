@@ -1,7 +1,7 @@
 #include "bufferManager.h"
 #include "cudaMemPool.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
 #include "tllmBuffers.h"
 
 #include <cstring>

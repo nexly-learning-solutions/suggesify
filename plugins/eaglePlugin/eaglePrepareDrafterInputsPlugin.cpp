@@ -1,8 +1,8 @@
 #include "eaglePrepareDrafterInputsPlugin.h"
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/dataType.h"
-#include "suggestify/common/memoryUtils.h"
+#include "../common/assert.h"
+#include "../common/dataType.h"
+#include "../common/memoryUtils.h"
 #include "../src/speculativeDecoding/eagleDecodingKernels.h"
 #include "../runtime/common.h"
 #include "../runtime/iTensor.h"

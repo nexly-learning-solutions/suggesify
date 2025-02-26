@@ -1,8 +1,8 @@
 
 #include "runtimeBuffers.h"
 
-#include "suggestify/batch_manager/kvCacheManager.h"
-#include "suggestify/common/assert.h"
+#include "../batch_manager/kvCacheManager.h"
+#include "../common/assert.h"
 #include "runtimeKernels.h"
 #include "tllmRuntime.h"
 #include "utils/sessionUtils.h"

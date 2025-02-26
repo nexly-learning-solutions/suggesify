@@ -1,6 +1,6 @@
 
 #include "stopCriteriaLayer.h"
-#include "suggestify/common/nvtxUtils.h"
+#include "../common/nvtxUtils.h"
 #include "../src/stopCriteriaKernels.h"
 #include "layerUtils.h"
 

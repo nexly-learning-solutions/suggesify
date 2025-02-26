@@ -1,9 +1,9 @@
 
 #include "lookaheadDecodingLayer.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/nvtxUtils.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
+#include "../common/logger.h"
+#include "../common/nvtxUtils.h"
 #include "../executor.h"
 #include "../src/samplingTopKKernels.h"
 #include "decodingParams.h"

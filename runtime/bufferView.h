@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "suggestify/common/assert.h"
+#include "../common/assert.h"
 #include "iBuffer.h"
 
 #include <string>

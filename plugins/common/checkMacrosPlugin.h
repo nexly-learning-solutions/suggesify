@@ -1,7 +1,7 @@
 #pragma once
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
 
 namespace suggestify::plugins
 {

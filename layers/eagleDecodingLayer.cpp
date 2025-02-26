@@ -1,7 +1,7 @@
 
 #include "eagleDecodingLayer.h"
-#include "suggestify/common/nvtxUtils.h"
-#include "suggestify/common/workspace.h"
+#include "../common/nvtxUtils.h"
+#include "../common/workspace.h"
 #include "../src/speculativeDecoding/common.h"
 #include "../src/speculativeDecoding/eagleDecodingKernels.h"
 #include "defaultDecodingParams.h"

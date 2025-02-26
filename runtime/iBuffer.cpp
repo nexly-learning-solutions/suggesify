@@ -3,8 +3,8 @@
 #include "iTensor.h"
 #include "tllmBuffers.h"
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
 #include "bufferView.h"
 
 #include <cuda_runtime_api.h>

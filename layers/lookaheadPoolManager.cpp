@@ -1,6 +1,6 @@
 
 #include "lookaheadPoolManager.h"
-#include "suggestify/common/logger.h"
+#include "../common/logger.h"
 #include "lookaheadDecodingUtils.h"
 
 namespace suggestify::layers

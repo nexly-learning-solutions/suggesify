@@ -1,8 +1,8 @@
 
 #include "lookaheadBuffers.h"
 #include "iTensor.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/layers/lookaheadDecodingUtils.h"
+#include "../common/logger.h"
+#include "../layers/lookaheadDecodingUtils.h"
 #include "common.h"
 
 namespace suggestify::runtime

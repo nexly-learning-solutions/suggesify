@@ -1,10 +1,10 @@
 
 #include "ipcUtils.h"
 
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/customAllReduceUtils.h"
-#include "suggestify/common/mpiUtils.h"
-#include "suggestify/common/workspace.h"
+#include "../common/cudaUtils.h"
+#include "../common/customAllReduceUtils.h"
+#include "../common/mpiUtils.h"
+#include "../common/workspace.h"
 
 #include <NvInferRuntimeBase.h>
 #include <cstddef>

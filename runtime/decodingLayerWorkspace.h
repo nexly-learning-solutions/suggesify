@@ -3,9 +3,9 @@
 
 #include <memory>
 
-#include "suggestify/common/dataType.h"
-#include "suggestify/common/workspace.h"
-#include "suggestify/layers/decodingParams.h"
+#include "../common/dataType.h"
+#include "../common/workspace.h"
+#include "../layers/decodingParams.h"
 #include "bufferManager.h"
 #include "iBuffer.h"
 #include "iTensor.h"

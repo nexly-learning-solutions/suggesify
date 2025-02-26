@@ -1,7 +1,7 @@
 
-#include "suggestify/common/cudaUtils.h"
-#include "suggestify/common/logger.h"
-#include "suggestify/common/mpiUtils.h"
+#include "../common/cudaUtils.h"
+#include "../common/logger.h"
+#include "../common/mpiUtils.h"
 #include "executor.h"
 #include "serialization.h"
 #include "../plugins/api/tllmPlugin.h"

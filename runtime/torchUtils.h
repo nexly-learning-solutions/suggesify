@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "suggestify/common/assert.h"
-#include "suggestify/common/cudaUtils.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
 #include "cudaStream.h"
 #include "iTensor.h"
 

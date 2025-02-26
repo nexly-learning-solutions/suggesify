@@ -1,6 +1,6 @@
 #include "tllmLogger.h"
-#include "suggestify/common/assert.h"
-#include "suggestify/common/logger.h"
+#include "../common/assert.h"
+#include "../common/logger.h"
 
 using namespace suggestify::runtime;
 namespace tc = suggestify::common;
