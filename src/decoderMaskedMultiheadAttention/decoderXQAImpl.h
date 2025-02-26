@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/xqaParams.h"
-#include "suggestify/kernels/kvCacheUtils.h"
+#include "../src/decoderMaskedMultiheadAttention/xqaParams.h"
+#include "../src/kvCacheUtils.h"
 
 namespace suggestify
 {

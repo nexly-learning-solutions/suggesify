@@ -3,7 +3,7 @@
 
 #include "suggestify/common/assert.h"
 #include "suggestify/executor/executor.h"
-#include "suggestify/kernels/beamSearchKernels.h"
+#include "../src/beamSearchKernels.h"
 #include "iTensor.h"
 #include <common.h>
 #include <speculativeDecodingModule.h>

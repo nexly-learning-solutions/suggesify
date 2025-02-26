@@ -6,8 +6,8 @@
 #include "cudaUtils.h"
 #include "envUtils.h"
 #include "workspace.h"
-#include "suggestify/kernels/kvCacheUtils.h"
-#include "suggestify/kernels/multiHeadAttentionCommon.h"
+#include "../src/kvCacheUtils.h"
+#include "../src/multiHeadAttentionCommon.h"
 #include "xqaParams.h"
 #include <cstddef>
 #include <cstdint>

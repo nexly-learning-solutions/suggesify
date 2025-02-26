@@ -1,7 +1,7 @@
 
 #include "suggestify/common/cudaUtils.h"
 #include "suggestify/common/nvtxUtils.h"
-#include "suggestify/kernels/decodingCommon.h"
+#include "../src/decodingCommon.h"
 #include "topKSamplingLayer.h"
 #include "topPSamplingLayer.h"
 

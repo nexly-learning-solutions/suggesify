@@ -2,8 +2,8 @@
 #include "statefulGptDecoder.h"
 
 #include "suggestify/common/memoryUtils.h"
-#include "suggestify/kernels/decodingCommon.h"
-#include "suggestify/kernels/decodingKernels.h"
+#include "../src/decodingCommon.h"
+#include "../src/decodingKernels.h"
 #include "runtimeKernels.h"
 
 #include <algorithm>

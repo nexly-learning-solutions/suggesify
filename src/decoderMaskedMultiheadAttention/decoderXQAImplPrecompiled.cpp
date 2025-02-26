@@ -1,16 +1,16 @@
 
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplPrecompiled.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplPrecompiled.h"
 
 #include "cudaDriverWrapper.h"
 #include "envUtils.h"
 #include "workspace.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/cubin/xqa_kernel_cubin.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAConstants.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplCommon.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQARunner.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/tensorMapUtils.h"
-#include "suggestify/kernels/kvCacheUtils.h"
-#include "suggestify/kernels/unfusedAttentionKernels.h"
+#include "../src/decoderMaskedMultiheadAttention/cubin/xqa_kernel_cubin.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAConstants.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplCommon.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQARunner.h"
+#include "../src/decoderMaskedMultiheadAttention/tensorMapUtils.h"
+#include "../src/kvCacheUtils.h"
+#include "../src/unfusedAttentionKernels.h"
 #include <cassert>
 #include <cuda.h>
 #include <functional>

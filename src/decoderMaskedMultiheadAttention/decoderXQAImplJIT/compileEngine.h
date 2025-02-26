@@ -1,7 +1,7 @@
 
 #pragma once
 #include "cubinObj.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/xqaParams.h"
+#include "../src/decoderMaskedMultiheadAttention/xqaParams.h"
 #include <nvrtc.h>
 #include <string>
 #include <vector>

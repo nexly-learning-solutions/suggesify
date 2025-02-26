@@ -3,8 +3,8 @@
 #include "suggestify/common/dataType.h"
 #include "suggestify/common/mpiUtils.h"
 #include "suggestify/common/opUtils.h"
-#include "suggestify/kernels/customAllReduceKernels.h"
-#include "suggestify/runtime/torchUtils.h"
+#include "../src/customAllReduceKernels.h"
+#include "../torchUtils.h"
 #include "thUtils.h"
 #include <nvml.h>
 #include <torch/extension.h>

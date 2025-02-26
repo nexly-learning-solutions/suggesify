@@ -1,10 +1,10 @@
 
 #pragma once
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImpl.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImpl.h"
 
 #include "compileEngine.h"
 #include "cubinObjRegistry.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplCommon.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplCommon.h"
 #include <unordered_set>
 
 namespace suggestify

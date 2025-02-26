@@ -1,6 +1,6 @@
 #pragma once
 
-#include "suggestify/runtime/ncclCommunicator.h"
+#include "../ncclCommunicator.h"
 #include "thUtils.h"
 #include <memory>
 

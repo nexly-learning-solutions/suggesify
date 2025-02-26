@@ -1,6 +1,6 @@
 #pragma once
 #include "cudaDriverWrapper.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/xqaParams.h"
+#include "../src/decoderMaskedMultiheadAttention/xqaParams.h"
 
 namespace suggestify
 {

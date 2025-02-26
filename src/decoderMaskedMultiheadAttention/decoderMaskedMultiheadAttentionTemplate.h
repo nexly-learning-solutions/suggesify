@@ -3,11 +3,11 @@
 
 #include "cudaTypeUtils.cuh"
 #include "memoryUtils.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttentionUtils.h"
-#include "suggestify/kernels/gptKernels.h"
-#include "suggestify/kernels/kvCacheUtils.h"
-#include "suggestify/kernels/math.h"
+#include "../src/decoderMaskedMultiheadAttention.h"
+#include "../src/decoderMaskedMultiheadAttentionUtils.h"
+#include "../src/gptKernels.h"
+#include "../src/kvCacheUtils.h"
+#include "../src/math.h"
 #include <assert.h>
 #include <float.h>
 #include <type_traits>

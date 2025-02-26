@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "suggestify/kernels/kvCacheIndex.h"
+#include "../src/kvCacheIndex.h"
 #include "bufferManager.h"
 #include "common.h"
 #include "cudaStream.h"

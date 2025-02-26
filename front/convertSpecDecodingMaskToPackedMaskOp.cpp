@@ -1,5 +1,5 @@
 
-#include "suggestify/kernels/speculativeDecoding/explicitDraftTokensKernels.h"
+#include "../src/speculativeDecoding/explicitDraftTokensKernels.h"
 #include "thUtils.h"
 
 namespace th = torch;

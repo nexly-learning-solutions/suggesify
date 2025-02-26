@@ -1,7 +1,7 @@
 
 #include "ncclCommunicatorOp.h"
 
-#include "suggestify/runtime/iBuffer.h"
+#include "../iBuffer.h"
 
 namespace tr = suggestify::runtime;
 

@@ -1,6 +1,6 @@
 
 
-#include "suggestify/kernels/decoderMaskedMultiheadAttention.h"
+#include "../src/decoderMaskedMultiheadAttention.h"
 #include <assert.h>
 #include <float.h>
 #include <type_traits>

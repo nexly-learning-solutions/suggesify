@@ -1,6 +1,6 @@
 
 #include "suggestify/common/mathUtils.h"
-#include "suggestify/kernels/contextFusedMultiHeadAttention/fmhaPackedMask.h"
+#include "../src/contextFusedMultiHeadAttention/fmhaPackedMask.h"
 #include "thUtils.h"
 
 namespace torch_ext

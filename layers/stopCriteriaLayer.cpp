@@ -1,7 +1,7 @@
 
 #include "stopCriteriaLayer.h"
 #include "suggestify/common/nvtxUtils.h"
-#include "suggestify/kernels/stopCriteriaKernels.h"
+#include "../src/stopCriteriaKernels.h"
 #include "layerUtils.h"
 
 using namespace suggestify::common;

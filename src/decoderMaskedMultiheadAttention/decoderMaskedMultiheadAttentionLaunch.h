@@ -4,9 +4,9 @@
 #include "decoderMaskedMultiheadAttentionTemplate.h"
 #include "assert.h"
 #include "envUtils.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention.h"
-#include "suggestify/kernels/gptKernels.h"
-#include "suggestify/kernels/kvCacheUtils.h"
+#include "../src/decoderMaskedMultiheadAttention.h"
+#include "../src/gptKernels.h"
+#include "../src/kvCacheUtils.h"
 
 #include <algorithm>
 #include <cuda_runtime_api.h>

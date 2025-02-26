@@ -2,11 +2,11 @@
 #include "dynamicDecodeOp.h"
 
 #include "suggestify/executor/types.h"
-#include "suggestify/kernels/decodingCommon.h"
-#include "suggestify/runtime/bufferManager.h"
-#include "suggestify/runtime/common.h"
-#include "suggestify/runtime/gptDecoder.h"
-#include "suggestify/runtime/iTensor.h"
+#include "../src/decodingCommon.h"
+#include "../bufferManager.h"
+#include "../common.h"
+#include "../gptDecoder.h"
+#include "../iTensor.h"
 #include "thUtils.h"
 #include <c10/cuda/CUDAFunctions.h>
 

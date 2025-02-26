@@ -1,8 +1,8 @@
 
 #pragma once
 #include "quantization.h"
-#include "suggestify/kernels/gptKernels.h"
-#include "suggestify/kernels/multiHeadAttentionCommon.h"
+#include "../src/gptKernels.h"
+#include "../src/multiHeadAttentionCommon.h"
 
 namespace suggestify
 {

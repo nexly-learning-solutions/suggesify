@@ -4,10 +4,10 @@
 #include "cudaTypeUtils.cuh"
 #include "cudaUtils.h"
 #include "reduceKernelUtils.cuh"
-#include "suggestify/kernels/decoderMaskedMultiheadAttentionUtils.h"
-#include "suggestify/kernels/gptKernels.h"
-#include "suggestify/kernels/kvCacheUtils.h"
-#include "suggestify/kernels/unfusedAttentionKernels.h"
+#include "../src/decoderMaskedMultiheadAttentionUtils.h"
+#include "../src/gptKernels.h"
+#include "../src/kvCacheUtils.h"
+#include "../src/unfusedAttentionKernels.h"
 
 using namespace suggestify::common;
 

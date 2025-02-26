@@ -1,9 +1,9 @@
 
 #include "medusaDecodingLayer.h"
 #include "suggestify/common/nvtxUtils.h"
-#include "suggestify/kernels/decodingCommon.h"
-#include "suggestify/kernels/samplingTopKKernels.h"
-#include "suggestify/kernels/speculativeDecoding/medusaDecodingKernels.h"
+#include "../src/decodingCommon.h"
+#include "../src/samplingTopKKernels.h"
+#include "../src/speculativeDecoding/medusaDecodingKernels.h"
 #include "bufferManager.h"
 #include "iBuffer.h"
 

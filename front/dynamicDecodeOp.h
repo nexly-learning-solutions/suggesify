@@ -1,7 +1,7 @@
 
 #include "suggestify/common/cudaBf16Wrapper.h"
 #include "suggestify/layers/dynamicDecodeLayer.h"
-#include "suggestify/runtime/iTensor.h"
+#include "../iTensor.h"
 #include "thUtils.h"
 
 namespace th = torch;

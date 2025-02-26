@@ -1,11 +1,11 @@
 
-#include "suggestify/kernels/lora/lora.h"
+#include "../src/lora/lora.h"
 
 #include "assert.h"
 #include "cublasMMWrapper.h"
 #include "cudaUtils.h"
-#include "suggestify/kernels/groupGemm.h"
-#include "suggestify/kernels/splitkGroupGemm.h"
+#include "../src/groupGemm.h"
+#include "../src/splitkGroupGemm.h"
 #include "iBuffer.h"
 
 #include <algorithm>

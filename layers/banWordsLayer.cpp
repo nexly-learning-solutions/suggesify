@@ -1,7 +1,7 @@
 
 #include "banWordsLayer.h"
-#include "suggestify/kernels/banBadWords.h"
-#include "suggestify/kernels/banRepeatNgram.h"
+#include "../src/banBadWords.h"
+#include "../src/banRepeatNgram.h"
 #include "defaultDecodingParams.h"
 #include "layerUtils.h"
 

@@ -8,13 +8,13 @@
 #include "assert.h"
 #include "cudaUtils.h"
 #include "quantization.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/cubinObjRegistry.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplPrecompiled.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/xqaParams.h"
-#include "suggestify/kernels/gptKernels.h"
-#include "suggestify/kernels/kvCacheUtils.h"
-#include "suggestify/kernels/multiHeadAttentionCommon.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplJIT/cubinObjRegistry.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplPrecompiled.h"
+#include "../src/decoderMaskedMultiheadAttention/xqaParams.h"
+#include "../src/gptKernels.h"
+#include "../src/kvCacheUtils.h"
+#include "../src/multiHeadAttentionCommon.h"
 
 using namespace suggestify::common;
 

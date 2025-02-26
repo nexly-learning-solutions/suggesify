@@ -1,5 +1,5 @@
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/tensorMapUtils.h"
-#include "suggestify/kernels/kvCacheUtils.h"
+#include "../src/decoderMaskedMultiheadAttention/tensorMapUtils.h"
+#include "../src/kvCacheUtils.h"
 
 #include <cstdint>
 #include <type_traits>

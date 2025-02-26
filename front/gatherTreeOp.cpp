@@ -1,8 +1,8 @@
 
 #include "suggestify/common/cudaUtils.h"
-#include "suggestify/kernels/beamSearchKernels.h"
-#include "suggestify/kernels/decodingCommon.h"
-#include "suggestify/kernels/decodingKernels.h"
+#include "../src/beamSearchKernels.h"
+#include "../src/decodingCommon.h"
+#include "../src/decodingKernels.h"
 #include "thUtils.h"
 
 namespace th = torch;

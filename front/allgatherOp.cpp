@@ -1,7 +1,7 @@
 
 #include "suggestify/common/mpiUtils.h"
 #include "suggestify/common/opUtils.h"
-#include "suggestify/runtime/torchUtils.h"
+#include "../torchUtils.h"
 
 #include <NvInferRuntime.h>
 #include <c10/cuda/CUDAStream.h>

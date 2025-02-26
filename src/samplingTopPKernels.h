@@ -1,7 +1,7 @@
 #pragma once
 
 #include "assert.h"
-#include "suggestify/kernels/decodingCommon.h"
+#include "../src/decodingCommon.h"
 #include "common.h"
 #include <curand_kernel.h>
 

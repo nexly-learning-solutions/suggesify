@@ -11,7 +11,7 @@
 #include "logger.h"
 #include "memoryUtils.h"
 #include "reduceKernelUtils.cuh"
-#include "suggestify/kernels/samplingTopKKernels.h"
+#include "../src/samplingTopKKernels.h"
 
 using namespace suggestify::common;
 using namespace suggestify::runtime;

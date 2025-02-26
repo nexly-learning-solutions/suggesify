@@ -1,6 +1,6 @@
 
-#include "suggestify/kernels/kvCacheIndex.h"
-#include "suggestify/kernels/speculativeDecoding/kvCacheUpdateKernels.h"
+#include "../src/kvCacheIndex.h"
+#include "../src/speculativeDecoding/kvCacheUpdateKernels.h"
 #include "thUtils.h"
 
 #include <cstdint>

@@ -1,8 +1,8 @@
 
 #include "gptDecoder.h"
 
-#include "suggestify/kernels/decodingKernels.h"
-#include "suggestify/kernels/speculativeDecoding/externalDraftTokensKernels.h"
+#include "../src/decodingKernels.h"
+#include "../src/speculativeDecoding/externalDraftTokensKernels.h"
 #include "suggestify/layers/decodingParams.h"
 #include "suggestify/layers/dynamicDecodeLayer.h"
 #include "decodingLayerWorkspace.h"

@@ -1,7 +1,7 @@
 
 
 #include "cudaUtils.h"
-#include "suggestify/kernels/banBadWords.h"
+#include "../src/banBadWords.h"
 
 using namespace suggestify::common;
 using namespace suggestify::runtime;

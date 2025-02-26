@@ -4,7 +4,7 @@
 
 #include "compileEngine.h"
 #include "serializationUtils.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplCommon.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplCommon.h"
 #include <functional>
 #include <unordered_map>
 

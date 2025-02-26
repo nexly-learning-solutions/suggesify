@@ -1,8 +1,8 @@
 #pragma once
 
-#include "suggestify/kernels/gptKernels.h"
-#include "suggestify/kernels/kvCacheUtils.h"
-#include "suggestify/kernels/mlaKernels.h"
+#include "../src/gptKernels.h"
+#include "../src/kvCacheUtils.h"
+#include "../src/mlaKernels.h"
 #include "iTensor.h"
 #include <cuda_runtime_api.h>
 

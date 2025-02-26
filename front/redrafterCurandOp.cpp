@@ -1,9 +1,9 @@
 
 #include "suggestify/common/cudaUtils.h"
-#include "suggestify/kernels/decodingCommon.h"
-#include "suggestify/kernels/speculativeDecoding/explicitDraftTokensKernels.h"
+#include "../src/decodingCommon.h"
+#include "../src/speculativeDecoding/explicitDraftTokensKernels.h"
 #include "suggestify/layers/defaultDecodingParams.h"
-#include "suggestify/runtime/common.h"
+#include "../common.h"
 #include "thUtils.h"
 
 #if ENABLE_BF16

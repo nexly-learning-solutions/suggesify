@@ -1,6 +1,6 @@
 
 #pragma once
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImpl.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImpl.h"
 
 namespace suggestify
 {

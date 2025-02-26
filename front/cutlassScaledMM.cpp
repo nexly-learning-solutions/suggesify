@@ -1,5 +1,5 @@
-#include "suggestify/kernels/internal_cutlass_kernels/include/low_latency_gemm.h"
-#include "suggestify/runtime/torchUtils.h"
+#include "../src/internal_cutlass_kernels/include/low_latency_gemm.h"
+#include "../torchUtils.h"
 #include "thUtils.h"
 #include <torch/extension.h>
 

@@ -1,6 +1,6 @@
 
 #include "suggestify/common/cudaBf16Wrapper.h"
-#include "suggestify/kernels/cutlass_kernels/cutlass_preprocessors.h"
+#include "../src/cutlass_kernels/cutlass_preprocessors.h"
 #include "thUtils.h"
 
 #if defined(TORCH_VERSION_MAJOR)                                                                                       \

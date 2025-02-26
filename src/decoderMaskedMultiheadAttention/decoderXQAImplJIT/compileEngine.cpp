@@ -6,7 +6,7 @@
 #include "assert.h"
 #include "stringUtils.h"
 #include "tllmException.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/kernelUtils.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplJIT/kernelUtils.h"
 #include <string>
 #include <vector>
 

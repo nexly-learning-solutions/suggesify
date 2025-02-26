@@ -4,8 +4,8 @@
 
 #include "suggestify/common/assert.h"
 #include "suggestify/common/cudaUtils.h"
-#include "suggestify/kernels/speculativeDecoding/eagleDecodingKernels.h"
-#include "suggestify/kernels/speculativeDecoding/explicitDraftTokensKernels.h"
+#include "../src/speculativeDecoding/eagleDecodingKernels.h"
+#include "../src/speculativeDecoding/explicitDraftTokensKernels.h"
 #include "common.h"
 #include "iBuffer.h"
 #include "runtimeKernels.h"

@@ -5,7 +5,7 @@
 #include "suggestify/common/logger.h"
 #include "suggestify/common/nvtxUtils.h"
 #include "suggestify/executor/executor.h"
-#include "suggestify/kernels/samplingTopKKernels.h"
+#include "../src/samplingTopKKernels.h"
 #include "decodingParams.h"
 #include "defaultDecodingParams.h"
 #include "lookaheadAlgorithm.h"

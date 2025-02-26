@@ -7,7 +7,7 @@
 #include "suggestify/common/nvtxUtils.h"
 #include "suggestify/common/safetensors.h"
 #include "suggestify/executor/tensor.h"
-#include "suggestify/kernels/userbuffers/ub_interface.h"
+#include "../src/userbuffers/ub_interface.h"
 #include "tllmLogger.h"
 
 #include <NvInferRuntime.h>

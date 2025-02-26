@@ -1,10 +1,10 @@
 
 #include "beamSearchLayer.h"
-#include "suggestify/kernels/beamSearchKernels/beamSearchKernelsTemplate.h"
+#include "../src/beamSearchKernels/beamSearchKernelsTemplate.h"
 
 #include "suggestify/common/cudaUtils.h"
 #include "suggestify/common/stringUtils.h"
-#include "suggestify/kernels/beamSearchKernels.h"
+#include "../src/beamSearchKernels.h"
 #include "defaultDecodingParams.h"
 #include "layerUtils.h"
 #include <limits>

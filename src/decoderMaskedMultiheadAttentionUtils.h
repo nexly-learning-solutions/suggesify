@@ -2,7 +2,7 @@
 #pragma once
 
 #include "cudaTypeUtils.cuh"
-#include "suggestify/kernels/gptKernels.h"
+#include "../src/gptKernels.h"
 #include <stdint.h>
 
 #ifdef ENABLE_BF16

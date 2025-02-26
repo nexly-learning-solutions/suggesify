@@ -3,9 +3,9 @@
 #include "suggestify/common/logger.h"
 #include "suggestify/common/memoryUtils.h"
 #include "suggestify/common/nvtxUtils.h"
-#include "suggestify/kernels/decodingCommon.h"
-#include "suggestify/kernels/samplingTopKKernels.h"
-#include "suggestify/kernels/samplingTopPKernels.h"
+#include "../src/decodingCommon.h"
+#include "../src/samplingTopKKernels.h"
+#include "../src/samplingTopPKernels.h"
 #include "defaultDecodingParams.h"
 #include "layerUtils.h"
 

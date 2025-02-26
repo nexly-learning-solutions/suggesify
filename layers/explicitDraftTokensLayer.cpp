@@ -1,8 +1,8 @@
 
 #include "explicitDraftTokensLayer.h"
-#include "suggestify/kernels/penaltyTypes.h"
-#include "suggestify/kernels/speculativeDecoding/common.h"
-#include "suggestify/kernels/speculativeDecoding/explicitDraftTokensKernels.h"
+#include "../src/penaltyTypes.h"
+#include "../src/speculativeDecoding/common.h"
+#include "../src/speculativeDecoding/explicitDraftTokensKernels.h"
 #include "defaultDecodingParams.h"
 #include "layerUtils.h"
 

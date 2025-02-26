@@ -3,8 +3,8 @@
 #include "cutlass/gemm/gemm.h"
 #include "assert.h"
 #include "quantization.h"
-#include "suggestify/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels.h"
-#include "suggestify/kernels/lora/lora.h"
+#include "../src/cutlass_kernels/moe_gemm/moe_gemm_kernels.h"
+#include "../src/lora/lora.h"
 #include <cuda_runtime_api.h>
 #include <optional>
 #include <random>

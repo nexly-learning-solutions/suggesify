@@ -9,11 +9,11 @@
 #include "cudaUtils.h"
 #include "envUtils.h"
 #include "workspace.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/cubin/xqa_kernel_cubin.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAConstants.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImpl.h"
-#include "suggestify/kernels/kvCacheUtils.h"
-#include "suggestify/kernels/unfusedAttentionKernels.h"
+#include "../src/decoderMaskedMultiheadAttention/cubin/xqa_kernel_cubin.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAConstants.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImpl.h"
+#include "../src/kvCacheUtils.h"
+#include "../src/unfusedAttentionKernels.h"
 
 namespace suggestify
 {

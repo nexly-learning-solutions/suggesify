@@ -3,8 +3,8 @@
 
 #include "suggestify/common/assert.h"
 #include "suggestify/executor/types.h"
-#include "suggestify/kernels/decodingCommon.h"
-#include "suggestify/kernels/decodingKernels.h"
+#include "../src/decodingCommon.h"
+#include "../src/decodingKernels.h"
 #include "bufferManager.h"
 #include "cudaEvent.h"
 #include "memoryCounters.h"

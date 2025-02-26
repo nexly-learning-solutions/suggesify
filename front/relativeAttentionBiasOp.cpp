@@ -1,5 +1,5 @@
 
-#include "suggestify/kernels/buildRelativeAttentionBiasKernel.h"
+#include "../src/buildRelativeAttentionBiasKernel.h"
 #include "thUtils.h"
 
 namespace th = torch;

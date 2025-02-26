@@ -1,8 +1,8 @@
 
 #include "suggestify/common/workspace.h"
-#include "suggestify/kernels/cutlass_kernels/moe_gemm/moe_gemm_kernels.h"
-#include "suggestify/kernels/mixtureOfExperts/moe_kernels.h"
-#include "suggestify/runtime/torchUtils.h"
+#include "../src/cutlass_kernels/moe_gemm/moe_gemm_kernels.h"
+#include "../src/mixtureOfExperts/moe_kernels.h"
+#include "../torchUtils.h"
 #include "thUtils.h"
 
 #include <ATen/native/cuda/Resize.h>

@@ -1,5 +1,5 @@
 
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplCommon.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplCommon.h"
 
 namespace suggestify
 {

@@ -3,7 +3,7 @@
 #include "suggestify/common/cudaUtils.h"
 #include "suggestify/common/memoryUtils.h"
 #include "suggestify/common/reduceKernelUtils.cuh"
-#include "suggestify/kernels/speculativeDecoding/kvCacheUpdateKernels.h"
+#include "../src/speculativeDecoding/kvCacheUpdateKernels.h"
 #include "runtimeKernels.h"
 
 #include <cub/cub.cuh>

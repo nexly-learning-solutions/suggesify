@@ -32,7 +32,7 @@
 
 #include "cudaUtils.h"
 #include "dataType.h"
-#include "suggestify/kernels/mixtureOfExperts/moe_kernels.h"
+#include "../src/mixtureOfExperts/moe_kernels.h"
 
 #ifndef CUDART_VERSION
 #error CUDART_VERSION Undefined!

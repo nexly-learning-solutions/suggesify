@@ -1,7 +1,7 @@
 #pragma once
 
 #include "cudaUtils.h"
-#include "suggestify/kernels/gptKernels.h"
+#include "../src/gptKernels.h"
 #include "iTensor.h"
 #include <cstdint>
 #include <cuda_fp16.h>

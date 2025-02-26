@@ -1,7 +1,7 @@
 #include "suggestify/common/cudaUtils.h"
 #include "suggestify/plugins/common/plugin.h"
 #include "suggestify/plugins/gemmPlugin/gemmPlugin.h"
-#include "suggestify/runtime/torchUtils.h"
+#include "../torchUtils.h"
 #include "thUtils.h"
 #include <cublasLt.h>
 #include <torch/extension.h>

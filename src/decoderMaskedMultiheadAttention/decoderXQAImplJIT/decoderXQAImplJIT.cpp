@@ -1,15 +1,15 @@
 
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
 
 #include "compileEngine.h"
 #include "envUtils.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/cubin/xqa_kernel_cubin.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAConstants.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/kernelUtils.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQARunner.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/tensorMapUtils.h"
-#include "suggestify/kernels/unfusedAttentionKernels.h"
+#include "../src/decoderMaskedMultiheadAttention/cubin/xqa_kernel_cubin.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAConstants.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplJIT/kernelUtils.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQARunner.h"
+#include "../src/decoderMaskedMultiheadAttention/tensorMapUtils.h"
+#include "../src/unfusedAttentionKernels.h"
 
 namespace
 {

@@ -10,8 +10,8 @@
 #include "cudaUtils.h"
 #include "memoryUtils.h"
 #include "reduceKernelUtils.cuh"
-#include "suggestify/kernels/samplingTopKKernels.h"
-#include "suggestify/kernels/samplingTopPKernels.h"
+#include "../src/samplingTopKKernels.h"
+#include "../src/samplingTopPKernels.h"
 
 using namespace suggestify::common;
 using namespace suggestify::runtime;

@@ -1,7 +1,7 @@
 
 #pragma once
-#include "suggestify/runtime/iBuffer.h"
-#include "suggestify/runtime/iTensor.h"
+#include "../iBuffer.h"
+#include "../iTensor.h"
 #include "torch/csrc/cuda/Stream.h"
 #include "torch/extension.h"
 #include <ATen/cuda/CUDAContext.h>

@@ -1,8 +1,8 @@
 
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImpl.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImpl.h"
 
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
-#include "suggestify/kernels/decoderMaskedMultiheadAttention/decoderXQAImplPrecompiled.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplJIT/decoderXQAImplJIT.h"
+#include "../src/decoderMaskedMultiheadAttention/decoderXQAImplPrecompiled.h"
 
 #include <cassert>
 #include <functional>

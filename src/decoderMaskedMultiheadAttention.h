@@ -3,8 +3,8 @@
 
 #include "cudaBf16Wrapper.h"
 #include "cudaFp8Utils.h"
-#include "suggestify/kernels/gptKernels.h"
-#include "suggestify/kernels/kvCacheUtils.h"
+#include "../src/gptKernels.h"
+#include "../src/kvCacheUtils.h"
 #include <cuda_fp16.h>
 #include <cuda_runtime_api.h>
 #include <stdint.h>
