@@ -4,7 +4,7 @@
 #include "suggestify/common/mpiUtils.h"
 #include "executor.h"
 #include "serialization.h"
-#include "suggestify/plugins/api/tllmPlugin.h"
+#include "../plugins/api/tllmPlugin.h"
 #include <csignal>
 
 namespace tle = suggestify::executor;
