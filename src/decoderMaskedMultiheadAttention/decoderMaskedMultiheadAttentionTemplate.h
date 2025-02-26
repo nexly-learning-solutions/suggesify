@@ -2001,7 +2001,7 @@ __global__ void __launch_bounds__(MAX_THEADS_PER_BLOCK, MIN_BLOCKS_PER_SM) maske
                 // Special logic in T5 relative attention, both encoder & decoder use this, because
                 // relative_attention_bias is pre-computed once and passed around.
                 // T5 decoder attention now only uses bidirectional=False relative position logic
-                // (ref: suggestify/layers/attention.py compute_relative_bias())
+                // (ref: attention.py compute_relative_bias())
                 relative_position = relative_position >= 0 ? 0 : -relative_position;
 
                 int max_exact = num_buckets / 2;
