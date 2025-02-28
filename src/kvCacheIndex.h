@@ -20,7 +20,7 @@ public:
     explicit KVCacheIndex(UnderlyingType value, bool isSecondary = false)
         : value{isSecondary ? value | kSecondaryPoolFlag : value}
     {
-        TLLM_CHECK_DEBUG(value >= 0);
+        CHECK_DEBUG(value >= 0);
     }
 
     __host__ __device__ [[nodiscard]] UnderlyingType get() const

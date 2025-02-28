@@ -52,9 +52,9 @@ struct KVBlockArrayForContextFMHA
         , data{data}
     {
         float const tokensPerBlockSeqLog2 = log2(mTokensPerBlock);
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             ceil(tokensPerBlockSeqLog2) == floor(tokensPerBlockSeqLog2), "tokensPerBlock must be power of 2");
-        TLLM_CHECK_WITH_INFO(static_cast<int64_t>(mMaxSeqs - 1) * mMaxBlocksPerSeq * 2 + maxBlocksPerSeq
+        CHECK_WITH_INFO(static_cast<int64_t>(mMaxSeqs - 1) * mMaxBlocksPerSeq * 2 + maxBlocksPerSeq
                 <= std::numeric_limits<int32_t>::max(),
             "kv cache is too large for gpt_attention_plugin");
         mTokensPerBlockLog2 = static_cast<int>(tokensPerBlockSeqLog2);
@@ -199,7 +199,7 @@ struct KVLinearBuffer
         , mSinkTokens(sinkTokenLen)
         , data(data)
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             static_cast<int64_t>(mMaxSeqs - 1) * mBytesPerSeq * 2 + mBytesPerSeq <= std::numeric_limits<int32_t>::max(),
             "kv cache is too large for gpt_attention_plugin");
         mCyclicCacheLen = mMaxAttentionWindow - mSinkTokens;

@@ -400,7 +400,7 @@ public:
             , priority{priority}
             , durationMs{durationMs}
         {
-            TLLM_CHECK_WITH_INFO(priority >= KvCacheRetentionConfig::kMinRetentionPriority
+            CHECK_WITH_INFO(priority >= KvCacheRetentionConfig::kMinRetentionPriority
                     && priority <= KvCacheRetentionConfig::kMaxRetentionPriority,
                 "Invalid priority value. Must be between %d and %d", KvCacheRetentionConfig::kMinRetentionPriority,
                 KvCacheRetentionConfig::kMaxRetentionPriority);

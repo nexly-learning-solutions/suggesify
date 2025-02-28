@@ -210,7 +210,7 @@ __global__ void batchApplyPenalty(T const* const* inputLogits, T* outputLogits, 
 template <typename T>
 void invokeBatchApplyPenalty(InvokeBatchApplyPenaltyParams<T> const& params)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     dim3 block(512);
     dim3 grid(params.batchSize, params.beamWidth, params.maxTokensPerStep);
     batchApplyPenalty<T><<<grid, block, 0, params.stream>>>(params.inputLogits, params.outputLogits, params.biases,

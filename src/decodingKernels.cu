@@ -293,7 +293,7 @@ void invokeGatherTree(gatherTreeParam param)
 
     if (param.beamWidth > 1)
     {
-        TLLM_CHECK_WITH_INFO(param.beamWidth <= 32, "TRT-LLM does not support beam width > 32 now");
+        CHECK_WITH_INFO(param.beamWidth <= 32, "TRT-LLM does not support beam width > 32 now");
         // sort results by normalized cumLogProbs
         dim3 grid(param.batchSize);
         dim3 block(divUp(param.beamWidth, 32) * 32);
@@ -509,7 +509,7 @@ __global__ void finalizeKernel(BeamHypotheses bh)
 
 void invokeFinalize(BeamHypotheses& bh, cudaStream_t stream)
 {
-    TLLM_LOG_TRACE("%s %s start", __FILE__, __PRETTY_FUNCTION__);
+    LOG_TRACE("%s %s start", __FILE__, __PRETTY_FUNCTION__);
 
     int const nBM = bh.nBeamWidth;
     int const nThread = min(roundUp(nBM * 2, 32), 1024);
@@ -517,7 +517,7 @@ void invokeFinalize(BeamHypotheses& bh, cudaStream_t stream)
     finalizeKernel<<<bh.nBatchSize, nThread, nByteSharedMemory, stream>>>(bh);
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s %s stop", __FILE__, __PRETTY_FUNCTION__);
+    LOG_TRACE("%s %s stop", __FILE__, __PRETTY_FUNCTION__);
 }
 
 __global__ void copyBeamHypotheses(CopyBeamHypothesesStruct copyStruct)
@@ -710,7 +710,7 @@ namespace runtime::kernels
 void gatherTree(DecodingOutput const& decodingOutput, DecodingInput const& decodingInput, BufferManager const& manager,
     SamplingConfig const& samplingConfig)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     auto& finalOutputIds = *decodingOutput.gatheredIds;
     auto const& finalOutputIdsShape = finalOutputIds.getShape();
     auto const& decodingOutputIdsShape = decodingOutput.ids->getShape();
@@ -718,15 +718,15 @@ void gatherTree(DecodingOutput const& decodingOutput, DecodingInput const& decod
     auto const beamWidth = finalOutputIdsShape.d[1];
     auto const maxSeqLength = finalOutputIdsShape.d[2];
 
-    TLLM_CHECK_WITH_INFO(beamWidth > 1, "gatherTree is only needed for beam search.");
+    CHECK_WITH_INFO(beamWidth > 1, "gatherTree is only needed for beam search.");
 
-    TLLM_CHECK_WITH_INFO(decodingOutputIdsShape.d[0] == batchSize,
+    CHECK_WITH_INFO(decodingOutputIdsShape.d[0] == batchSize,
         common::fmtstr("Decoder batch size (" FMT_DIM ") does not match final batch size (" FMT_DIM ")",
             decodingOutputIdsShape.d[0], batchSize));
-    TLLM_CHECK_WITH_INFO(decodingOutputIdsShape.d[1] == beamWidth,
+    CHECK_WITH_INFO(decodingOutputIdsShape.d[1] == beamWidth,
         common::fmtstr("Decoder beam width (" FMT_DIM ") does not match final beam width (" FMT_DIM ")",
             decodingOutputIdsShape.d[1], beamWidth));
-    TLLM_CHECK_WITH_INFO(decodingOutputIdsShape.d[2] <= maxSeqLength,
+    CHECK_WITH_INFO(decodingOutputIdsShape.d[2] <= maxSeqLength,
         common::fmtstr("Decoder seq length size (" FMT_DIM ") is too large for final seq length (" FMT_DIM ")",
             decodingOutputIdsShape.d[2], maxSeqLength));
 
@@ -749,7 +749,7 @@ void gatherTree(DecodingOutput const& decodingOutput, DecodingInput const& decod
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(size == batchSize,
+        CHECK_WITH_INFO(size == batchSize,
             common::fmtstr("Size of lengthPenalty in SamplingConfig (" FMT_DIM ") is different from batchSize (" FMT_DIM
                            ")",
                 size, batchSize));
@@ -789,7 +789,7 @@ void gatherTree(DecodingOutput const& decodingOutput, DecodingInput const& decod
     suggestify::kernels::invokeFinalize(bh, stream);
     sync_check_cuda_error();
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 } // namespace runtime::kernels

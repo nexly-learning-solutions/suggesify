@@ -101,7 +101,7 @@ private:
         case ERROR: return "ERROR";
         }
 
-        TLLM_THROW("Unknown log level: %d", level);
+        THROW("Unknown log level: %d", level);
     }
 
     static inline std::string getPrefix(Level const level)
@@ -153,7 +153,7 @@ void Logger::log(Logger::Level const level, int const rank, char const* format, 
     }
 }
 
-#define TLLM_LOG(level, ...)                                                                                           \
+#define LOG(level, ...)                                                                                           \
     do                                                                                                                 \
     {                                                                                                                  \
         auto* const logger = suggestify::common::Logger::getLogger();                                                \
@@ -163,10 +163,10 @@ void Logger::log(Logger::Level const level, int const rank, char const* format, 
         }                                                                                                              \
     } while (0)
 
-#define TLLM_LOG_TRACE(...) TLLM_LOG(suggestify::common::Logger::TRACE, __VA_ARGS__)
-#define TLLM_LOG_DEBUG(...) TLLM_LOG(suggestify::common::Logger::DEBUG, __VA_ARGS__)
-#define TLLM_LOG_INFO(...) TLLM_LOG(suggestify::common::Logger::INFO, __VA_ARGS__)
-#define TLLM_LOG_WARNING(...) TLLM_LOG(suggestify::common::Logger::WARNING, __VA_ARGS__)
-#define TLLM_LOG_ERROR(...) TLLM_LOG(suggestify::common::Logger::ERROR, __VA_ARGS__)
-#define TLLM_LOG_EXCEPTION(ex, ...) suggestify::common::Logger::getLogger()->log(ex, ##__VA_ARGS__)
+#define LOG_TRACE(...) LOG(suggestify::common::Logger::TRACE, __VA_ARGS__)
+#define LOG_DEBUG(...) LOG(suggestify::common::Logger::DEBUG, __VA_ARGS__)
+#define LOG_INFO(...) LOG(suggestify::common::Logger::INFO, __VA_ARGS__)
+#define LOG_WARNING(...) LOG(suggestify::common::Logger::WARNING, __VA_ARGS__)
+#define LOG_ERROR(...) LOG(suggestify::common::Logger::ERROR, __VA_ARGS__)
+#define LOG_EXCEPTION(ex, ...) suggestify::common::Logger::getLogger()->log(ex, ##__VA_ARGS__)
 }

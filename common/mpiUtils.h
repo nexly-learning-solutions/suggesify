@@ -46,7 +46,7 @@ typedef struct MPI_Status
 #include <type_traits>
 #include <vector>
 
-#define MPICHECK(cmd) TLLM_MPI_CHECK(cmd)
+#define MPICHECK(cmd) MPI_CHECK(cmd)
 
 namespace suggestify::runtime
 {
@@ -207,7 +207,7 @@ public:
 #if ENABLE_MULTI_DEVICE
         MPI_Wait(&mRequest, MPI_STATUS_IGNORE);
 #else
-        TLLM_THROW("Multi device support is disabled.");
+        THROW("Multi device support is disabled.");
 #endif
     }
 
@@ -351,7 +351,7 @@ public:
             return recv(&value, sizeof(T), MpiType::kBYTE, source, tag);
         }
 #else
-        TLLM_THROW("Multi device support is disabled.");
+        THROW("Multi device support is disabled.");
 #endif
     }
 

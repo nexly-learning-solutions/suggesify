@@ -1152,8 +1152,8 @@ void invokeMambaConv1dContext(MambaConv1dParamsBase& params, cudaStream_t stream
 
     int shmem = warpL * (32 / laneD) * (pipe + 1) * tileD * 4;
 
-    TLLM_CHECK_WITH_INFO(D % 32 == 0, "Channels should be multiple of 32.");
-    TLLM_CHECK_WITH_INFO(K == 4, "Only dconv == 4 is supported.");
+    CHECK_WITH_INFO(D % 32 == 0, "Channels should be multiple of 32.");
+    CHECK_WITH_INFO(K == 4, "Only dconv == 4 is supported.");
 
     input_t* ya = (input_t*) params.out_ptr;
     input_t* ys = (input_t*) params.state_out_ptr;
@@ -1282,8 +1282,8 @@ void invokeMambaConv1dGeneration(MambaConv1dParamsBase& params, cudaStream_t str
     int const channelsPerThread = 4;
     int const dConv = 4;
     int const channelsPerBlock = threadsPerBlock * channelsPerThread;
-    TLLM_CHECK_WITH_INFO(channels % channelsPerThread == 0, "channels should be multiple of channelsPerThread");
-    TLLM_CHECK_WITH_INFO(params.dconv == dConv, "only dconv == 4 is supported now.");
+    CHECK_WITH_INFO(channels % channelsPerThread == 0, "channels should be multiple of channelsPerThread");
+    CHECK_WITH_INFO(params.dconv == dConv, "only dconv == 4 is supported now.");
     int blockx = (channels + channelsPerBlock - 1) / channelsPerBlock;
     int blocky = (samples + microBatchSize - 1) / microBatchSize;
     dim3 grid(blockx, blocky, 1);

@@ -64,7 +64,7 @@ public:
     [[nodiscard]] reference operator[](size_type index)
     {
 #ifdef INDEX_RANGE_CHECK
-        TLLM_CHECK_WITH_INFO(index < mSize, "Index %lu is out of bounds [0, %lu)", index, mSize);
+        CHECK_WITH_INFO(index < mSize, "Index %lu is out of bounds [0, %lu)", index, mSize);
 #endif
         return mData[index];
     }
@@ -72,7 +72,7 @@ public:
     [[nodiscard]] const_reference operator[](size_type index) const
     {
 #ifdef INDEX_RANGE_CHECK
-        TLLM_CHECK_WITH_INFO(index < mSize, "Index %lu is out of bounds [0, %lu)", index, mSize);
+        CHECK_WITH_INFO(index < mSize, "Index %lu is out of bounds [0, %lu)", index, mSize);
 #endif
         return mData[index];
     }

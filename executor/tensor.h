@@ -121,7 +121,7 @@ public:
         using DimType64 = Shape::DimType64;
         if constexpr (!std::is_same_v<DimType64, decltype(data.size())>)
         {
-            TLLM_CHECK(data.size() <= std::numeric_limits<DimType64>::max());
+            CHECK(data.size() <= std::numeric_limits<DimType64>::max());
         }
         return of(data.data(), {static_cast<Shape::DimType64>(data.size())});
     }

@@ -261,9 +261,9 @@ void invokeBuildDecoderInfo(BuildDecoderInfoParams<T> const& params, cudaStream_
 {
     // Compute the sequence and padding offsets.
     int const THREADS_PER_BLOCK = 256;
-    TLLM_CHECK_WITH_INFO(params.rotaryEmbeddingDim / 2 <= 256 && params.rotaryEmbeddingDim % 2 == 0,
+    CHECK_WITH_INFO(params.rotaryEmbeddingDim / 2 <= 256 && params.rotaryEmbeddingDim % 2 == 0,
         "Rotary embedding dim is assumed to be smaller than 512 and multiple of 2.");
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         !(params.seqKVLengths == nullptr && params.rotaryEmbeddingDim > 0), "KV sequence lengths buffer is invalid.");
     bool const need_encoder_padding_offsets
         = (params.encoderPaddingOffsets != nullptr) && (params.seqKVOffsets != nullptr);
@@ -275,7 +275,7 @@ void invokeBuildDecoderInfo(BuildDecoderInfoParams<T> const& params, cudaStream_
     // Compute the attention mask, if needed.
     if (params.attentionMask != nullptr)
     {
-        TLLM_CHECK_WITH_INFO(params.seqQLengths != nullptr, "Q sequence lengths buffer is invalid.");
+        CHECK_WITH_INFO(params.seqQLengths != nullptr, "Q sequence lengths buffer is invalid.");
         AttentionMaskParams<T> attentionMaskParams;
         memset((void*) &attentionMaskParams, 0, sizeof(attentionMaskParams));
         // Set parameters.

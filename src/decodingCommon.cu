@@ -164,7 +164,7 @@ __global__ void addBiasSoftMax(T* logits, T** logitsPtrs, T* probs, float* outpu
 template <typename T>
 void invokeAddBiasSoftMax(BiasSoftmaxParams<T> const params, cudaStream_t stream)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
     dim3 grid(params.batchSize, params.maxBeamWidth);
     auto const vocabRoundedToWarp = roundUp(params.vocabSize, 32);
@@ -174,7 +174,7 @@ void invokeAddBiasSoftMax(BiasSoftmaxParams<T> const params, cudaStream_t stream
         params.maxBatchSize, params.maxBeamWidth, params.vocabSize, params.vocabSizePadded, params.skipSoftMax,
         params.batchSlotsLogits, params.ptrsForBeams);
 
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template void invokeAddBiasSoftMax(BiasSoftmaxParams<float> const params, cudaStream_t stream);

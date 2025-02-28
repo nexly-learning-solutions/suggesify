@@ -34,7 +34,7 @@ static inline size_t get_size_in_bytes(size_t n, Data_type dtype)
     case DATA_TYPE_BF16: return n * 2;
     case DATA_TYPE_E4M3: return n;
     case DATA_TYPE_E5M2: return n;
-    default: TLLM_CHECK_WITH_INFO(false, "FMHA Data Type is not supported."); return 0;
+    default: CHECK_WITH_INFO(false, "FMHA Data Type is not supported."); return 0;
     }
 }
 

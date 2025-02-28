@@ -314,7 +314,7 @@ inline std::tuple<size_t, size_t> getDeviceMemoryInfo(bool const useUvm)
         freeSysMem = memInfo.ullAvailPhys;
 #endif
 
-        TLLM_LOG_INFO("Using UVM based system memory for KV cache, total memory %0.2f GB, available memory %0.2f GB",
+        LOG_INFO("Using UVM based system memory for KV cache, total memory %0.2f GB, available memory %0.2f GB",
             ((double) totalSysMem / 1e9), ((double) freeSysMem / 1e9));
         return {freeSysMem, totalSysMem};
     }
@@ -322,7 +322,7 @@ inline std::tuple<size_t, size_t> getDeviceMemoryInfo(bool const useUvm)
     size_t free = 0;
     size_t total = 0;
     check_cuda_error(cudaMemGetInfo(&free, &total));
-    TLLM_LOG_DEBUG("Using GPU memory for KV cache, total memory %0.2f GB, available memory %0.2f GB",
+    LOG_DEBUG("Using GPU memory for KV cache, total memory %0.2f GB, available memory %0.2f GB",
         ((double) total / 1e9), ((double) free / 1e9));
     return {free, total};
 }
@@ -338,7 +338,7 @@ inline size_t getAllocationGranularity()
     prop.requestedHandleTypes = ::CU_MEM_HANDLE_TYPE_NONE;
 
     size_t granularity = 0;
-    TLLM_CU_CHECK(cuMemGetAllocationGranularity(&granularity, &prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM));
+    CU_CHECK(cuMemGetAllocationGranularity(&granularity, &prop, CU_MEM_ALLOC_GRANULARITY_MINIMUM));
     return granularity;
 }
 
@@ -386,7 +386,7 @@ void printAbsMean(T const* buf, uint64_t size, cudaStream_t stream, std::string 
 {
     if (buf == nullptr)
     {
-        TLLM_LOG_WARNING("%s is an nullptr, skip!", name.c_str());
+        LOG_WARNING("%s is an nullptr, skip!", name.c_str());
         return;
     }
     cudaDeviceSynchronize();
@@ -413,7 +413,7 @@ void printAbsMean(T const* buf, uint64_t size, cudaStream_t stream, std::string 
         }
         max_val = max_val > abs(float(h_tmp[i])) ? max_val : abs(float(h_tmp[i]));
     }
-    TLLM_LOG_INFO("%20s size: %u, abs mean: %f, abs sum: %f, abs max: %f, find inf: %s", name.c_str(), size, sum / size,
+    LOG_INFO("%20s size: %u, abs mean: %f, abs sum: %f, abs max: %f, find inf: %s", name.c_str(), size, sum / size,
         sum, max_val, find_inf ? "true" : "false");
     delete[] h_tmp;
     cudaDeviceSynchronize();
@@ -426,7 +426,7 @@ void printToStream(T const* result, int const size, FILE* strm)
     bool const split_rows = (strm == stdout);
     if (result == nullptr)
     {
-        TLLM_LOG_WARNING("It is an nullptr, skip! \n");
+        LOG_WARNING("It is an nullptr, skip! \n");
         return;
     }
     T* tmp = reinterpret_cast<T*>(malloc(sizeof(T) * size));
@@ -455,7 +455,7 @@ void print2dToStream(T const* result, int const r, int const c, int const stride
 {
     if (result == nullptr)
     {
-        TLLM_LOG_WARNING("It is an nullptr, skip! \n");
+        LOG_WARNING("It is an nullptr, skip! \n");
         return;
     }
     for (int ri = 0; ri < r; ++ri)
@@ -591,13 +591,13 @@ template void printMatrix(int const* ptr, int m, int k, int stride, bool is_devi
 
 }
 
-#define TLLM_CUDA_CHECK(stat)                                                                                          \
+#define CUDA_CHECK(stat)                                                                                          \
     do                                                                                                                 \
     {                                                                                                                  \
         suggestify::common::check((stat), #stat, __FILE__, __LINE__);                                                \
     } while (0)
 
-#define TLLM_CUDA_CHECK_FREE_RESOURCE(stat)                                                                            \
+#define CUDA_CHECK_FREE_RESOURCE(stat)                                                                            \
     do                                                                                                                 \
     {                                                                                                                  \
         suggestify::common::checkEx((stat), {cudaSuccess, cudaErrorCudartUnloading}, #stat, __FILE__, __LINE__);     \

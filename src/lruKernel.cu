@@ -275,8 +275,8 @@ void invokeRGLRU(lruParams& params, cudaStream_t stream)
     int const blocks = (channels + threads - 1) / threads;
     dim3 block(threads, 2);
     dim3 grid(blocks, samples);
-    TLLM_CHECK((channels % block.x) == 0);
-    TLLM_CHECK(!(params.block_size % 4 != 0 && sizeof(T) == 2));
+    CHECK((channels % block.x) == 0);
+    CHECK(!(params.block_size % 4 != 0 && sizeof(T) == 2));
 
     rg_lru_kernel<T><<<grid, block, 0, stream>>>(params);
 }

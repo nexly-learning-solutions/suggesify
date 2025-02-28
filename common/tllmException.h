@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <string>
 
-#define NEW_TLLM_EXCEPTION(...)                                                                                        \
+#define NEW_EXCEPTION(...)                                                                                        \
     suggestify::common::TllmException(__FILE__, __LINE__, suggestify::common::fmtstr(__VA_ARGS__))
 
 namespace suggestify::common

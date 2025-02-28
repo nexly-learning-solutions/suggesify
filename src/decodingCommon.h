@@ -196,27 +196,27 @@ struct BiasSoftmaxParams
 
     void checkParams()
     {
-        TLLM_CHECK(logits || logitsPtrs);
-        TLLM_CHECK(((outputEntropy != nullptr) && (probs != nullptr)) || (outputEntropy == nullptr));
-        TLLM_CHECK(((outputEntropy != nullptr) && !skipSoftMax) || (outputEntropy == nullptr));
+        CHECK(logits || logitsPtrs);
+        CHECK(((outputEntropy != nullptr) && (probs != nullptr)) || (outputEntropy == nullptr));
+        CHECK(((outputEntropy != nullptr) && !skipSoftMax) || (outputEntropy == nullptr));
 
         if (batchSlotsLogits)
         {
-            TLLM_CHECK(batchSlots);
+            CHECK(batchSlots);
         }
 
         if (ptrsForBeams)
         {
-            TLLM_CHECK(logitsPtrs);
+            CHECK(logitsPtrs);
         }
 
-        TLLM_CHECK(batchSize > 0);
-        TLLM_CHECK(maxBatchSize > 0);
-        TLLM_CHECK(batchSize <= maxBatchSize);
-        TLLM_CHECK(maxBeamWidth > 0);
-        TLLM_CHECK(vocabSize > 0);
-        TLLM_CHECK(vocabSizePadded > 0);
-        TLLM_CHECK(vocabSize <= vocabSizePadded);
+        CHECK(batchSize > 0);
+        CHECK(maxBatchSize > 0);
+        CHECK(batchSize <= maxBatchSize);
+        CHECK(maxBeamWidth > 0);
+        CHECK(vocabSize > 0);
+        CHECK(vocabSizePadded > 0);
+        CHECK(vocabSize <= vocabSizePadded);
     }
 };
 
