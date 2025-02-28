@@ -1088,7 +1088,7 @@ uint32_t calcAirTopPBlockNum(int batchSize, int len, int smCnt, bool isDetermini
     int constexpr BlockSize = 512;
     int constexpr VECTORIZED_READ_SIZE = 16;
     static_assert(VECTORIZED_READ_SIZE / sizeof(T) >= 1);
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         smCnt > 0, "AIR Top-P needs the count of multiprocessor to calculate the proper block dimension settings");
 
     int activeBlocks;
@@ -1172,7 +1172,7 @@ void invokeAirTopPSamplingWithDeterministicPara(TopPSamplingKernelParams<T> cons
 
     static_assert(std::is_same_v<T, half> | std::is_same_v<T, float>, "T needs to be either half or float");
     static_assert(std::is_same_v<AccT, float>, "AccT needs to be float");
-    TLLM_CHECK_WITH_INFO(((std::is_same_v<T, half>) &&(params.vocabSizePadded < pow(2, 22)) && isDeterministic)
+    CHECK_WITH_INFO(((std::is_same_v<T, half>) &&(params.vocabSizePadded < pow(2, 22)) && isDeterministic)
             || ((std::is_same_v<T, float>) &&(params.vocabSizePadded < pow(2, 41)) && isDeterministic)
             || (~isDeterministic),
         "For Deterministic AIR Top-P, the maximum vocab_size we support is pow(2,22) for half-precision and pow(2,41) "
