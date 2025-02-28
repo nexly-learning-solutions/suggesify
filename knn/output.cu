@@ -1,7 +1,7 @@
 #include "../types.h"
 #include "../bitonicSort.cuh"
 #include "../gpuTypes.h"
-#include "../kernels.cuh"
+#include "../src.cuh"
 #include <limits>
 #include "output.h"
 #include <limits>
