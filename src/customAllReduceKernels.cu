@@ -368,10 +368,10 @@ template <typename T, bool Bias = false, bool Residual = false, bool Affine = fa
 void rms_norm_kernel_launcher(AllReduceParams& params, cudaStream_t stream, AllReduceFusionOp fusionOp)
 {
     static constexpr int kPackedSize = details::kBytesPerAccess / sizeof(T);
-    TLLM_CHECK(params.fusion_params.hidden_size % kPackedSize == 0);
+    CHECK(params.fusion_params.hidden_size % kPackedSize == 0);
     if (fusionOp == AllReduceFusionOp::RESIDUAL_RMS_PREPOST_NORM)
     {
-        TLLM_CHECK(params.fusion_params.hidden_size <= 8192);
+        CHECK(params.fusion_params.hidden_size <= 8192);
     }
     int need_threads = params.fusion_params.hidden_size / kPackedSize;
     int cta_size;
@@ -390,7 +390,7 @@ void rms_norm_kernel_launcher(AllReduceParams& params, cudaStream_t stream, AllR
         smem_size = params.fusion_params.hidden_size * sizeof(T);
         if (sugesstify::common::getEnvEnablePDL())
         {
-            TLLM_LOG_DEBUG("Enable PDL in rms_norm_kernel");
+            LOG_DEBUG("Enable PDL in rms_norm_kernel");
             cudaLaunchConfig_t kernelConfig = {0};
             kernelConfig.gridDim = cta_num;
             kernelConfig.blockDim = cta_size;
@@ -405,12 +405,12 @@ void rms_norm_kernel_launcher(AllReduceParams& params, cudaStream_t stream, AllR
 
             if (fusionOp == AllReduceFusionOp::RESIDUAL_RMS_NORM)
             {
-                TLLM_CUDA_CHECK(
+                CUDA_CHECK(
                     cudaLaunchKernelEx(&kernelConfig, rms_norm_kernel<T, Bias, Residual, Affine, true>, params));
             }
             else
             {
-                TLLM_CUDA_CHECK(
+                CUDA_CHECK(
                     cudaLaunchKernelEx(&kernelConfig, rms_pre_post_norm_kernel<T, Bias, Residual, Affine>, params));
             }
         }
@@ -430,7 +430,7 @@ void rms_norm_kernel_launcher(AllReduceParams& params, cudaStream_t stream, AllR
     {
         if (sugesstify::common::getEnvEnablePDL())
         {
-            TLLM_LOG_DEBUG("Enable PDL in rms_norm_kernel");
+            LOG_DEBUG("Enable PDL in rms_norm_kernel");
             cudaLaunchConfig_t kernelConfig = {0};
             kernelConfig.gridDim = cta_num;
             kernelConfig.blockDim = cta_size;
@@ -445,12 +445,12 @@ void rms_norm_kernel_launcher(AllReduceParams& params, cudaStream_t stream, AllR
 
             if (fusionOp == AllReduceFusionOp::RESIDUAL_RMS_NORM)
             {
-                TLLM_CUDA_CHECK(
+                CUDA_CHECK(
                     cudaLaunchKernelEx(&kernelConfig, rms_norm_kernel<T, Bias, Residual, Affine, false>, params));
             }
             else
             {
-                TLLM_CUDA_CHECK(
+                CUDA_CHECK(
                     cudaLaunchKernelEx(&kernelConfig, rms_pre_post_norm_kernel<T, Bias, Residual, Affine>, params));
             }
         }
@@ -818,14 +818,14 @@ template <typename T, int RanksPerNode, bool Bias, bool Affine>
 void lamport_style_one_shot_all_reduce_norm_kernel_launcher(AllReduceParams params, cudaStream_t stream)
 {
     static constexpr int kPackedSize = details::kBytesPerAccess / sizeof(T);
-    TLLM_CHECK(params.fusion_params.hidden_size % kPackedSize == 0);
+    CHECK(params.fusion_params.hidden_size % kPackedSize == 0);
     int threads_per_token = params.fusion_params.hidden_size / kPackedSize;
     int warps_per_token = (threads_per_token + details::kWarpSize - 1) / details::kWarpSize;
     int token_num = params.elts_total / params.fusion_params.hidden_size;
     int warp_min_number = heuristic_min_warp_number(RanksPerNode, params.fusion_params.hidden_size);
     int cluster_size = std::min(((warps_per_token + warp_min_number - 1) / warp_min_number), details::kClusterMaxSize);
     int cta_size = warps_per_token / cluster_size * details::kWarpSize;
-    TLLM_CHECK(cta_size <= details::kMaxCtaSize);
+    CHECK(cta_size <= details::kMaxCtaSize);
     int cta_num = token_num * cluster_size;
     cudaLaunchConfig_t kernel_config = {0};
     kernel_config.gridDim = cta_num;
@@ -849,7 +849,7 @@ void lamport_style_one_shot_all_reduce_norm_kernel_launcher(AllReduceParams para
 #define LAUNCH_LAMPORT_KERNEL(CLUSTER_SIZE)                                                                            \
     if (cluster_size == CLUSTER_SIZE)                                                                                  \
     {                                                                                                                  \
-        TLLM_CUDA_CHECK(cudaLaunchKernelEx(&kernel_config,                                                             \
+        CUDA_CHECK(cudaLaunchKernelEx(&kernel_config,                                                             \
             lamport_style_one_shot_all_reduce_norm_kernel<CLUSTER_SIZE, T, RanksPerNode, Bias, Affine>, params));      \
         return;                                                                                                        \
     }
@@ -1131,7 +1131,7 @@ void one_shot_all_reduce_norm_kernel_launcher(AllReduceParams& params, cudaStrea
 
     if (fusionOp == AllReduceFusionOp::RESIDUAL_RMS_PREPOST_NORM)
     {
-        TLLM_CHECK(params.fusion_params.hidden_size <= 8192);
+        CHECK(params.fusion_params.hidden_size <= 8192);
     }
 
     if (is_lamport_supported<T>(token_num, params.fusion_params.hidden_size)
@@ -1142,7 +1142,7 @@ void one_shot_all_reduce_norm_kernel_launcher(AllReduceParams& params, cudaStrea
     else
     {
         static constexpr int kPackedSize = details::kBytesPerAccess / sizeof(T);
-        TLLM_CHECK(params.fusion_params.hidden_size % kPackedSize == 0);
+        CHECK(params.fusion_params.hidden_size % kPackedSize == 0);
         int need_threads = params.fusion_params.hidden_size / kPackedSize;
         int cta_size;
         if (need_threads <= details::kMaxCtaSize)
@@ -1162,7 +1162,7 @@ void one_shot_all_reduce_norm_kernel_launcher(AllReduceParams& params, cudaStrea
             smem_size = params.fusion_params.hidden_size * sizeof(T);
             if (sugesstify::common::getEnvEnablePDL())
             {
-                TLLM_LOG_DEBUG("Enable PDL in one_shot_all_reduce_norm_kernel");
+                LOG_DEBUG("Enable PDL in one_shot_all_reduce_norm_kernel");
 
                 cudaLaunchConfig_t kernelConfig = {0};
                 kernelConfig.gridDim = cta_num;
@@ -1177,12 +1177,12 @@ void one_shot_all_reduce_norm_kernel_launcher(AllReduceParams& params, cudaStrea
                 kernelConfig.numAttrs = 1;
                 if (fusionOp == AllReduceFusionOp::RESIDUAL_RMS_NORM)
                 {
-                    TLLM_CUDA_CHECK(cudaLaunchKernelEx(
+                    CUDA_CHECK(cudaLaunchKernelEx(
                         &kernelConfig, one_shot_all_reduce_norm_kernel<T, RanksPerNode, Bias, Affine, true>, params));
                 }
                 else
                 {
-                    TLLM_CUDA_CHECK(cudaLaunchKernelEx(
+                    CUDA_CHECK(cudaLaunchKernelEx(
                         &kernelConfig, one_shot_prenorm_all_reduce_norm_kernel<T, RanksPerNode, Bias, Affine>, params));
                 }
             }
@@ -1216,15 +1216,15 @@ void one_shot_all_reduce_norm_kernel_launcher(AllReduceParams& params, cudaStrea
                 kernelConfig.attrs = attribute;
                 kernelConfig.numAttrs = 1;
 
-                TLLM_LOG_DEBUG("Enable PDL in one_shot_all_reduce_norm_kernel");
+                LOG_DEBUG("Enable PDL in one_shot_all_reduce_norm_kernel");
                 if (fusionOp == AllReduceFusionOp::RESIDUAL_RMS_NORM)
                 {
-                    TLLM_CUDA_CHECK(cudaLaunchKernelEx(
+                    CUDA_CHECK(cudaLaunchKernelEx(
                         &kernelConfig, one_shot_all_reduce_norm_kernel<T, RanksPerNode, Bias, Affine, false>, params));
                 }
                 else
                 {
-                    TLLM_CUDA_CHECK(cudaLaunchKernelEx(
+                    CUDA_CHECK(cudaLaunchKernelEx(
                         &kernelConfig, one_shot_prenorm_all_reduce_norm_kernel<T, RanksPerNode, Bias, Affine>, params));
                 }
             }
@@ -1526,7 +1526,7 @@ std::tuple<int, int> kernelLaunchConfig(AllReduceStrategyType algo, AllReducePar
     {
     case AllReduceStrategyType::ONESHOT:
     {
-        TLLM_CHECK(params.elts_total % elts_per_thread == 0);
+        CHECK(params.elts_total % elts_per_thread == 0);
         size_t const total_threads = roundUp(params.elts_total / elts_per_thread, WARP_SIZE);
         threads_per_block = std::min(DEFAULT_BLOCK_SIZE, total_threads);
         blocks_per_grid = std::min(static_cast<size_t>(MAX_ALL_REDUCE_BLOCKS), divUp(total_threads, threads_per_block));
@@ -1535,7 +1535,7 @@ std::tuple<int, int> kernelLaunchConfig(AllReduceStrategyType algo, AllReducePar
     }
     case AllReduceStrategyType::TWOSHOT:
     {
-        TLLM_CHECK(params.elts_total % (elts_per_thread * params.ranks_per_node) == 0);
+        CHECK(params.elts_total % (elts_per_thread * params.ranks_per_node) == 0);
         size_t const total_threads = roundUp(params.elts_total / (elts_per_thread * params.ranks_per_node), WARP_SIZE);
 
         while (total_threads % blocks_per_grid != 0 || total_threads / blocks_per_grid > DEFAULT_BLOCK_SIZE)
@@ -1559,7 +1559,7 @@ std::tuple<int, int> kernelLaunchConfig(AllReduceStrategyType algo, AllReducePar
         params.elts_per_block = roundUp(divUp(params.elts_per_rank, blocks_per_grid), elts_per_thread);
         break;
     }
-    default: TLLM_THROW("Algorithm not supported here.");
+    default: THROW("Algorithm not supported here.");
     }
 
     return std::make_tuple(blocks_per_grid, threads_per_block);
@@ -1570,7 +1570,7 @@ template <typename T, int RANKS_PER_NODE, bool PUSH_MODE = false, bool USE_MEMCP
 void AllReduceNormKernelLaunch(AllReduceStrategyType algo, AllReduceStrategyConfig config, AllReduceFusionOp fusionOp,
     AllReduceParams& params, cudaStream_t stream)
 {
-    TLLM_CHECK_WITH_INFO(
+    CHECK_WITH_INFO(
         (fusionOp == AllReduceFusionOp::RESIDUAL_RMS_NORM || fusionOp == AllReduceFusionOp::RESIDUAL_RMS_PREPOST_NORM),
         "Unsupported AllReduceFusionOp: %d", static_cast<int>(fusionOp));
     if (algo == AllReduceStrategyType::ONESHOT)
@@ -1580,7 +1580,7 @@ void AllReduceNormKernelLaunch(AllReduceStrategyType algo, AllReduceStrategyConf
     }
     else
     {
-        TLLM_CHECK_WITH_INFO(!(USE_MEMCPY && PUSH_MODE), "Memcpy cannot be used with PUSH_MODE.");
+        CHECK_WITH_INFO(!(USE_MEMCPY && PUSH_MODE), "Memcpy cannot be used with PUSH_MODE.");
         size_t elts_per_thread = 16 / sizeof(T);
         auto [blocks_per_grid, threads_per_block] = kernelLaunchConfig(algo, params, elts_per_thread);
         if (USE_MEMCPY)
@@ -1593,7 +1593,7 @@ void AllReduceNormKernelLaunch(AllReduceStrategyType algo, AllReduceStrategyConf
 
         if (sugesstify::common::getEnvEnablePDL())
         {
-            TLLM_LOG_DEBUG("Enable PDL in twoShotAllReduceKernel");
+            LOG_DEBUG("Enable PDL in twoShotAllReduceKernel");
             cudaLaunchConfig_t kernelConfig = {0};
             kernelConfig.gridDim = blocks_per_grid;
             kernelConfig.blockDim = threads_per_block;
@@ -1606,7 +1606,7 @@ void AllReduceNormKernelLaunch(AllReduceStrategyType algo, AllReduceStrategyConf
             kernelConfig.attrs = attribute;
             kernelConfig.numAttrs = 1;
 
-            TLLM_CUDA_CHECK(cudaLaunchKernelEx(
+            CUDA_CHECK(cudaLaunchKernelEx(
                 &kernelConfig, twoShotAllReduceKernel<T, RANKS_PER_NODE, !USE_MEMCPY, PUSH_MODE, Bias, true>, params));
         }
         else
@@ -1649,8 +1649,8 @@ template <typename T, int RANKS_PER_NODE, bool PUSH_MODE = false, bool USE_MEMCP
 void AllReduceDispatch(AllReduceStrategyType algo, AllReduceStrategyConfig config, AllReduceFusionOp fusionOp,
     AllReduceParams& params, cudaStream_t stream)
 {
-    TLLM_CHECK(fusionOp == AllReduceFusionOp::NONE);
-    TLLM_CHECK_WITH_INFO(!(USE_MEMCPY && PUSH_MODE), "Memcpy cannot be used with PUSH_MODE.");
+    CHECK(fusionOp == AllReduceFusionOp::NONE);
+    CHECK_WITH_INFO(!(USE_MEMCPY && PUSH_MODE), "Memcpy cannot be used with PUSH_MODE.");
     size_t elts_per_thread = 16 / sizeof(T);
     auto [blocks_per_grid, threads_per_block] = kernelLaunchConfig(algo, params, elts_per_thread);
     if (USE_MEMCPY)
@@ -1676,12 +1676,12 @@ void AllReduceDispatchMemcpy(AllReduceStrategyType algo, AllReduceStrategyConfig
 {
     if (fusionOp == AllReduceFusionOp::NONE)
     {
-        TLLM_LOG_DEBUG("AllReduceDispatch enabled");
+        LOG_DEBUG("AllReduceDispatch enabled");
         AllReduceDispatch<T, RANKS_PER_NODE, PUSH_MODE, USE_MEMCPY>(algo, config, fusionOp, params, stream);
     }
     else
     {
-        TLLM_LOG_DEBUG("AllReduceNormDispatch enabled");
+        LOG_DEBUG("AllReduceNormDispatch enabled");
         AllReduceNormDispatch<T, RANKS_PER_NODE, PUSH_MODE, USE_MEMCPY>(algo, config, fusionOp, params, stream);
     }
 }
@@ -1726,7 +1726,7 @@ void AllReduceDispatchType(AllReduceParams& params, AllReduceStrategyType strat,
     case 4: AllReduceDispatchRanksPerNode<T, 4>(strat, config, fusionOp, params, stream); break;
     case 6: AllReduceDispatchRanksPerNode<T, 6>(strat, config, fusionOp, params, stream); break;
     case 8: AllReduceDispatchRanksPerNode<T, 8>(strat, config, fusionOp, params, stream); break;
-    default: TLLM_THROW("Custom all reduce only supported on {2, 4, 6, 8} GPUs per node.");
+    default: THROW("Custom all reduce only supported on {2, 4, 6, 8} GPUs per node.");
     }
 }
 
@@ -1747,7 +1747,7 @@ AllReduceParams AllReduceParams::deserialize(int64_t* buffer, size_t tpSize, siz
     auto const flag_ptr
         = &buffer[sugesstify::utils::customAllReduceUtils::NUM_POINTERS_PER_RANK * tpSize + flag_offset];
     *flag_ptr += 1;
-    TLLM_LOG_TRACE("AllReduceParams's flag value is %d, flag offset %d", *flag_ptr, flag_offset);
+    LOG_TRACE("AllReduceParams's flag value is %d, flag offset %d", *flag_ptr, flag_offset);
     uint32_t flag_value = *flag_ptr;
     AllReduceParams params;
     auto const buffer_offset = (flag_value % 2 == 0) ? 0 : tpSize;
@@ -1774,7 +1774,7 @@ AllReduceParams AllReduceParams::deserialize(int64_t* buffer, size_t tpSize, siz
 void customAllReduce(kernels::AllReduceParams& params, nvinfer1::DataType dataType, AllReduceStrategyType strat,
     AllReduceStrategyConfig config, AllReduceFusionOp fusionOp, cudaStream_t stream)
 {
-    TLLM_CHECK_WITH_INFO(configurationSupported(strat, params.elts_total, params.ranks_per_node, dataType),
+    CHECK_WITH_INFO(configurationSupported(strat, params.elts_total, params.ranks_per_node, dataType),
         "Custom all-reduce configuration unsupported");
 
     sync_check_cuda_error();
@@ -1788,7 +1788,7 @@ void customAllReduce(kernels::AllReduceParams& params, nvinfer1::DataType dataTy
         AllReduceDispatchType<__nv_bfloat16>(params, strat, config, fusionOp, stream);
         break;
 #endif
-    default: TLLM_THROW("Unsupported dataType for customAllReduce");
+    default: THROW("Unsupported dataType for customAllReduce");
     }
     sync_check_cuda_error();
 }
@@ -1825,7 +1825,7 @@ void residualRmsNorm(
 #ifdef ENABLE_BF16
     case nvinfer1::DataType::kBF16: launchResidualRmsNormKernel<__nv_bfloat16>(params, stream, fusionOp); break;
 #endif
-    default: TLLM_THROW("Unsupported dataType for customAllReduce");
+    default: THROW("Unsupported dataType for customAllReduce");
     }
     sync_check_cuda_error();
 }
@@ -1846,7 +1846,7 @@ void lamportInitialize(void* buffer, size_t size, nvinfer1::DataType dataType, c
         reduce_fusion::lamport_initialize_kernel_launcher<__nv_bfloat16>(buffer, size, stream);
         break;
 #endif
-    default: TLLM_THROW("Unsupported dataType for customAllReduce");
+    default: THROW("Unsupported dataType for customAllReduce");
     }
     sync_check_cuda_error();
 }

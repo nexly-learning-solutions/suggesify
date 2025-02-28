@@ -128,9 +128,9 @@ int create_communicator_grouped2(communicator** comm, int pipegpus, int pipenode
     (*comm)->pdl_launch = sugesstify::common::getEnvEnablePDL() ? 1 : 0;
 
     cudaDeviceProp device_prop;
-    TLLM_CUDA_CHECK(cudaGetDevice(&cur_dev));
-    TLLM_CUDA_CHECK(cudaGetDeviceCount(&ndev));
-    TLLM_CUDA_CHECK(cudaGetDeviceProperties(&device_prop, cur_dev));
+    CUDA_CHECK(cudaGetDevice(&cur_dev));
+    CUDA_CHECK(cudaGetDeviceCount(&ndev));
+    CUDA_CHECK(cudaGetDeviceProperties(&device_prop, cur_dev));
     (*comm)->sm_arch = device_prop.major;
     (*comm)->use_rr_kernel = device_prop.major == 8;
     if (getenv("OVERRIDERR"))
@@ -146,7 +146,7 @@ int create_communicator_grouped2(communicator** comm, int pipegpus, int pipenode
     {
         if (cur_dev != myrank % ndev)
             printf("%d: device used %d[%d] ,resetting device to %d\n", myrank, cur_dev, ndev, myrank);
-        TLLM_CUDA_CHECK(cudaSetDevice(myrank % ndev));
+        CUDA_CHECK(cudaSetDevice(myrank % ndev));
         cur_dev = myrank % ndev;
     }
     (*comm)->mydev = cur_dev;
@@ -273,10 +273,10 @@ int create_communicator_grouped2(communicator** comm, int pipegpus, int pipenode
 #define LOCALSIZE 4 * (REG0_OFFSET(*comm) + REG0_FLAGS + REG0_COMMBUFFER * NBUF)
     register_user_buffer_collective(&((*comm)->gpu_ptrs), LOCALSIZE, *comm, true);
 
-    TLLM_CUDA_CHECK(cudaMalloc(&(*comm)->send_id, (*comm)->nranks * sizeof(int)));
-    TLLM_CUDA_CHECK(cudaMalloc(&(*comm)->recv_id, MAX_REGIONS * (*comm)->nranks * sizeof(int)));
-    TLLM_CUDA_CHECK(cudaMemset((*comm)->send_id, 0, (*comm)->nranks * sizeof(int)));
-    TLLM_CUDA_CHECK(cudaMemset((*comm)->recv_id, 0, MAX_REGIONS * (*comm)->nranks * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&(*comm)->send_id, (*comm)->nranks * sizeof(int)));
+    CUDA_CHECK(cudaMalloc(&(*comm)->recv_id, MAX_REGIONS * (*comm)->nranks * sizeof(int)));
+    CUDA_CHECK(cudaMemset((*comm)->send_id, 0, (*comm)->nranks * sizeof(int)));
+    CUDA_CHECK(cudaMemset((*comm)->recv_id, 0, MAX_REGIONS * (*comm)->nranks * sizeof(int)));
     (*comm)->sms = getenv("MAXSMS") ? atoi(getenv("MAXSMS")) : 16;
     (*comm)->threads = getenv("MAXTHREADS") ? atoi(getenv("MAXTHREADS")) : 1024;
 
@@ -409,8 +409,8 @@ int register_user_buffer_collective(void** gpubuff, size_t bytes, communicator* 
         CUCHECK(cuMemSetAccess(ptr, aligned_size * nranks, &accessDesc, 1));
 
         if (hndl == 0)
-            TLLM_CUDA_CHECK(cudaMemset(comm->gpu_ptrs, 0, aligned_size));
-        TLLM_CUDA_CHECK(cudaMemcpy(((char*) (comm->gpu_ptrs)) + (hndl * nranks * sizeof(void*)), remptrs,
+            CUDA_CHECK(cudaMemset(comm->gpu_ptrs, 0, aligned_size));
+        CUDA_CHECK(cudaMemcpy(((char*) (comm->gpu_ptrs)) + (hndl * nranks * sizeof(void*)), remptrs,
             nranks * sizeof(void*), cudaMemcpyHostToDevice));
         free(remptrs);
 
@@ -441,20 +441,20 @@ int register_user_buffer_collective(void** gpubuff, size_t bytes, communicator* 
         assert(comm->nvsize <= 8);
         cudaIpcMemHandle_t* memhndl;
         cudaIpcMemHandle_t myhndl;
-        TLLM_CUDA_CHECK(cudaIpcGetMemHandle(&myhndl, *gpubuff));
+        CUDA_CHECK(cudaIpcGetMemHandle(&myhndl, *gpubuff));
         ub_alloc_copy_allgather((void**) &memhndl, sizeof(cudaIpcMemHandle_t), (void*) &myhndl, comm->comm_intra);
 
         for (int i = 0; i < comm->nvsize; i++)
             if (i != comm->nvrank)
-                TLLM_CUDA_CHECK(cudaIpcOpenMemHandle(
+                CUDA_CHECK(cudaIpcOpenMemHandle(
                     (void**) &(comm->peer_ptr[hndl][i]), memhndl[i], cudaIpcMemLazyEnablePeerAccess));
         comm->peer_ptr[hndl][comm->nvrank] = *gpubuff;
-        TLLM_CUDA_CHECK(cudaDeviceSynchronize());
+        CUDA_CHECK(cudaDeviceSynchronize());
 
-        TLLM_CUDA_CHECK(cudaMemcpy((char*) (comm->gpu_ptrs) + (hndl * comm->nvsize * sizeof(void*)),
+        CUDA_CHECK(cudaMemcpy((char*) (comm->gpu_ptrs) + (hndl * comm->nvsize * sizeof(void*)),
             comm->peer_ptr[hndl], comm->nvsize * sizeof(void*), cudaMemcpyHostToDevice));
 
-        TLLM_CUDA_CHECK(cudaDeviceSynchronize());
+        CUDA_CHECK(cudaDeviceSynchronize());
 
         ub_free(memhndl);
     }

@@ -123,7 +123,7 @@ void cudaCoreGemmKernel(Params const& params, cudaStream_t stream)
 
     if (sugesstify::common::getEnvEnablePDL())
     {
-        TLLM_LOG_DEBUG("Enable PDL in fp8_gemm_plugin");
+        LOG_DEBUG("Enable PDL in fp8_gemm_plugin");
         cudaLaunchConfig_t kernelConfig = {0};
         kernelConfig.gridDim = grid;
         kernelConfig.blockDim = block;
@@ -136,7 +136,7 @@ void cudaCoreGemmKernel(Params const& params, cudaStream_t stream)
         kernelConfig.attrs = attribute;
         kernelConfig.numAttrs = 1;
 
-        TLLM_CUDA_CHECK(
+        CUDA_CHECK(
             cudaLaunchKernelEx(&kernelConfig, cudaCoreGemm<InputType, OutputType, TILE_M, TILE_N, BLOCK_SIZE>,
                 reinterpret_cast<InputType const*>(params.act), reinterpret_cast<InputType const*>(params.weight),
                 params.alpha, reinterpret_cast<OutputType*>(params.output), params.m, params.n, params.k));
@@ -265,7 +265,7 @@ bool cudaCoreGemmDispatcher(Params const& params, cudaStream_t stream)
 
     if (!dispatched)
     {
-        TLLM_LOG_DEBUG(
+        LOG_DEBUG(
             "sugesstify::kernels::cuda_core_gemm::cudaCoreGemmDispatcher failed to dispatch: inputType=%d, "
             "outputType=%d, "
             "m=%d, "

@@ -340,7 +340,7 @@ __global__ void __launch_bounds__(MAX_THREADS) userbuffers_fp16_sum_inplace_gpu_
             = {reinterpret_cast<void*>(&arg1), reinterpret_cast<void*>(&arg2), reinterpret_cast<void*>(&arg3),         \
                 reinterpret_cast<void*>(&arg4), reinterpret_cast<void*>(&arg5), reinterpret_cast<void*>(&arg6),        \
                 reinterpret_cast<void*>(&arg7), reinterpret_cast<void*>(&arg8), reinterpret_cast<void*>(&arg9)};       \
-        TLLM_CUDA_CHECK(cudaLaunchKernelExC(&cfg,                                                                      \
+        CUDA_CHECK(cudaLaunchKernelExC(&cfg,                                                                      \
             (void*) (comm->use_rr_kernel ? userbuffers_fp16_sum_inplace_gpu_rr<DType, x>                               \
                                          : userbuffers_fp16_sum_inplace_gpu_rw<DType, x>),                             \
             kernelArgs));                                                                                              \
@@ -361,7 +361,7 @@ __global__ void __launch_bounds__(MAX_THREADS) userbuffers_fp16_sum_inplace_gpu_
             reinterpret_cast<void*>(&arg3), reinterpret_cast<void*>(&arg4), reinterpret_cast<void*>(&arg5),            \
             reinterpret_cast<void*>(&arg6), reinterpret_cast<void*>(&arg7), reinterpret_cast<void*>(&arg8),            \
             reinterpret_cast<void*>(&arg9), reinterpret_cast<void*>(&arg10)};                                          \
-        TLLM_CUDA_CHECK(                                                                                               \
+        CUDA_CHECK(                                                                                               \
             cudaLaunchKernelExC(&cfg, (void*) (userbuffers_fp16_sum_inplace_gpu_mc<DType, x>), kernelArgs));           \
     }
 
@@ -733,7 +733,7 @@ __global__ void __launch_bounds__(MAX_THREADS) userbuffers_fp16_sum_inplace_gpu_
             reinterpret_cast<void*>(&arg12), reinterpret_cast<void*>(&arg13), reinterpret_cast<void*>(&arg14),         \
             reinterpret_cast<void*>(&arg15), reinterpret_cast<void*>(&arg16), reinterpret_cast<void*>(&arg17),         \
             reinterpret_cast<void*>(&arg18), reinterpret_cast<void*>(&arg19), reinterpret_cast<void*>(&arg20)};        \
-        TLLM_CUDA_CHECK(cudaLaunchKernelExC(                                                                           \
+        CUDA_CHECK(cudaLaunchKernelExC(                                                                           \
             &cfg, (void*) (userbuffers_fp16_sum_inplace_gpu_mc_rmsnorm_quant<DType, x>), kernelArgs));                 \
     }
 
@@ -765,7 +765,7 @@ __global__ void __launch_bounds__(MAX_THREADS) userbuffers_fp16_sum_inplace_gpu_
             reinterpret_cast<void*>(&arg12), reinterpret_cast<void*>(&arg13), reinterpret_cast<void*>(&arg14),         \
             reinterpret_cast<void*>(&arg15), reinterpret_cast<void*>(&arg16), reinterpret_cast<void*>(&arg17),         \
             reinterpret_cast<void*>(&arg18), reinterpret_cast<void*>(&arg19), reinterpret_cast<void*>(&arg20)};        \
-        TLLM_CUDA_CHECK(cudaLaunchKernelExC(                                                                           \
+        CUDA_CHECK(cudaLaunchKernelExC(                                                                           \
             &cfg, (void*) (userbuffers_fp16_sum_inplace_gpu_mc_rmsnorm_quant_oneshot<DType, x>), kernelArgs));         \
     }
 
@@ -788,7 +788,7 @@ __global__ void __launch_bounds__(MAX_THREADS) userbuffers_fp16_sum_inplace_gpu_
             reinterpret_cast<void*>(&arg6), reinterpret_cast<void*>(&arg7), reinterpret_cast<void*>(&arg8),            \
             reinterpret_cast<void*>(&arg9), reinterpret_cast<void*>(&arg10), reinterpret_cast<void*>(&arg11),          \
             reinterpret_cast<void*>(&arg12), reinterpret_cast<void*>(&arg13)};                                         \
-        TLLM_CUDA_CHECK(cudaLaunchKernelExC(                                                                           \
+        CUDA_CHECK(cudaLaunchKernelExC(                                                                           \
             &cfg, (void*) (userbuffers_fp16_sum_inplace_gpu_mc_res_allgather<DType, x>), kernelArgs));                 \
     }
 
@@ -862,7 +862,7 @@ int allreduce2_userbuff_inplace_rmsnorm_quant(int const handler, size_t const of
 
     if (elements % hidden_size)
         return 0;
-    TLLM_CHECK(hidden_size % 8 == 0);
+    CHECK(hidden_size % 8 == 0);
     int hidden_lines = hidden_size / 8;
     shard_tokens(elements / hidden_size, ar_nvsize, ar_nvrank);
 
@@ -872,7 +872,7 @@ int allreduce2_userbuff_inplace_rmsnorm_quant(int const handler, size_t const of
     while (nthreads > 1024)
     {
         nlines++;
-        TLLM_CHECK(nlines <= 4);
+        CHECK(nlines <= 4);
         if ((hidden_size / 8) % nlines == 0)
             nthreads = ((hidden_size / 8)) / nlines;
     }
@@ -894,7 +894,7 @@ int allreduce2_userbuff_inplace_rmsnorm_quant(int const handler, size_t const of
     }
     else
     {
-        TLLM_CHECK(0);
+        CHECK(0);
     }
 
     return sms;
@@ -908,7 +908,7 @@ int allgather2_userbuff_residual(int const handler, size_t const offset, size_t 
     // CPU/SHARP part is not supported yet;
     if (comm->oneshot != 0 && (elements * comm->ar2_nvsize <= 131072))
     {
-        TLLM_CUDA_CHECK(cudaMemcpyAsync(reinterpret_cast<uint8_t*>(comm->mem_ptr[handler]) + (offset * 2), residual_in,
+        CUDA_CHECK(cudaMemcpyAsync(reinterpret_cast<uint8_t*>(comm->mem_ptr[handler]) + (offset * 2), residual_in,
             elements * 2, cudaMemcpyDeviceToDevice, stream));
         return 0;
     }
@@ -920,7 +920,7 @@ int allgather2_userbuff_residual(int const handler, size_t const offset, size_t 
 
     if (elements % hidden_size)
         return 0;
-    TLLM_CHECK(hidden_size % 8 == 0);
+    CHECK(hidden_size % 8 == 0);
     int hidden_lines = hidden_size / 8;
     shard_tokens(elements / hidden_size, ar_nvsize, ar_nvrank);
 
@@ -930,7 +930,7 @@ int allgather2_userbuff_residual(int const handler, size_t const offset, size_t 
     while (nthreads > 1024)
     {
         nlines++;
-        TLLM_CHECK(nlines <= 4);
+        CHECK(nlines <= 4);
         if ((hidden_size / 8) % nlines == 0)
             nthreads = ((hidden_size / 8)) / nlines;
     }
@@ -942,7 +942,7 @@ int allgather2_userbuff_residual(int const handler, size_t const offset, size_t 
     }
     else
     {
-        TLLM_CHECK(0);
+        CHECK(0);
     }
 
     return sms;
@@ -959,7 +959,7 @@ void allreduce2_userbuff_inplace_impl(int const handler, size_t const offset, si
         allreduce2_userbuff_inplace<__nv_bfloat16>(handler, offset, elements, comm, stream);
         break;
 #endif
-    default: TLLM_THROW("Unsupported dataType for allreduce2_userbuff_inplace_impl");
+    default: THROW("Unsupported dataType for allreduce2_userbuff_inplace_impl");
     }
 }
 
@@ -977,7 +977,7 @@ int allgather2_userbuff_residual_impl(int const handler, size_t const offset, si
             handler, offset, elements, hidden_size, residual, comm, stream);
         break;
 #endif
-    default: TLLM_THROW("Unsupported dataType for allgather2_userbuff_residual_impl");
+    default: THROW("Unsupported dataType for allgather2_userbuff_residual_impl");
     }
 }
 
@@ -998,7 +998,7 @@ int allreduce2_userbuff_inplace_rmsnorm_quant_impl(int const handler, size_t con
             elements, hidden_size, beta, gamma, eps, scalefactor, residual_in, residual_out, comm, stream);
         break;
 #endif
-    default: TLLM_THROW("Unsupported dataType for allreduce2_userbuff_inplace_rmsnorm_quant_impl");
+    default: THROW("Unsupported dataType for allreduce2_userbuff_inplace_rmsnorm_quant_impl");
     }
 }
 } // namespace sugesstify::kernels::ub

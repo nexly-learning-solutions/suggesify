@@ -44,7 +44,7 @@ ipcSocketResult_t ipcSocketInit(IpcSocketHandle* handle, int rank, uint64_t hash
     handle->socketName[0] = '\0';
     if ((fd = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0)
     {
-        TLLM_LOG_WARNING("UDS: Socket creation error");
+        LOG_WARNING("UDS: Socket creation error");
         return ipcSocketSystemError;
     }
 
@@ -55,7 +55,7 @@ ipcSocketResult_t ipcSocketInit(IpcSocketHandle* handle, int rank, uint64_t hash
     if (len > (sizeof(cliaddr.sun_path) - 1))
     {
         errno = ENAMETOOLONG;
-        TLLM_LOG_WARNING("UDS: Cannot bind provided name to socket. Name too large");
+        LOG_WARNING("UDS: Cannot bind provided name to socket. Name too large");
         return ipcSocketInternalError;
     }
     strncpy(cliaddr.sun_path, temp, len);
@@ -66,7 +66,7 @@ ipcSocketResult_t ipcSocketInit(IpcSocketHandle* handle, int rank, uint64_t hash
 #endif
     if (bind(fd, (struct sockaddr*) &cliaddr, sizeof(cliaddr)) < 0)
     {
-        TLLM_LOG_WARNING("UDS: Binding to socket %s failed", temp);
+        LOG_WARNING("UDS: Binding to socket %s failed", temp);
         close(fd);
         return ipcSocketSystemError;
     }
@@ -89,7 +89,7 @@ ipcSocketResult_t ipcSocketGetFd(struct IpcSocketHandle* handle, int* fd)
     if (handle == NULL)
     {
         errno = EINVAL;
-        TLLM_LOG_WARNING("ipcSocketSocketGetFd: pass NULL socket");
+        LOG_WARNING("ipcSocketSocketGetFd: pass NULL socket");
         return ipcSocketInvalidArgument;
     }
     if (fd)
@@ -154,7 +154,7 @@ ipcSocketResult_t ipcSocketRecvMsg(IpcSocketHandle* handle, void* hdr, int hdrLe
     {
         if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
         {
-            TLLM_LOG_WARNING("UDS: Receiving data over socket failed");
+            LOG_WARNING("UDS: Receiving data over socket failed");
             return ipcSocketSystemError;
         }
         if (handle->abortFlag && *handle->abortFlag)
@@ -168,7 +168,7 @@ ipcSocketResult_t ipcSocketRecvMsg(IpcSocketHandle* handle, void* hdr, int hdrLe
             if ((cmptr->cmsg_level != SOL_SOCKET) || (cmptr->cmsg_type != SCM_RIGHTS))
             {
                 errno = EBADMSG;
-                TLLM_LOG_WARNING("UDS: Receiving data over socket %s failed", handle->socketName);
+                LOG_WARNING("UDS: Receiving data over socket %s failed", handle->socketName);
                 return ipcSocketSystemError;
             }
 
@@ -177,14 +177,14 @@ ipcSocketResult_t ipcSocketRecvMsg(IpcSocketHandle* handle, void* hdr, int hdrLe
         else
         {
             errno = ENOMSG;
-            TLLM_LOG_WARNING("UDS: Receiving data over socket %s failed", handle->socketName);
+            LOG_WARNING("UDS: Receiving data over socket %s failed", handle->socketName);
             return ipcSocketSystemError;
         }
     }
     else
     {
         errno = EINVAL;
-        TLLM_LOG_WARNING("UDS: File descriptor pointer cannot be NULL");
+        LOG_WARNING("UDS: File descriptor pointer cannot be NULL");
         return ipcSocketInvalidArgument;
     }
 
@@ -220,7 +220,7 @@ ipcSocketResult_t ipcSocketSendMsg(
     if (len > (sizeof(cliaddr.sun_path) - 1))
     {
         errno = ENAMETOOLONG;
-        TLLM_LOG_WARNING("UDS: Cannot connect to provided name for socket. Name too large");
+        LOG_WARNING("UDS: Cannot connect to provided name for socket. Name too large");
         return ipcSocketInternalError;
     }
     (void) strncpy(cliaddr.sun_path, temp, len);
@@ -263,7 +263,7 @@ ipcSocketResult_t ipcSocketSendMsg(
     {
         if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
         {
-            TLLM_LOG_WARNING("UDS: Sending data over socket %s failed", temp);
+            LOG_WARNING("UDS: Sending data over socket %s failed", temp);
             return ipcSocketSystemError;
         }
         if (handle->abortFlag && *handle->abortFlag)

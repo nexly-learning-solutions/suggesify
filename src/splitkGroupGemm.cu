@@ -56,7 +56,7 @@ void splitkGroupedGemm_(std::vector<cutlass::gemm::GemmCoord> problem_sizes, std
     void* gemmParamsWorkSpace, int64_t gemmParamsWorkSpaceSize, void* gemmWorkSpace, int64_t gemmWorkSpaceSize,
     int splitKSlices, cudaStream_t stream)
 {
-    TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s start", __PRETTY_FUNCTION__);
     using ElementA = cutlassType;
     using ElementB = cutlassType;
     using ElementOutput = float;
@@ -123,13 +123,13 @@ void splitkGroupedGemm_(std::vector<cutlass::gemm::GemmCoord> problem_sizes, std
 
         auto problem = problem_sizes.at(i);
         lda_host[i] = LayoutA::packed({problem.m(), problem.k()}).stride(0);
-        TLLM_CHECK(lda_host[i] % kAlignmentAB == 0);
+        CHECK(lda_host[i] % kAlignmentAB == 0);
         ldb_host[i] = LayoutB::packed({problem.k(), problem.n()}).stride(0);
-        TLLM_CHECK(ldb_host[i] % kAlignmentAB == 0);
+        CHECK(ldb_host[i] % kAlignmentAB == 0);
         ldc_host[i] = LayoutC::packed({problem.m(), problem.n()}).stride(0);
-        TLLM_CHECK(ldc_host[i] % kAlignmentC == 0);
+        CHECK(ldc_host[i] % kAlignmentC == 0);
         ldd_host[i] = LayoutC::packed({problem.m(), problem.n()}).stride(0);
-        TLLM_CHECK(ldd_host[i] % kAlignmentC == 0);
+        CHECK(ldd_host[i] % kAlignmentC == 0);
 
         offset_host[i] = cumulative_offsets;
         cumulative_offsets += problem.m() * problem.n();
@@ -153,7 +153,7 @@ void splitkGroupedGemm_(std::vector<cutlass::gemm::GemmCoord> problem_sizes, std
     int64_t* offset = reinterpret_cast<int64_t*>(
         (char*) gemmParamsWorkSpace + gemm_coord_size + 2 * ptr_size + 2 * out_ptr_size + 4 * ldd_size);
 
-    TLLM_CHECK(((char*) ldc_host - (char*) host_workspace) == ((char*) ldc - (char*) gemmParamsWorkSpace));
+    CHECK(((char*) ldc_host - (char*) host_workspace) == ((char*) ldc - (char*) gemmParamsWorkSpace));
     sugesstify::common::cudaAutoCpy(
         (int8_t*) gemmParamsWorkSpace, (int8_t*) host_workspace, gemmParamsWorkSpaceSize, stream);
 
@@ -166,22 +166,22 @@ void splitkGroupedGemm_(std::vector<cutlass::gemm::GemmCoord> problem_sizes, std
     Gemm gemm;
 
     size_t workSpaceSize = gemm.get_workspace_size(args);
-    TLLM_CHECK_WITH_INFO(workSpaceSize <= gemmWorkSpaceSize,
+    CHECK_WITH_INFO(workSpaceSize <= gemmWorkSpaceSize,
         "workSpaceSize (%lu) is smaller than required gemmWorkSpaceSize (%lu).", workSpaceSize,
         (size_t) gemmWorkSpaceSize);
 
     cutlass::Status status = gemm.initialize(args, gemmWorkSpace);
 
-    TLLM_CHECK_WITH_INFO(status == cutlass::Status::kSuccess, "Failed to initialize CUTLASS Grouped GEMM kernel.");
+    CHECK_WITH_INFO(status == cutlass::Status::kSuccess, "Failed to initialize CUTLASS Grouped GEMM kernel.");
 
     // Run the grouped GEMM object
     status = gemm.run(stream);
 
-    TLLM_CHECK_WITH_INFO(status == cutlass::Status::kSuccess, "Failed to run CUTLASS Grouped GEMM kernel.");
+    CHECK_WITH_INFO(status == cutlass::Status::kSuccess, "Failed to run CUTLASS Grouped GEMM kernel.");
     sync_check_cuda_error();
 
     std::free(host_workspace);
-    TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+    LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
 }
 
 template <int M1, int N1, int K1, int M2, int N2, int K2, int kAlignmentAB, int kAlignmentC, int kStages>
@@ -198,7 +198,7 @@ void splitkGroupedGemmType_(std::vector<cutlass::gemm::GemmCoord> problem_sizes,
     }
     else if (dataType == nvinfer1::DataType::kFLOAT)
     {
-        TLLM_CHECK_WITH_INFO(false, "not support float input/output");
+        CHECK_WITH_INFO(false, "not support float input/output");
     }
 #ifdef ENABLE_BF16
     else if (dataType == nvinfer1::DataType::kBF16)
@@ -215,7 +215,7 @@ void splitkGroupedGemm(std::vector<cutlass::gemm::GemmCoord> problem_sizes, std:
     void* gemmParamsWorkSpace, int64_t gemmParamsWorkSpaceSize, void* gemmWorkSpace, int64_t gemmWorkSpaceSize,
     bool isLoraIn, nvinfer1::DataType dataType, int splitKSlices, int minKN, cudaStream_t stream)
 {
-    TLLM_LOG_TRACE("%s start, isLoraIn: %d, minKN = %d", __PRETTY_FUNCTION__, static_cast<int>(isLoraIn), minKN);
+    LOG_TRACE("%s start, isLoraIn: %d, minKN = %d", __PRETTY_FUNCTION__, static_cast<int>(isLoraIn), minKN);
     if (isLoraIn)
     {
         // K >> N, like K = 1024, N = 8

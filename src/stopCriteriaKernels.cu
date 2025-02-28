@@ -220,7 +220,7 @@ void invokeExplicitEOSCriterion(TokenIdType const** outputIds, TokenIdType const
     SizeType32* sequenceLengths, SizeType32* numNewTokens, SizeType32 const* batchSlots, SizeType32 batchSize,
     SizeType32 beamWidth, SizeType32 maxTokensPerStep, cudaStream_t stream)
 {
-    TLLM_CHECK_WITH_INFO(beamWidth == 1, "Explicit EOS criterion does not support beam search");
+    CHECK_WITH_INFO(beamWidth == 1, "Explicit EOS criterion does not support beam search");
     // Check if we have sampled an end id token. If so, stop the sequence.
     SizeType32 constexpr blockSize{256};
 
