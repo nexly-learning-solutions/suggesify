@@ -1,6 +1,6 @@
 
 #pragma once
-#include "sugesstify/common/quantization.h"
+#include "../common/quantization.h"
 #include <cassert>
 #include <cmath>
 #include <cstdint>

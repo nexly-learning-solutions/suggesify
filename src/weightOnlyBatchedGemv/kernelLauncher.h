@@ -1,6 +1,6 @@
 
 #pragma once
-#include "sugesstify/common/cudaUtils.h"
+#include "../common/cudaUtils.h"
 #include "../src/weightOnlyBatchedGemv/common.h"
 #include "../src/weightOnlyBatchedGemv/details.h"
 

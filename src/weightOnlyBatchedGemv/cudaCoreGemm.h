@@ -1,12 +1,12 @@
 
 #pragma once
-#include "sugesstify/common/assert.h"
-#include "sugesstify/common/cudaUtils.h"
-#include "sugesstify/common/envUtils.h"
-#include "sugesstify/common/logger.h"
-#include "sugesstify/common/quantization.h"
+#include "../common/assert.h"
+#include "../common/cudaUtils.h"
+#include "../common/envUtils.h"
+#include "../common/logger.h"
+#include "../common/quantization.h"
 #include "../src/cutlass_kernels/cutlass_type_conversion.h"
-#include "sugesstify/runtime/common.h"
+#include "../runtime/common.h"
 
 #include <NvInferRuntime.h>
 
