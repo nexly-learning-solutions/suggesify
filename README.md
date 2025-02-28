@@ -1,6 +1,4 @@
-This README outlines the process of building this project, utilizing various essential libraries and tools.
-
-**Important Note:** This project is an **AI project** and is intended for use only by **experienced professionals in artificial intelligence and deep learning**. It requires a strong understanding of these domains to utilize the project effectively and safely. 
+**Important Note:** This project is an **AI project** and is intended for use only by **experienced professionals in artificial intelligence and deep learning**. It requires a strong understanding of these domains. 
 
 ⚙️ **Prerequisites**
 
@@ -86,15 +84,3 @@ Once the project has been built successfully, execute unit tests to verify its f
 📄 **Checking Logs**
 
 You can view the log file under `Debug/HIP_nvcc/suggestify.log`. This log is useful for identifying bugs and other issues.
-
-📚 **Documentation**
-
-Detailed documentation regarding suggestify's functionalities, APIs, and other aspects can be found in the `docs` directory.
-
-🤝 **Contributing**
-
-We encourage contributions from the community to improve and extend suggestify's capabilities. If you're interested in contributing, please refer to the Contribution Guidelines for more information.
-
-📄 **License**
-
-suggestify is licensed under the Apache License 2.0. Please review the license for details on usage and distribution rights.
