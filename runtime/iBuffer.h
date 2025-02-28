@@ -3,8 +3,8 @@
 
 #include "../common/arrayView.h"
 #include "../common/dataType.h"
-#include "../kernels/decodingCommon.h"
-#include "../kernels/kvCacheIndex.h"
+#include "../src/decodingCommon.h"
+#include "../src/kvCacheIndex.h"
 #include "common.h"
 
 #include <NvInferRuntime.h>

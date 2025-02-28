@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../common/cudaUtils.h"
-#include "../kernels/contextFusedMultiHeadAttention/fused_multihead_attention_common.h"
+#include "../src/contextFusedMultiHeadAttention/fused_multihead_attention_common.h"
 #include "../runtime/iTensor.h"
 #include <cstdint>
 #include <cuda_fp16.h>

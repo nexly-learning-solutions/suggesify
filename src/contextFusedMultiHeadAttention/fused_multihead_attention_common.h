@@ -1,12 +1,12 @@
 
 #pragma once
 
-#include "../kernels/kvCacheUtils.h"
+#include "../src/kvCacheUtils.h"
 #include "tmaDescriptor.h"
 #include <limits.h>
 #include <stdint.h>
 
-#include "../kernels/multiHeadAttentionCommon.h"
+#include "../src/multiHeadAttentionCommon.h"
 
 namespace suggestify
 {

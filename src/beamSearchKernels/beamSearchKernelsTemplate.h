@@ -11,8 +11,8 @@
 #include "../common/cudaUtils.h"
 #include "../common/reduceKernelUtils.cuh"
 #include "../common/stringUtils.h"
-#include "../kernels/beamSearchKernels.h"
-#include "../kernels/decodingCommon.h"
+#include "../src/beamSearchKernels.h"
+#include "../src/decodingCommon.h"
 
 using namespace suggestify::common;
 

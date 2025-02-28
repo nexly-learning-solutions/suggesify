@@ -3,7 +3,7 @@
 #pragma once
 
 #include "common.h"
-#include "../kernels/customAllReduceKernels.h"
+#include "../src/customAllReduceKernels.h"
 #include "bufferManager.h"
 #include "iTensor.h"
 #include "worldConfig.h"
