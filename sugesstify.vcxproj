@@ -73,7 +73,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0B7B5475-22D8-4233-80F5-A35E841B285D}</ProjectGuid>
-    <RootNamespace>recs</RootNamespace>
+    <RootNamespace>sugesstify</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -103,7 +103,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\recs\3rdparty\netcdf-cxx4\cxx4;C:\recs\3rdparty\Microsoft-MPI\src\include;C:\recs\3rdparty\jsoncpp\include;C:\recs\3rdparty\OpenBLAS;C:\recs\3rdparty\nccl\build\include;C:\recs\3rdparty\glog\src\glog;$(IncludePath)</IncludePath>
+    <IncludePath>C:\sugesstify\3rdparty\netcdf-cxx4\cxx4;C:\sugesstify\3rdparty\Microsoft-MPI\src\include;C:\sugesstify\3rdparty\jsoncpp\include;C:\sugesstify\3rdparty\OpenBLAS;C:\sugesstify\3rdparty\nccl\build\include;C:\sugesstify\3rdparty\glog\src\glog;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

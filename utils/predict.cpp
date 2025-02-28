@@ -38,18 +38,18 @@ void convertTextToNetCDF(const std::string& inputTextFile, const std::string& da
 
 void printUsagePredict() {
     std::cout << "Predict: Generates predictions from a trained neural network given a signals/input dataset." << std::endl;
-    std::cout << "Usage: predict -d <dataset_name> -n <network_file> -r <input_text_file> -i <input_feature_index> -o <output_feature_index> -f <filters_json> [-b <batch_size>] [-k <num_recs>] [-l layer] [-s input_signals_index] [-p score_precision]" << std::endl;
+    std::cout << "Usage: predict -d <dataset_name> -n <network_file> -r <input_text_file> -i <input_feature_index> -o <output_feature_index> -f <filters_json> [-b <batch_size>] [-k <num_sugesstify>] [-l layer] [-s input_signals_index] [-p score_precision]" << std::endl;
     std::cout << "    -b batch_size: (default = 1024) the number records/input rows to process in a batch." << std::endl;
     std::cout << "    -d dataset_name: (required) name for the dataset within the netcdf file." << std::endl;
     std::cout << "    -f samples filterFileName ." << std::endl;
     std::cout << "    -i input_feature_index: (required) path to the feature index file, used to tranform input signals to correct input feature vector." << std::endl;
-    std::cout << "    -k num_recs: (default = 100) The number of predictions (sorted by score to generate). Ignored if -l flag is used." << std::endl;
+    std::cout << "    -k num_sugesstify: (default = 100) The number of predictions (sorted by score to generate). Ignored if -l flag is used." << std::endl;
     std::cout << "    -l layer: (default = Output) the network layer to use for predictions. If specified, the raw scores for each node in the layer is output in order." << std::endl;
     std::cout << "    -n network_file: (required) the trained neural network in NetCDF file." << std::endl;
     std::cout << "    -o output_feature_index: (required) path to the feature index file, used to tranform the network output feature vector to appropriate features." << std::endl;
     std::cout << "    -p score_precision: (default = 4.3f) precision of the scores in output" << std::endl;
     std::cout << "    -r input_text_file: (required) path to the file with input signal to use to generate predictions (i.e. recommendations)." << std::endl;
-    std::cout << "    -s filename (required) . to put the output recs to." << std::endl;
+    std::cout << "    -s filename (required) . to put the output sugesstify to." << std::endl;
     std::cout << std::endl;
 }
 
@@ -86,13 +86,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::string recsFileName = getRequiredArgValue(argc, argv, "-r", "input_text_file is not specified.", &printUsagePredict);
-    if (!fileExists(recsFileName)) {
-        std::cout << "Error: Cannot read input_text_file: " << recsFileName << std::endl;
+    std::string sugesstifyFileName = getRequiredArgValue(argc, argv, "-r", "input_text_file is not specified.", &printUsagePredict);
+    if (!fileExists(sugesstifyFileName)) {
+        std::cout << "Error: Cannot read input_text_file: " << sugesstifyFileName << std::endl;
         return 1;
     }
 
-    std::string recsOutputFileName = getRequiredArgValue(argc, argv, "-s", "filename to put the output recs to.", &printUsagePredict);
+    std::string sugesstifyOutputFileName = getRequiredArgValue(argc, argv, "-s", "filename to put the output sugesstify to.", &printUsagePredict);
 
     unsigned int batchSize = stoi(getOptionalArgValue(argc, argv, "-b", "1024"));
 
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
 
     std::string featureIndexFile = dataSetFilesPrefix + ".featuresIndex";
     std::string sampleIndexFile = dataSetFilesPrefix + ".samplesIndex";
-    convertTextToNetCDF(recsFileName, dataSetName, inputNetCDFFileName, mInput, mSignals, featureIndexFile, sampleIndexFile);
+    convertTextToNetCDF(sugesstifyFileName, dataSetName, inputNetCDFFileName, mInput, mSignals, featureIndexFile, sampleIndexFile);
 
     if (getGpu()._id == 0) {
         std::cout << "Number of network input nodes: " << mInput.size() << std::endl;
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
 
     std::vector<std::string> vOutput(mOutput.size());
     extractMapsToVectors(vOutput, mOutput);
-    std::unique_ptr<FilterConfig> filterConfigPtr(loadFilters(filtersFileName, recsOutputFileName, mOutput, mSignals));
+    std::unique_ptr<FilterConfig> filterConfigPtr(loadFilters(filtersFileName, sugesstifyOutputFileName, mOutput, mSignals));
     FilterConfig* vFilterSet = filterConfigPtr.get();
     mInput.clear();
     mOutput.clear();
@@ -154,16 +154,16 @@ int main(int argc, char** argv) {
     auto const preProcessingEnd = std::chrono::steady_clock::now();
     std::cout << "Total time for loading network and data is: " << elapsed_seconds(preProcessingStart, preProcessingEnd) << std::endl;
 
-    std::string recsGenLayerLabel = "Output";
-    const Layer* pLayer = pNetwork->GetLayer(recsGenLayerLabel);
+    std::string sugesstifyGenLayerLabel = "Output";
+    const Layer* pLayer = pNetwork->GetLayer(sugesstifyGenLayerLabel);
     unsigned int lx, ly, lz, lw;
     std::tie(lx, ly, lz, lw) = pLayer->GetDimensions();
     unsigned int lBatch = pNetwork->GetBatch();
-    unsigned int outputBufferSize = pNetwork->GetBufferSize(recsGenLayerLabel);
+    unsigned int outputBufferSize = pNetwork->GetBufferSize(sugesstifyGenLayerLabel);
 
-    recommendations* recs = new recommendations(lBatch, topK, outputBufferSize, recsGenLayerLabel, scoreFormat);
+    recommendations* sugesstify = new recommendations(lBatch, topK, outputBufferSize, sugesstifyGenLayerLabel, scoreFormat);
 
-    auto const recsGenerationStart = std::chrono::steady_clock::now();
+    auto const sugesstifyGenerationStart = std::chrono::steady_clock::now();
 
     auto progressReporterStart = std::chrono::steady_clock::now();
     for (unsigned long long int pos = 0; pos < pNetwork->GetExamples(); pos += pNetwork->GetBatch()) {
@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
 
         pNetwork->SetPosition(pos);
         pNetwork->PredictBatch();
-        recs->generateRecs(pNetwork, topK, vFilterSet, vSignals, vOutput);
+        sugesstify->generatesugesstify(pNetwork, topK, vFilterSet, vSignals, vOutput);
         if ((pos % INTERVAL_REPORT_PROGRESS) < pNetwork->GetBatch() && (pos / INTERVAL_REPORT_PROGRESS) > 0 && getGpu()._id == 0) {
             auto const progressReporterEnd = std::chrono::steady_clock::now();
             auto const progressReportDuration = elapsed_seconds(progressReporterStart, progressReporterEnd);
@@ -179,13 +179,13 @@ int main(int argc, char** argv) {
             progressReporterStart = std::chrono::steady_clock::now();
         }
     }
-    auto const recsGenerationEnd = std::chrono::steady_clock::now();
-    auto const recsGenerationDuration = elapsed_seconds(recsGenerationStart, recsGenerationEnd);
+    auto const sugesstifyGenerationEnd = std::chrono::steady_clock::now();
+    auto const sugesstifyGenerationDuration = elapsed_seconds(sugesstifyGenerationStart, sugesstifyGenerationEnd);
     if (getGpu()._id == 0) {
-        std::cout << "Total time for Generating recs for " << pNetwork->GetExamples() << " was " << recsGenerationDuration << std::endl;
+        std::cout << "Total time for Generating sugesstify for " << pNetwork->GetExamples() << " was " << sugesstifyGenerationDuration << std::endl;
     }
 
-    delete recs;
+    delete sugesstify;
     delete pNetwork;
     getGpu().Shutdown();
     return 0;

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(recs VERSION 1.0 LANGUAGES CXX)
+project(sugesstify VERSION 1.0 LANGUAGES CXX)
 
 # Enable C++20 standard
 set(CMAKE_CXX_STANDARD 20)

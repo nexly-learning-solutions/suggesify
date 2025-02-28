@@ -13,7 +13,7 @@
 #include <driver_types.h>
 #include "../layer.h"
 
-const string recommendations::DEFAULT_LAYER_RECS_GEN_LABEL = "Output";
+const string recommendations::DEFAULT_LAYER_sugesstify_GEN_LABEL = "Output";
 const string recommendations::DEFAULT_SCORE_PRECISION = "4.3f";
 
 const unsigned int recommendations::TOPK_SCALAR = 5;
@@ -26,11 +26,11 @@ recommendations::recommendations(unsigned int xBatchSize,
     : pbKey(std::make_unique<GpuBuffer<float>>(xBatchSize* xK* TOPK_SCALAR, true)),
     pbUIValue(std::make_unique<GpuBuffer<unsigned int>>(xBatchSize* xK* TOPK_SCALAR, true)),
     pFilteredOutput(std::make_unique<GpuBuffer<float>>(xOutputBufferSize, true)),
-    recsGenLayerLabel(layer),
+    sugesstifyGenLayerLabel(layer),
     scorePrecision(precision) {
 }
 
-void recommendations::generateRecs(Network* xNetwork,
+void recommendations::generatesugesstify(Network* xNetwork,
     unsigned int xK,
     const FilterConfig* xFilterSet,
     const vector<string>& xCustomerIndex,
@@ -52,8 +52,8 @@ void recommendations::generateRecs(Network* xNetwork,
 
     cudaIpcMemHandle_t keyMemHandle;
     cudaIpcMemHandle_t valMemHandle;
-    const float* dOutput = xNetwork->GetUnitBuffer(recsGenLayerLabel);
-    const Layer* pLayer = xNetwork->GetLayer(recsGenLayerLabel);
+    const float* dOutput = xNetwork->GetUnitBuffer(sugesstifyGenLayerLabel);
+    const Layer* pLayer = xNetwork->GetLayer(sugesstifyGenLayerLabel);
     auto [lx, ly, lz, lw] = pLayer->GetDimensions();
     int lOutputStride = lx * ly * lz * lw;
     auto [llx, lly, llz, llw] = pLayer->GetLocalDimensions();
@@ -61,7 +61,7 @@ void recommendations::generateRecs(Network* xNetwork,
     int lLocalOutputStride = llx * lly * llz * llw;
     unsigned int outputBufferSize = lLocalOutputStride * lBatch;
     if (!bMultiGPU) {
-        outputBufferSize = xNetwork->GetBufferSize(recsGenLayerLabel);
+        outputBufferSize = xNetwork->GetBufferSize(sugesstifyGenLayerLabel);
     }
 
     vector<float> hOutputBuffer(outputBufferSize);
@@ -138,7 +138,7 @@ void recommendations::generateRecs(Network* xNetwork,
     if (getGpu()._id == 0) {
         const char* fileName = xFilterSet->getOutputFileName().c_str();
         auto const now = std::chrono::steady_clock::now();
-        std::cout << "Time Elapsed for Filtering and selecting Top " << xK << " recs: " << elapsed_seconds(start, now) << std::endl;
+        std::cout << "Time Elapsed for Filtering and selecting Top " << xK << " sugesstify: " << elapsed_seconds(start, now) << std::endl;
         std::cout << "Writing to " << fileName << std::endl;
         std::ofstream fp(fileName, std::ios::app);
         pbKey->Download();
