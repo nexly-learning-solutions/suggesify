@@ -1,6 +1,7 @@
 import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.util.control.Breaks._
+import scala.reflect.Selectable.reflectiveSelectable
 import scala.language.implicitConversions
 
 object ModuleTranslation {
@@ -32,7 +33,7 @@ object ModuleTranslation {
     private val _parameters = mutable.Map[String, Any]()
     private val _network_outputs = mutable.Map[String, Any]()
 
-    def forward(args : Any*): Any = {
+    def forward(args: Any*): Any = {
       throw new NotImplementedError
     }
 
@@ -84,7 +85,7 @@ object ModuleTranslation {
           _parameters.remove(name)
           _modules(name) = value
         } else {
-          this.getClass.getMethods.filter(_.getName() == name).head.invoke(this, value.asInstanceOf[AnyRef])
+          this.getClass.getMethods.filter(_.getName == name).head.invoke(this, value.asInstanceOf[AnyRef])
         }
       } catch {
         case _: java.lang.NoSuchMethodException =>
@@ -93,7 +94,7 @@ object ModuleTranslation {
           } else if (value.isInstanceOf[Module]) {
             _modules(name) = value
           } else {
-            this.getClass.getMethods.filter(_.getName() == name).head.invoke(this, value.asInstanceOf[AnyRef])
+            this.getClass.getMethods.filter(_.getName == name).head.invoke(this, value.asInstanceOf[AnyRef])
           }
       }
     }
@@ -197,10 +198,11 @@ object ModuleTranslation {
       val m = named_parameters().toMap
       val tm = torch_module.asInstanceOf[{ def named_parameters(): Iterable[(String, Any)] }].named_parameters().toMap
 
-      assert(m.keys.toList.sorted == tm.keys.toList.sorted, "The parameter names of the tensorrt-llm module must be the same with the torch module")
+      assert(m.keys.toList.sorted == tm.keys.toList.sorted, "The parameter names of the module must be the same with the torch module")
 
-      named_parameters().foreach { case (k, v) =>
-        v.asInstanceOf[{ def value: Any }].value = tm(k).asInstanceOf[{ def detach(): Any }].detach().asInstanceOf[{ def cpu(): Any }].cpu().asInstanceOf[{ def numpy(): Any }].numpy()
+      m.foreach { case (k, v) =>
+        val param = v.asInstanceOf[{ def value: Any }]
+        param.value = tm(k).asInstanceOf[{ def detach(): Any }].detach().asInstanceOf[{ def cpu(): Any }].cpu().asInstanceOf[{ def numpy(): Any }].numpy()
       }
     }
 
@@ -247,7 +249,7 @@ object ModuleTranslation {
 
     def setItem(idx: Int, module: Module): Unit = {
       val _idx = _get_abs_string_index(idx)
-      setAttr(_idx, module)
+      setAttr(_idx, module.asInstanceOf[Any])
     }
 
     def length: Int = {
@@ -256,7 +258,7 @@ object ModuleTranslation {
 
     override def toString: String = {
       val list_of_reprs = (0 until length).map(i => this.getItem(i).toString).toList
-      s"[$list_of_reprs.mkString(", ")]"
+      s"[${list_of_reprs.mkString(", ")}]"
     }
   }
 }
