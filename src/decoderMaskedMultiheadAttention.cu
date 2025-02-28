@@ -1,6 +1,6 @@
 
 
-#include "../src/decoderMaskedMultiheadAttention.h"
+#include "decoderMaskedMultiheadAttention.h"
 #include <assert.h>
 #include <float.h>
 #include <type_traits>
@@ -11,15 +11,13 @@ namespace kernels
 {
 namespace mmha
 {
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Forward declaration of the kernel launcher to avoid including decoderMaskedMultiheadAttentionLaunch.h
 template <typename T, typename KVCacheBuffer, typename T_PARAMS, int Dh, bool BLOCK_SPARSE_ATTN,
     bool IMPLICIT_REL_ATTN_BIAS, bool ATTN_LOGIT_SOFTCAPPING>
 void mmha_launch_kernel(const T_PARAMS& params, KVCacheBuffer const& kv_cache_buffer,
     KVLinearBuffer const& shift_k_cache, cudaStream_t const& stream);
 
-} // namespace mmha
+}
 
 namespace
 {
@@ -106,7 +104,7 @@ void multihead_attention_(const KERNEL_PARAMS_TYPE& params, KVCacheBuffer const&
     case 64: MMHA_LAUNCH_KERNE_EX1(64);
     case 128: MMHA_LAUNCH_KERNE_EX2(128);
     case 256: MMHA_LAUNCH_KERNE_EX3(256);
-#ifndef FAST_BUILD // skip mmha 48, 80, 96, 104, 112, 144, 160, 192 and 224 for fast build
+#ifndef FAST_BUILD
     case 48: MMHA_LAUNCH_KERNEL(48);
     case 80: MMHA_LAUNCH_KERNEL(80);
     case 96: MMHA_LAUNCH_KERNEL(96);
@@ -116,16 +114,15 @@ void multihead_attention_(const KERNEL_PARAMS_TYPE& params, KVCacheBuffer const&
     case 160: MMHA_LAUNCH_KERNEL(160);
     case 192: MMHA_LAUNCH_KERNEL(192);
     case 224: MMHA_LAUNCH_KERNEL(224);
-#endif // FAST_BUILD
+#endif
     default: CHECK_WITH_INFO(false, "unsupported head_size %d", params.hidden_size_per_head);
     }
 }
 
 #undef MMHA_LAUNCH_KERNEL
 
-} // namespace
+}
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static constexpr std::array<int, 13> MMHA_SUPPORTED_HEAD_SIZES{
     32, 48, 64, 80, 96, 104, 112, 128, 144, 160, 192, 224, 256};
@@ -159,7 +156,6 @@ INSTANTIATE_MMHA_NORMAL_AND_PAGED(__nv_bfloat16, false)
 #endif
 #undef INSTANTIATE_MMHA_NORMAL_AND_PAGED
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernels
-} // namespace suggestify
+}
+}
