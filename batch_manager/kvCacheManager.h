@@ -249,8 +249,8 @@ public:
 
     void removeTokens(SizeType32 n)
     {
-        TLLM_CHECK(n <= mNumTokens);
-        TLLM_CHECK(mNumTokens - n >= 0);
+        CHECK(n <= mNumTokens);
+        CHECK(mNumTokens - n >= 0);
         mNumTokens -= n;
     }
 

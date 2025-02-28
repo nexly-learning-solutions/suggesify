@@ -301,7 +301,7 @@ public:
         }
         if (mIsStreaming && mSamplingConfig.beamWidth > 1 && !mReturnAllGeneratedTokens)
         {
-            TLLM_LOG_WARNING(
+            LOG_WARNING(
                 "Setting mReturnAllGeneratedTokens to True since streaming AND beam search are done simultaneously. "
                 "Returning the full beams at each streaming step is needed because beam search + streaming can change "
                 "previous outputs. Initialize request with mReturnAllGeneratedTokens = True to dismiss this error. "
@@ -312,7 +312,7 @@ public:
 
         if (mIsStreaming && mSamplingConfig.beamWidth > 1 && mReturnGenerationLogits)
         {
-            TLLM_LOG_WARNING(
+            LOG_WARNING(
                 "Returning generation logits when streaming is enabled and beamWidth > 1 is not allowed. "
                 "This is because the logits may appear in irrelevant order when the beams are gathered, "
                 "since logits are not. Disabling returnGenerationLogits.");
@@ -353,7 +353,7 @@ public:
         {
             mPromptEmbeddingTable = sugesstify::runtime::ITensor::view(
                 executor::detail::toITensor(pTuningConfig.value().getEmbeddingTable()));
-            TLLM_CHECK(mPromptEmbeddingTable.value()->getShape().nbDims == 2);
+            CHECK(mPromptEmbeddingTable.value()->getShape().nbDims == 2);
             mPromptVocabSize = mPromptEmbeddingTable.value()->getShape().d[0];
             mPromptEmbeddingTable.value()->unsqueeze(0);
 
@@ -466,13 +466,13 @@ public:
     void validate(SizeType32 maxInputLen, SizeType32 maxSequenceLen, SizeType32 maxDraftLen,
         std::optional<SizeType32> maxEncoderInputLen = std::nullopt, bool enableKVCacheReuse = false)
     {
-        TLLM_CHECK_WITH_INFO(!(maxEncoderInputLen.has_value() && getEncoderInputLen() > maxEncoderInputLen.value()),
+        CHECK_WITH_INFO(!(maxEncoderInputLen.has_value() && getEncoderInputLen() > maxEncoderInputLen.value()),
             "Encoder length (%d) exceeds maximum encoder input length (%d).", getEncoderInputLen(),
             maxEncoderInputLen.value());
 
         if (mPromptLen > maxInputLen)
         {
-            TLLM_THROW(
+            THROW(
                 "Prompt length (%d) exceeds maximum input length (%d). Set log level to info and check "
                 "TRTGptModel logs for how maximum input length is set",
                 mPromptLen, maxInputLen);
@@ -485,7 +485,7 @@ public:
             auto const inputDraftTokensLen = static_cast<SizeType32>(draftTokens->size());
             if (inputDraftTokensLen > maxDraftLen)
             {
-                TLLM_THROW("Draft tokens length (%d) exceeds maximum draft tokens length (%d).", inputDraftTokensLen,
+                THROW("Draft tokens length (%d) exceeds maximum draft tokens length (%d).", inputDraftTokensLen,
                     maxDraftLen);
             }
             draftLenPerEngineStep = inputDraftTokensLen;
@@ -493,7 +493,7 @@ public:
             if (mPromptLen + draftLenPerEngineStep > maxInputLen)
             {
                 auto const newDraftLenPerEngineStep = maxInputLen - mPromptLen;
-                TLLM_LOG_WARNING(
+                LOG_WARNING(
                     "Prompt length + number of draft tokens (%d + %d) exceeds maximum input length (%d)."
                     "Number of draft tokens is changed to (%d)",
                     mPromptLen, draftLenPerEngineStep, maxInputLen, newDraftLenPerEngineStep);
@@ -505,7 +505,7 @@ public:
         if (mPromptLen + mMaxNewTokens + draftLenPerEngineStep > maxSequenceLen)
         {
             auto const maxNewTokens = maxSequenceLen - mPromptLen - draftLenPerEngineStep;
-            TLLM_LOG_WARNING(
+            LOG_WARNING(
                 "Prompt length + number of requested output tokens + draft tokens per step (%d + %d + %d) exceeds "
                 "maximum sequence length (%d). "
                 "Number of requested output tokens is changed to (%d).",
@@ -513,13 +513,13 @@ public:
             mMaxNewTokens = maxNewTokens;
         }
 
-        TLLM_CHECK_WITH_INFO(mSamplingConfig.validate(), "Incorrect sampling config");
+        CHECK_WITH_INFO(mSamplingConfig.validate(), "Incorrect sampling config");
 
         if (enableKVCacheReuse && mPromptEmbeddingTable.has_value() && mPromptVocabSize.has_value())
         {
-            TLLM_CHECK_WITH_INFO(mInputTokenExtraIds.has_value() && mInputTokenExtraIds.value(),
+            CHECK_WITH_INFO(mInputTokenExtraIds.has_value() && mInputTokenExtraIds.value(),
                 "Input token extra ids must be provided when enabling kv cache reuse with prompt table");
-            TLLM_CHECK_WITH_INFO(mInputTokenExtraIds.value()->size() == static_cast<size_t>(mOrigPromptLen),
+            CHECK_WITH_INFO(mInputTokenExtraIds.value()->size() == static_cast<size_t>(mOrigPromptLen),
                 "inputTokenExtraIds vector size (%lu) must be the same as input token vector size (%lu).",
                 mInputTokenExtraIds.value()->size(), static_cast<size_t>(mOrigPromptLen));
         }
@@ -542,7 +542,7 @@ public:
 
     [[nodiscard]] executor::DataTransceiverState const& getDataTransceiverState() const
     {
-        TLLM_CHECK(mContextPhaseParams.has_value());
+        CHECK(mContextPhaseParams.has_value());
         return *static_cast<executor::DataTransceiverState const*>(mContextPhaseParams.value().getState());
     }
 
@@ -563,7 +563,7 @@ public:
 
     [[nodiscard]] SizeType32 getNumReturnSequences() const
     {
-        TLLM_LOG_WARNING(
+        LOG_WARNING(
             "mNumReturnSequences in the LlmRequest class is deprecated. Please use numReturnSequences in "
             "SamplingConfig directly.");
         return mNumReturnSequences;
@@ -635,7 +635,7 @@ public:
             return getEncoderTokens().value()->size();
         }
 
-        TLLM_THROW("GenericLlmRequest::getEncoderInputLen - Do not have encoder length!");
+        THROW("GenericLlmRequest::getEncoderInputLen - Do not have encoder length!");
     }
 
     [[nodiscard]] SizeType32 getEncoderOutputLen() const
@@ -705,7 +705,7 @@ public:
 
     void clearGeneratedTokens()
     {
-        TLLM_LOG_DEBUG("emptying generated tokens for request %d with promptlen", mRequestId, mPromptLen);
+        LOG_DEBUG("emptying generated tokens for request %d with promptlen", mRequestId, mPromptLen);
         for (auto& beam : mTokens)
         {
             beam.resize(mPromptLen);
@@ -714,7 +714,7 @@ public:
 
     void setGeneratedTokens(BeamTokens const& generatedBeamTokens)
     {
-        TLLM_LOG_DEBUG("setting generated tokens for request %d", mRequestId);
+        LOG_DEBUG("setting generated tokens for request %d", mRequestId);
         assert(generatedBeamTokens.size() == static_cast<size_t>(mSamplingConfig.beamWidth));
 
         for (size_t beamId = 0; beamId < generatedBeamTokens.size(); ++beamId)
@@ -733,10 +733,10 @@ public:
 
     void setNumReturnSequences(SizeType32 const& numReturnSequences)
     {
-        TLLM_CHECK_WITH_INFO(!isChild(), "A child request cannot change numReturnSequences.");
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(!isChild(), "A child request cannot change numReturnSequences.");
+        CHECK_WITH_INFO(
             numReturnSequences > 0, "numReturnSequences should be a positive integer, got %d.", numReturnSequences);
-        TLLM_CHECK_WITH_INFO(mChildRequests.size() <= static_cast<size_t>(numReturnSequences),
+        CHECK_WITH_INFO(mChildRequests.size() <= static_cast<size_t>(numReturnSequences),
             "Cannot set numReturnSequences %d smaller than the number %ld of child requests that have already created.",
             numReturnSequences, mChildRequests.size());
         mSamplingConfig.numReturnSequences = numReturnSequences;
@@ -991,7 +991,7 @@ public:
     void setPrepopulatedPromptLen(SizeType32 prepopulatedPromptLen, SizeType32 kvTokensPerBlock)
     {
         auto const promptLen = getPromptLen();
-        TLLM_CHECK(prepopulatedPromptLen < promptLen);
+        CHECK(prepopulatedPromptLen < promptLen);
         mPrepopulatedPromptLen = prepopulatedPromptLen;
 
         if (prepopulatedPromptLen > 0)
@@ -1002,14 +1002,14 @@ public:
                 auto const flooredEndPosition
                     = (prepopulatedPromptLen + chunkSize) / kvTokensPerBlock * kvTokensPerBlock;
                 chunkSize = flooredEndPosition - prepopulatedPromptLen;
-                TLLM_CHECK(chunkSize <= getContextChunkSize());
+                CHECK(chunkSize <= getContextChunkSize());
             }
             setContextCurrentPosition(prepopulatedPromptLen);
             setContextChunkSize(chunkSize);
 
             if (!isLastContextChunk())
             {
-                TLLM_CHECK_WITH_INFO((getContextCurrentPosition() + getContextChunkSize()) % kvTokensPerBlock == 0,
+                CHECK_WITH_INFO((getContextCurrentPosition() + getContextChunkSize()) % kvTokensPerBlock == 0,
                     "To prevent cache fragmentation, the context position after current chunk should be divisible "
                     "by the number of tokens per block, except for the last chunk.");
             }
@@ -1033,9 +1033,9 @@ public:
 
     void discardDraftTokens(SizeType32 numTokensToDiscard)
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             numTokensToDiscard > 0, "Can only discard a positive amount of draft tokens, got %d", numTokensToDiscard);
-        TLLM_CHECK_WITH_INFO(numTokensToDiscard <= getNumDraftTokens(),
+        CHECK_WITH_INFO(numTokensToDiscard <= getNumDraftTokens(),
             "Can't discard more draft tokens (%d) than exists (%d).", numTokensToDiscard, getNumDraftTokens());
         mDraftTokens->resize(getNumDraftTokens() - numTokensToDiscard);
     }
@@ -1108,15 +1108,15 @@ public:
 
     void freeEncoderOutputBuffers()
     {
-        TLLM_LOG_TRACE("%s start", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s start", __PRETTY_FUNCTION__);
 
-        TLLM_LOG_DEBUG(
+        LOG_DEBUG(
             "Encoder output buffers use count: %u, %u", mEncoderOutput.use_count(), mEncoderHiddenStates.use_count());
 
         mEncoderOutput.reset();
         mEncoderHiddenStates.reset();
 
-        TLLM_LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
+        LOG_TRACE("%s stop", __PRETTY_FUNCTION__);
     }
 
     [[nodiscard]] TensorPtr getCrossAttentionMask() const
@@ -1169,7 +1169,7 @@ public:
 
     void setReturnAllGeneratedTokens(bool const returnAllGeneratedTokens)
     {
-        TLLM_CHECK_WITH_INFO(!mIsStreaming || mSamplingConfig.beamWidth == 1 || returnAllGeneratedTokens,
+        CHECK_WITH_INFO(!mIsStreaming || mSamplingConfig.beamWidth == 1 || returnAllGeneratedTokens,
             "returnAllGeneratedTokens must be true if streaming AND beam search are used.");
         mReturnAllGeneratedTokens = returnAllGeneratedTokens;
     }
@@ -1196,7 +1196,7 @@ public:
 
     void setReturnGenerationLogits(bool const returnGenerationLogits)
     {
-        TLLM_CHECK_WITH_INFO(!(mIsStreaming && mSamplingConfig.beamWidth > 1 && returnGenerationLogits),
+        CHECK_WITH_INFO(!(mIsStreaming && mSamplingConfig.beamWidth > 1 && returnGenerationLogits),
             "returnGenerationLogits must be false if streaming AND beam search are used.");
         mReturnGenerationLogits = returnGenerationLogits;
     }
@@ -1297,7 +1297,7 @@ public:
             auto const& outputTensorName = outputTensor.first;
             auto const dataType = getTensorDataType(outputTensorName);
             auto shape = getTensorShape(outputTensorName);
-            TLLM_CHECK_WITH_INFO(shape.d[0] == -1, "First dimension of additional output tensor '%s' must be dynamic",
+            CHECK_WITH_INFO(shape.d[0] == -1, "First dimension of additional output tensor '%s' must be dynamic",
                 outputTensorName.c_str());
             shape.d[0] = mPromptLen;
             auto tensor = runtime::BufferManager::pinnedPool(shape, dataType);
@@ -1308,7 +1308,7 @@ public:
             auto const& outputTensorName = outputTensor.first;
             auto const dataType = getTensorDataType(outputTensorName);
             auto shape = getTensorShape(outputTensorName);
-            TLLM_CHECK_WITH_INFO(shape.d[0] == -1, "First dimension of additional output tensor '%s' must be dynamic",
+            CHECK_WITH_INFO(shape.d[0] == -1, "First dimension of additional output tensor '%s' must be dynamic",
                 outputTensorName.c_str());
             shape.d[0] = mMaxNewTokens - 1;
             shape = runtime::ITensor::unsqueeze(shape, 0);
@@ -1403,7 +1403,7 @@ public:
 
     [[nodiscard]] SizeType32 getContextChunkSize() const
     {
-        TLLM_CHECK_WITH_INFO(
+        CHECK_WITH_INFO(
             isContextInitState() || isDisaggGenerationInitState() || isDisaggGenerationTransmissionComplete(),
             "getContextChunkSize is only possible during the context phase.");
         return mContextChunkSize;
@@ -1411,8 +1411,8 @@ public:
 
     void setContextChunkSize(SizeType32 size)
     {
-        TLLM_CHECK_WITH_INFO(isContextInitState(), "setContextChunkSize is only possible during the context phase.");
-        TLLM_CHECK_WITH_INFO(size >= 0, "The chunk size of context (%d) can't be negative.", size);
+        CHECK_WITH_INFO(isContextInitState(), "setContextChunkSize is only possible during the context phase.");
+        CHECK_WITH_INFO(size >= 0, "The chunk size of context (%d) can't be negative.", size);
         mContextChunkSize = std::min(size, getContextRemainingLength());
     }
 
@@ -1429,7 +1429,7 @@ public:
 
     void moveToNextContextChunk()
     {
-        TLLM_CHECK_WITH_INFO(isContextInitState(), "Chunking is only possible during the context phase.");
+        CHECK_WITH_INFO(isContextInitState(), "Chunking is only possible during the context phase.");
         mContextCurrentPosition += getContextChunkSize();
         setContextChunkSize(0);
     }
@@ -1471,7 +1471,7 @@ public:
         }
         auto const currentTime = std::chrono::steady_clock::now();
         auto const elapsed = (std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - mStartTime));
-        TLLM_LOG_DEBUG("Checked timeOut for request %d with allotted Time %d after time %d and got %d", mRequestId,
+        LOG_DEBUG("Checked timeOut for request %d with allotted Time %d after time %d and got %d", mRequestId,
             mAllottedTimeMs->count(), elapsed.count(), (elapsed >= mAllottedTimeMs));
 
         return elapsed >= *mAllottedTimeMs;
@@ -1479,13 +1479,13 @@ public:
 
     std::optional<executor::Response> createResponse(bool useFastLogits = false, int32_t mpiWorldRank = 0)
     {
-        TLLM_CHECK(!isDisaggContextCompleteState());
+        CHECK(!isDisaggContextCompleteState());
         if (!(isFinished() || (mIsStreaming && mState == LlmRequestState::kGENERATION_IN_PROGRESS)))
         {
             return std::nullopt;
         }
 
-        TLLM_LOG_DEBUG("Creating response for request %lu", mRequestId);
+        LOG_DEBUG("Creating response for request %lu", mRequestId);
 
         executor::Result result;
         result.sequenceIndex = mSequenceIndex;
@@ -1601,7 +1601,7 @@ public:
             {
                 for (auto const& outputTensor : outputTensorMap)
                 {
-                    TLLM_LOG_DEBUG("Adding tensor %s with shape %s to result.", outputTensor.first.c_str(),
+                    LOG_DEBUG("Adding tensor %s with shape %s to result.", outputTensor.first.c_str(),
                         runtime::ITensor::toString(outputTensor.second->getShape()).c_str());
                     result.additionalOutputs.emplace_back(
                         prefix + outputTensor.first, executor::detail::ofITensor(outputTensor.second));
@@ -1680,12 +1680,12 @@ public:
     {
         if (finishReason == executor::FinishReason::kTIMED_OUT)
         {
-            TLLM_LOG_DEBUG("Request %d finished by timeout after %f sec", mRequestId,
+            LOG_DEBUG("Request %d finished by timeout after %f sec", mRequestId,
                 std::chrono::duration<float>(std::chrono::steady_clock::now() - mStartTime).count());
         }
         if (finishReason == executor::FinishReason::kCANCELLED)
         {
-            TLLM_LOG_DEBUG("Request %d finished by cancel", mRequestId);
+            LOG_DEBUG("Request %d finished by cancel", mRequestId);
         }
 
         for (int beam = 0; beam < mSamplingConfig.beamWidth; ++beam)
@@ -1845,7 +1845,7 @@ private:
         {
             if (mInputTokenExtraIds.value()->size() != inputTokens.size())
             {
-                TLLM_THROW("inputTokenExtraIds vector size (%lu) must be the same as input token vector size (%lu).",
+                THROW("inputTokenExtraIds vector size (%lu) must be the same as input token vector size (%lu).",
                     mInputTokenExtraIds.value()->size(), inputTokens.size());
             }
             std::transform(inputTokens.cbegin(), inputTokens.cend(), mInputTokenExtraIds.value()->cbegin(),
@@ -1881,12 +1881,12 @@ private:
                 = "Prompt embedding table and prompt vocab size tensors must both be provided for requests with "
                   "prompt "
                   "tuning enabled.";
-            TLLM_THROW(errStr);
+            THROW(errStr);
         }
 
         if (mDraftLogits.has_value() && mDraftTokens->empty())
         {
-            TLLM_THROW("Draft tokens must be specified when draft logits are given.");
+            THROW("Draft tokens must be specified when draft logits are given.");
         }
 
         setReturnLogProbs(outputLogProbs);
@@ -1895,14 +1895,14 @@ private:
         {
             if (!mSamplingConfig.numReturnSequences)
             {
-                TLLM_LOG_WARNING(
+                LOG_WARNING(
                     "In the Executor class, mNumReturnSequences is deprecated. Please set numReturnSequences in "
                     "SamplingConfig directly.");
             }
             else if (mSamplingConfig.numReturnSequences
                 && mSamplingConfig.numReturnSequences.value() != mNumReturnSequences)
             {
-                TLLM_THROW(
+                THROW(
                     "In the Executor class, both mSamplingConfig.numReturnSequences (%d) and mNumReturnSequences (%d) "
                     "are provided but unmatched. Please use numReturnSequences in SamplingConfig directly.",
                     mSamplingConfig.numReturnSequences.value(), mNumReturnSequences);
@@ -2098,8 +2098,8 @@ public:
 
     std::shared_ptr<LlmRequest> createChildRequest(RequestIdType requestId)
     {
-        TLLM_CHECK_WITH_INFO(!isChild(), "A child request cannot create its own child.");
-        TLLM_CHECK_WITH_INFO(mChildRequests.size() + 1 < static_cast<size_t>(getNumSubRequests()),
+        CHECK_WITH_INFO(!isChild(), "A child request cannot create its own child.");
+        CHECK_WITH_INFO(mChildRequests.size() + 1 < static_cast<size_t>(getNumSubRequests()),
             "Cannot create child requests more than the number of return sequences (%d)", getNumSubRequests());
         auto childReq = std::make_shared<LlmRequest>(*this);
         childReq->mRequestId = requestId;

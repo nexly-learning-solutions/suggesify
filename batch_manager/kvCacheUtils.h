@@ -20,8 +20,8 @@ public:
         , mBlockIds{std::move(blockIds)}
         , mIdx{idx}
     {
-        TLLM_CHECK(mPool);
-        TLLM_CHECK(mIdx <= mBlockIds.size());
+        CHECK(mPool);
+        CHECK(mIdx <= mBlockIds.size());
         update();
     }
 

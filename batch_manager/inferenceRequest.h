@@ -189,7 +189,7 @@ public:
     [[nodiscard]] TensorPtr const& get##funcName() const                                                               \
     {                                                                                                                  \
         auto it = mInputTensors.find(tensorName);                                                                      \
-        TLLM_CHECK_WITH_INFO(it != mInputTensors.end(), "Undefined tensor: %s", tensorName);                           \
+        CHECK_WITH_INFO(it != mInputTensors.end(), "Undefined tensor: %s", tensorName);                           \
         return it->second;                                                                                             \
     }                                                                                                                  \
                                                                                                                        \
@@ -209,7 +209,7 @@ public:
     {                                                                                                                  \
         if constexpr (std::is_same_v<TensorPtr, sugesstify::runtime::ITensor::SharedPtr>)                            \
         {                                                                                                              \
-            TLLM_CHECK_WITH_INFO(tensor, "Cannot set nullptr when calling %s", __FUNCTION__);                          \
+            CHECK_WITH_INFO(tensor, "Cannot set nullptr when calling %s", __FUNCTION__);                          \
         }                                                                                                              \
         mInputTensors[tensorName] = tensor;                                                                            \
     }
@@ -251,7 +251,7 @@ public:
 protected:
     static void validateTensorName(std::string const& tensorName)
     {
-        TLLM_CHECK_WITH_INFO(std::find(kTensorNames.begin(), kTensorNames.end(), tensorName) != kTensorNames.end(),
+        CHECK_WITH_INFO(std::find(kTensorNames.begin(), kTensorNames.end(), tensorName) != kTensorNames.end(),
             "Invalid tensor name: %s", tensorName.c_str());
     }
 
@@ -288,7 +288,7 @@ public:
         std::string const& inputTensorName) const
     {
         auto it = Base::mInputTensors.find(inputTensorName);
-        TLLM_CHECK_WITH_INFO(it != Base::mInputTensors.end(), "Invalid input tensor name: %s", inputTensorName.c_str());
+        CHECK_WITH_INFO(it != Base::mInputTensors.end(), "Invalid input tensor name: %s", inputTensorName.c_str());
         return it->second;
     }
 
