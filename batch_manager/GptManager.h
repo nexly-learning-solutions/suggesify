@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "../batch_manager/BatchManager.h"
-#include "../batch_manager/callbacks.h"
-#include "../batch_manager/llmRequest.h"
-#include "../batch_manager/trtGptModelOptionalParams.h"
+#include "../BatchManager.h"
+#include "../callbacks.h"
+#include "../llmRequest.h"
+#include "../trtGptModelOptionalParams.h"
 #include "../runtime/modelConfig.h"
 #include "../runtime/worldConfig.h"
 

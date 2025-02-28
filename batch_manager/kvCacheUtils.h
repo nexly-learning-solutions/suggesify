@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "../batch_manager/kvCacheManager.h"
+#include "../kvCacheManager.h"
 
 namespace sugesstify::batch_manager::kv_cache_manager
 {

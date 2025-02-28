@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "../batch_manager/llmRequest.h"
-#include "../batch_manager/namedTensor.h"
+#include "../llmRequest.h"
+#include "../namedTensor.h"
 #include "../executor/executor.h"
 #include "../runtime/iTensor.h"
 

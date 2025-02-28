@@ -3,7 +3,7 @@
 
 #include "common.h"
 #include "iBuffer.h"
-#include "../batch_manager/kvCacheManager.h"
+#include "../kvCacheManager.h"
 #include "../common/logger.h"
 #include "../common/stringUtils.h"
 #include "gptDecoderBatched.h"

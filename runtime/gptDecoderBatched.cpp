@@ -1,5 +1,5 @@
 #include "gptDecoderBatched.h"
-#include "../batch_manager/llmRequest.h"
+#include "../llmRequest.h"
 
 #include "../common/assert.h"
 #include "../types.h"

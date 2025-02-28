@@ -2,8 +2,8 @@
 #pragma once
 
 #include "common.h"
-#include "../batch_manager/llmRequest.h"
-#include "../batch_manager/sequenceSlotManager.h"
+#include "../llmRequest.h"
+#include "../sequenceSlotManager.h"
 #include "../common/algorithm.h"
 #include "../runtime/common.h"
 

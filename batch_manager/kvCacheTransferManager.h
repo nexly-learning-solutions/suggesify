@@ -1,5 +1,5 @@
 
-#include "../batch_manager/kvCacheManager.h"
+#include "../kvCacheManager.h"
 #include "../runtime/bufferManager.h"
 #include "../runtime/cudaEvent.h"
 

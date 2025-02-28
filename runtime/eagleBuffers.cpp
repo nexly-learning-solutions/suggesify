@@ -1,6 +1,6 @@
 
 #include "eagleBuffers.h"
-#include "../batch_manager/llmRequest.h"
+#include "../llmRequest.h"
 
 #include "../common/assert.h"
 #include "../common/cudaUtils.h"

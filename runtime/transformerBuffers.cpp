@@ -1,7 +1,7 @@
 
 #include "transformerBuffers.h"
 #include "iTensor.h"
-#include "../batch_manager/kvCacheManager.h"
+#include "../kvCacheManager.h"
 #include "../common/logger.h"
 #include "../common/stlUtils.h"
 #include "runtimeBuffers.h"

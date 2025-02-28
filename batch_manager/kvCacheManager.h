@@ -1,11 +1,11 @@
 
 #pragma once
 
-#include "../batch_manager/kvCacheConfig.h"
-#include "../batch_manager/kvCacheEventManager.h"
-#include "../batch_manager/llmRequest.h"
+#include "../kvCacheConfig.h"
+#include "../kvCacheEventManager.h"
+#include "../llmRequest.h"
 #include "../common/optionalRef.h"
-#include "../kernels/kvCacheIndex.h"
+#include "../src/kvCacheIndex.h"
 #include "../runtime/bufferManager.h"
 #include "../runtime/common.h"
 #include "../runtime/cudaStream.h"

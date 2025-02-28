@@ -1,7 +1,7 @@
 
 #include "gptAttentionPlugin.h"
 
-#include "../batch_manager/contextProgress.h"
+#include "../contextProgress.h"
 #include "../common/logger.h"
 #include "../src/decoderMaskedMultiheadAttention.h"
 #include "../src/gptKernels.h"

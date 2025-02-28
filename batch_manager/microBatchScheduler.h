@@ -2,7 +2,7 @@
 #pragma once
 
 #include "common.h"
-#include "../batch_manager/llmRequest.h"
+#include "../llmRequest.h"
 #include "../common/algorithm.h"
 #include "../runtime/common.h"
 

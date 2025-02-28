@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "../batch_manager/kvCacheManager.h"
+#include "../kvCacheManager.h"
 
 #include <chrono>
 #include <vector>

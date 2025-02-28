@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "../batch_manager/common.h"
-#include "../batch_manager/llmRequest.h"
-#include "../batch_manager/peftCacheManagerConfig.h"
+#include "../common.h"
+#include "../llmRequest.h"
+#include "../peftCacheManagerConfig.h"
 #include "../common/tllmException.h"
 #include "../runtime/loraCache.h"
 #include "../runtime/modelConfig.h"

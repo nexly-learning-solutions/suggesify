@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../batch_manager/kvCacheConfig.h"
+#include "../kvCacheConfig.h"
 #include "../executor/types.h"
 #include "bufferManager.h"
 #include "common.h"

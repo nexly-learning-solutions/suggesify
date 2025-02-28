@@ -2,9 +2,9 @@
 #pragma once
 
 #include "common.h"
-#include "../batch_manager/kvCacheManager.h"
-#include "../batch_manager/peftCacheManager.h"
-#include "../batch_manager/sequenceSlotManager.h"
+#include "../kvCacheManager.h"
+#include "../peftCacheManager.h"
+#include "../sequenceSlotManager.h"
 #include "../common/algorithm.h"
 #include "../common/optionalRef.h"
 #include "../runtime/common.h"

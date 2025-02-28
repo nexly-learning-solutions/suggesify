@@ -2,7 +2,7 @@
 #pragma once
 
 #include "common.h"
-#include "../batch_manager/kvCacheManager.h"
+#include "../kvCacheManager.h"
 #include "../common/algorithm.h"
 #include "../common/optionalRef.h"
 #include "../runtime/common.h"

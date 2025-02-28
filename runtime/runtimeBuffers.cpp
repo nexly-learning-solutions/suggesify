@@ -1,7 +1,7 @@
 
 #include "runtimeBuffers.h"
 
-#include "../batch_manager/kvCacheManager.h"
+#include "../kvCacheManager.h"
 #include "../common/assert.h"
 #include "runtimeKernels.h"
 #include "tllmRuntime.h"

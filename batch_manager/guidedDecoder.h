@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "../batch_manager/common.h"
+#include "../common.h"
 #include "../executor/executor.h"
 #include "../runtime/bufferManager.h"
 #include "../runtime/iTensor.h"

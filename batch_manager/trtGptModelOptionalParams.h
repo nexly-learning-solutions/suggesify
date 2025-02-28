@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "../batch_manager/kvCacheConfig.h"
-#include "../batch_manager/peftCacheManagerConfig.h"
+#include "../kvCacheConfig.h"
+#include "../peftCacheManagerConfig.h"
 #include "../executor/executor.h"
 #include "../runtime/common.h"
 
