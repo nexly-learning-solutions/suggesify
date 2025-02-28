@@ -8,7 +8,7 @@ import org.apache.logging.log4j.{LogManager, Logger}
 import scopt.OptionParser
 
 object GitRepoCloner {
-  
+
   val logger: Logger = LogManager.getLogger(GitRepoCloner.getClass)
 
   def checkGitInstalled(): Unit = {
@@ -81,12 +81,12 @@ object GitRepoCloner {
       opt[String]('d', "directory")
         .action((x, c) => c.copy(directory = x))
         .text("Directory to create and clone repositories into")
-        .default("3rdparty")
-      
+        .withFallback(() => "3rdparty")
+
       opt[Int]('w', "workers")
         .action((x, c) => c.copy(workers = x))
         .text("Number of concurrent cloning processes")
-        .default(4)
+        .withFallback(() => 4)
     }
 
     parser.parse(args, Config()) match {

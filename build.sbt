@@ -4,11 +4,11 @@ name := "sugesstify"
 
 version := "0.1"
 
-scalaVersion := "2.13.6"
+scalaVersion := "2.13.16"
 
-ThisBuild / scalaVersion     := "2.13.12"
-ThisBuild / version          := "0.1.0-SNAPSHOT"
-ThisBuild / organization     := "com.nexly"
+ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / organization := "com.nexly"
 ThisBuild / organizationName := "nexly"
 
 lazy val root = (project in file("."))
@@ -19,7 +19,7 @@ lazy val root = (project in file("."))
       "org.apache.logging.log4j" % "log4j-api" % "2.14.1",
       "org.apache.logging.log4j" % "log4j-core" % "2.14.1",
       "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.14.1",
-      "com.github.scopt" %% "scopt" % "4.0.0",
+      "com.github.scopt" %% "scopt" % "4.0.1",
       "org.scala-lang" % "scala-library" % "2.13.6"
     )
   )
