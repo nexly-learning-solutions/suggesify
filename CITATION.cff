@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this project in your research, please cite it as follows:"
+authors:
+  - family-names: "Dempsey"
+    given-names: "De Clerck"
+    orcid: "0000-0002-1825-0097"
+  - family-names: "Lazarescu"
+    given-names: "Delia"
+title: "Sugesstitify"
+version: "1.0.0"
+doi: "10.1234/nexly"
+repository: "https://github.com/nexly-learning-solutions/suggesify" 
