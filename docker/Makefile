@@ -49,7 +49,7 @@ define add_local_user
 endef
 
 define rewrite_tag
-$(shell echo $(IMAGE_WITH_TAG) | sed "s/\/tensorrt-llm:/\/tensorrt-llm-staging:/g")
+$(shell echo $(IMAGE_WITH_TAG) | sed "s/\/nexly:/\/nexly-staging:/g")
 endef
 
 %_build: DEVEL_IMAGE = $(if $(findstring 1,$(JENKINS_DEVEL)),$(shell grep 'LLM_DOCKER_IMAGE = ' ../jenkins/L0_MergeRequest.groovy | grep -o '".*"' | tr -d '"'))

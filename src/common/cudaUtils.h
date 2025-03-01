@@ -104,7 +104,7 @@ void check(T result, char const* const func, char const* const file, int const l
     if (result)
     {
         throw TllmException(
-            file, line, fmtstr("[TensorRT-LLM][ERROR] CUDA runtime error in %s: %s", func, _cudaGetErrorEnum(result)));
+            file, line, fmtstr("[nexly][ERROR] CUDA runtime error in %s: %s", func, _cudaGetErrorEnum(result)));
     }
 }
 
@@ -115,7 +115,7 @@ void checkEx(T result, std::initializer_list<T> const& validReturns, char const*
     if (std::all_of(std::begin(validReturns), std::end(validReturns), [&result](T const& t) { return t != result; }))
     {
         throw TllmException(
-            file, line, fmtstr("[TensorRT-LLM][ERROR] CUDA runtime error in %s: %s", func, _cudaGetErrorEnum(result)));
+            file, line, fmtstr("[nexly][ERROR] CUDA runtime error in %s: %s", func, _cudaGetErrorEnum(result)));
     }
 }
 
@@ -170,7 +170,7 @@ inline void syncAndCheck(char const* const file, int const line)
 #define PRINT_FUNC_NAME_()                                                                                             \
     do                                                                                                                 \
     {                                                                                                                  \
-        std::cout << "[TensorRT-LLM][CALL] " << __FUNCTION__ << " " << std::endl;                                      \
+        std::cout << "[nexly][CALL] " << __FUNCTION__ << " " << std::endl;                                      \
     } while (0)
 
 template<typename T> struct packed_type;

@@ -20,7 +20,7 @@ void CHECK_XQA_JIT_ERROR_(tllmXqaJitStatus result, char const* const func, char 
         std::vector<char> log(tllmXqaJitGetLastErrorStringSize());
         tllmXqaJitGetLastErrorString(log.data());
         throw suggestify::common::TllmException(file, line,
-            suggestify::common::fmtstr("[TensorRT-LLM][ERROR] TllmXqaJit runtime error in %s: %s", func, log.data()));
+            suggestify::common::fmtstr("[nexly][ERROR] TllmXqaJit runtime error in %s: %s", func, log.data()));
     }
 }
 

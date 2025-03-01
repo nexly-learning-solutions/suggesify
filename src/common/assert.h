@@ -10,7 +10,7 @@ namespace suggestify::common
 {
 [[noreturn]] inline void throwRuntimeError(char const* const file, int const line, std::string const& info = "")
 {
-    throw TllmException(file, line, fmtstr("[TensorRT-LLM][ERROR] Assertion failed: %s", info.c_str()));
+    throw TllmException(file, line, fmtstr("[nexly][ERROR] Assertion failed: %s", info.c_str()));
 }
 
 }

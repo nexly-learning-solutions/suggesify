@@ -186,7 +186,7 @@ void generic_mixed_gemm_kernelLauncher(ActivationType const* A, WeightType const
     {
         std::string err_msg = "fpA_intB cutlass kernel will fail for params. Error: "
             + std::string(cutlassGetStatusString(can_implement));
-        throw std::runtime_error("[TensorRT-LLm Error][fpA_intB Runner] " + err_msg);
+        throw std::runtime_error("[nexly Error][fpA_intB Runner] " + err_msg);
     }
 
     auto init_status = gemm.initialize(args, workspace, stream);
@@ -194,7 +194,7 @@ void generic_mixed_gemm_kernelLauncher(ActivationType const* A, WeightType const
     {
         std::string err_msg
             = "Failed to initialize cutlass fpA_intB gemm. Error: " + std::string(cutlassGetStatusString(init_status));
-        throw std::runtime_error("[TensorRT-LLm Error][fpA_intB Runner] " + err_msg);
+        throw std::runtime_error("[nexly Error][fpA_intB Runner] " + err_msg);
     }
 
     auto run_status = gemm.run(stream);
@@ -202,7 +202,7 @@ void generic_mixed_gemm_kernelLauncher(ActivationType const* A, WeightType const
     {
         std::string err_msg
             = "Failed to run cutlass fpA_intB gemm. Error: " + std::string(cutlassGetStatusString(run_status));
-        throw std::runtime_error("[TensorRT-LLm Error][fpA_intB Runner] " + err_msg);
+        throw std::runtime_error("[nexly Error][fpA_intB Runner] " + err_msg);
     }
 }
 
@@ -220,20 +220,20 @@ void filter_and_run_mixed_gemm(ActivationType const* A, WeightType const* B, Sca
     {
         std::string err_msg = "Cutlass fpA_intB gemm not supported for arch "
             + std::to_string(arch::kMinComputeCapability) + " with stages set to " + std::to_string(Stages);
-        throw std::runtime_error("[TensorRT-LLm Error][filter_and_run_mixed_gemm] " + err_msg);
+        throw std::runtime_error("[nexly Error][filter_and_run_mixed_gemm] " + err_msg);
     }
     else if constexpr (Stages == 2 && arch::kMinComputeCapability >= 89)
     {
         std::string err_msg = "Cutlass fpA_intB gemm not supported for arch "
             + std::to_string(arch::kMinComputeCapability) + " with stages set to " + std::to_string(Stages);
-        throw std::runtime_error("[TensorRT-LLm Error][filter_and_run_mixed_gemm] " + err_msg);
+        throw std::runtime_error("[nexly Error][filter_and_run_mixed_gemm] " + err_msg);
     }
     else if constexpr (cutlass::platform::is_same<ActivationType, __nv_fp8_e4m3>::value
         && arch::kMinComputeCapability < 89)
     {
         std::string err_msg = "Cutlass fpA_intB gemm not supported for arch "
             + std::to_string(arch::kMinComputeCapability) + " with activation type set to FP8";
-        throw std::runtime_error("[TensorRT-LLm Error][filter_and_run_mixed_gemm] " + err_msg);
+        throw std::runtime_error("[nexly Error][filter_and_run_mixed_gemm] " + err_msg);
     }
     else
     {
@@ -272,7 +272,7 @@ void dispatch_gemm_config(ActivationType const* A, WeightType const* B, ScaleZer
         break;
     default:
         std::string err_msg = "dispatch_gemm_config does not support stages " + std::to_string(gemm_config.stages);
-        throw std::runtime_error("[TensorRT-LLm Error][dispatch_gemm_config] " + err_msg);
+        throw std::runtime_error("[nexly Error][dispatch_gemm_config] " + err_msg);
         break;
     }
 }
@@ -349,23 +349,23 @@ void dispatch_gemm_to_cutlass(ActivationType const* A, WeightType const* B, Scal
             }
             break;
         case tkc::CutlassTileConfig::Undefined:
-            throw std::runtime_error("[TensorRT-LLm Error][fpA_intB][dispatch_gemm_to_cutlass] gemm config undefined.");
+            throw std::runtime_error("[nexly Error][fpA_intB][dispatch_gemm_to_cutlass] gemm config undefined.");
             break;
         case tkc::CutlassTileConfig::ChooseWithHeuristic:
             throw std::runtime_error(
-                "[TensorRT-LLm Error][fpA_intB][dispatch_gemm_to_cutlass] gemm config should have already been set by "
+                "[nexly Error][fpA_intB][dispatch_gemm_to_cutlass] gemm config should have already been set by "
                 "heuristic.");
             break;
         default:
             throw std::runtime_error(
-                "[TensorRT-LLm Error][fpA_intB][dispatch_gemm_to_cutlass] Config is invalid for mixed type GEMM.");
+                "[nexly Error][fpA_intB][dispatch_gemm_to_cutlass] Config is invalid for mixed type GEMM.");
             break;
         }
     }
     else
     {
         std::string err_msg = "The activation type must equal the scale, bias and output types on Ampere and earlier.";
-        throw std::runtime_error("[TensorRT-LLm Error][dispatch_gemm_to_cutlass] " + err_msg);
+        throw std::runtime_error("[nexly Error][dispatch_gemm_to_cutlass] " + err_msg);
     }
 }
 
@@ -417,7 +417,7 @@ void CutlassFpAIntBGemmRunner<ActivationType, WeightType, QuantOp, ScaleZeroType
         if constexpr (cutlass::platform::is_same<ActivationType, __nv_fp8_e4m3>::value)
         {
             throw std::runtime_error(
-                "[TensorRT-LLM Error][CutlassFpAIntBGemmRunner][dispatch_to_arch] INT4xFP8 GEMM for Ada needs "
+                "[nexly Error][CutlassFpAIntBGemmRunner][dispatch_to_arch] INT4xFP8 GEMM for Ada needs "
                 "CUDA>=12.4");
         }
 #endif
@@ -437,7 +437,7 @@ void CutlassFpAIntBGemmRunner<ActivationType, WeightType, QuantOp, ScaleZeroType
     else
     {
         throw std::runtime_error(
-            "[TensorRT-LLM Error][CutlassFpAIntBGemmRunner][dispatch_to_arch] Arch unsupported for CUTLASS mixed type "
+            "[nexly Error][CutlassFpAIntBGemmRunner][dispatch_to_arch] Arch unsupported for CUTLASS mixed type "
             "GEMM");
     }
 }

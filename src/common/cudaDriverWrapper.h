@@ -104,7 +104,7 @@ void checkDriver(
         wrap.cuGetErrorName(result, &errorName);
         wrap.cuGetErrorMessage(result, &errorMsg);
         throw TllmException(
-            file, line, fmtstr("[TensorRT-LLM][ERROR] CUDA driver error in %s: %s: %s", func, errorName, errorMsg));
+            file, line, fmtstr("[nexly][ERROR] CUDA driver error in %s: %s: %s", func, errorName, errorMsg));
     }
 }
 

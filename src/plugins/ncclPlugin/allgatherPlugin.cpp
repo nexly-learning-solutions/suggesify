@@ -31,7 +31,7 @@ AllgatherPlugin::AllgatherPlugin(void const* data, size_t length)
     }
     CHECK_WITH_INFO(d == a + length,
         "Expected length (%d) != real length (%d). This is often "
-        "caused by using different TensorRT-LLM version to build "
+        "caused by using different nexly version to build "
         "engine and run engine.",
         (int) length, (int) (d - a));
 }

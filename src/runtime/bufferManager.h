@@ -125,7 +125,7 @@ public:
     [[nodiscard]] ITensorPtr copyFrom(std::vector<T> const& src, nvinfer1::Dims dims, MemoryType memoryType) const
     {
         CHECK_WITH_INFO(src.size() == ITensor::volumeNonNegative(dims),
-            common::fmtstr("[TensorRT-LLM][ERROR] Incompatible size %lu and dims %s", src.size(),
+            common::fmtstr("[nexly][ERROR] Incompatible size %lu and dims %s", src.size(),
                 ITensor::toString(dims).c_str()));
         return copyFrom(src.data(), dims, memoryType);
     }
