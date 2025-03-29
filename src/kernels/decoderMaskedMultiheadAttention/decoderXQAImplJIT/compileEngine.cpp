@@ -1,6 +1,4 @@
-
 #include "compileEngine.h"
-
 #include "cubinObj.h"
 #include "nvrtcWrapper/include/nvrtcWrapper.h"
 #include "assert.h"
@@ -13,6 +11,13 @@
 namespace
 {
 
+/// <summary>
+/// Checks for XQA JIT errors and throws an exception if one occurs.
+/// </summary>
+/// <param name="result">The result of the XQA JIT function.</param>
+/// <param name="func">The name of the function where the error occurred.</param>
+/// <param name="file">The name of the file where the error occurred.</param>
+/// <param name="line">The line number where the error occurred.</param>
 void CHECK_XQA_JIT_ERROR_(tllmXqaJitStatus result, char const* const func, char const* const file, int const line)
 {
     if (result != XQA_JIT_SUCCESS)
@@ -24,6 +29,9 @@ void CHECK_XQA_JIT_ERROR_(tllmXqaJitStatus result, char const* const func, char 
     }
 }
 
+/// <summary>
+/// A macro to check for XQA JIT errors.
+/// </summary>
 #define CHECK_XQA_JIT_ERROR(val) CHECK_XQA_JIT_ERROR_((val), #val, __FILE__, __LINE__)
 
 } // anonymous namespace
@@ -35,6 +43,10 @@ namespace kernels
 namespace jit
 {
 
+/// <summary>
+/// Compiles the XQA kernel.
+/// </summary>
+/// <returns>A CubinObj containing the compiled kernel.</returns>
 CubinObj CompileEngine::compile() const
 {
     tllmXqaJitProgram program;
@@ -63,6 +75,11 @@ CubinObj CompileEngine::compile() const
     return CubinObj(cubinContent);
 }
 
+/// <summary>
+/// Constructor for CompileEngine.
+/// </summary>
+/// <param name="SM">The compute capability (SM) of the target device.</param>
+/// <param name="xqaParams">The XQA parameters.</param>
 CompileEngine::CompileEngine(int SM, XQAParams const& xqaParams)
     : mSM(SM)
     , mXqaParams(xqaParams)
