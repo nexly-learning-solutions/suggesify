@@ -1,15 +1,22 @@
 #include "ipcsocket.h"
 #include "../common/assert.h"
 #include "../common/logger.h"
-#include <errno.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
+
+#include <cerrno>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+#include <cstring>
+#include <cstdint>
+#include <cstdio>
+
 #if ENABLE_MULTI_DEVICE
+
 namespace sugesstify::runtime::ub
 {
 
-static char const* ipcSocketResultStrings[static_cast<int>(ipcSocketNumResults)] = {
+constexpr auto ipcSocketResultStrings = std::array{
     "Success",
     "Unhandled CUDA error",
     "System error",
@@ -20,125 +27,158 @@ static char const* ipcSocketResultStrings[static_cast<int>(ipcSocketNumResults)]
     "In progress",
 };
 
-char const* ipcSocketGetErrorString(ipcSocketResult_t res)
+std::string_view ipcSocketGetErrorString(ipcSocketResult_t res)
 {
+    if (static_cast<int>(res) < 0 || static_cast<int>(res) >= ipcSocketResultStrings.size())
+    {
+        return "Unknown error";
+    }
     return ipcSocketResultStrings[static_cast<int>(res)];
 }
 
-#define USE_ABSTRACT_SOCKET
+constexpr auto IPC_SOCKNAME_STR = "/tmp/ub-ipc-socket-%d-%lx";
 
-#define IPC_SOCKNAME_STR "/tmp/ub-ipc-socket-%d-%lx"
 
-ipcSocketResult_t ipcSocketInit(IpcSocketHandle* handle, int rank, uint64_t hash, uint32_t volatile* abortFlag)
+ipcSocketResult_t ipcSocketInit(IpcSocketHandle* handle, int rank, uint64_t hash, std::atomic<uint32_t>* abortFlag)
 {
-    int fd = -1;
-    struct sockaddr_un cliaddr;
-    char temp[IPC_SOCKNAME_LEN] = "";
-
-    if (handle == NULL)
+    if (!handle)
     {
         return ipcSocketInternalError;
     }
 
     handle->fd = -1;
     handle->socketName[0] = '\0';
-    if ((fd = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0)
+
+    int fd = socket(AF_UNIX, SOCK_DGRAM, 0);
+    if (fd == -1)
     {
-        LOG_WARNING("UDS: Socket creation error");
+        LOG_WARNING("UDS: Socket creation error: %s", strerror(errno));
         return ipcSocketSystemError;
     }
 
-    bzero(&cliaddr, sizeof(cliaddr));
+    sockaddr_un cliaddr{};
     cliaddr.sun_family = AF_UNIX;
 
-    size_t len = snprintf(temp, IPC_SOCKNAME_LEN, IPC_SOCKNAME_STR, rank, hash);
-    if (len > (sizeof(cliaddr.sun_path) - 1))
+    char temp[IPC_SOCKNAME_LEN];
+    const int len = std::snprintf(temp, IPC_SOCKNAME_LEN, IPC_SOCKNAME_STR, rank, hash);
+
+    if (len < 0 || len >= IPC_SOCKNAME_LEN)
     {
-        errno = ENAMETOOLONG;
-        LOG_WARNING("UDS: Cannot bind provided name to socket. Name too large");
+        LOG_WARNING("UDS: Socket name too long, rank %d, hash %lx", rank, hash);
+        close(fd);
         return ipcSocketInternalError;
     }
-    strncpy(cliaddr.sun_path, temp, len);
+
+    std::string_view socket_name(temp, len);
+
 #ifdef USE_ABSTRACT_SOCKET
     cliaddr.sun_path[0] = '\0';
+    std::memcpy(cliaddr.sun_path + 1, temp, len);
+    socklen_t addrlen = 1 + len;
 #else
-    unlink(temp);
+    std::strncpy(cliaddr.sun_path, temp, sizeof(cliaddr.sun_path) - 1);
+    cliaddr.sun_path[sizeof(cliaddr.sun_path) - 1] = '\0';
+    socklen_t addrlen = SUN_LEN(&cliaddr);
+    if (unlink(temp) == -1 && errno != ENOENT) {
+        LOG_WARNING("UDS: Unlink failed for %s: %s", temp, strerror(errno));
+        close(fd);
+        return ipcSocketSystemError;
+    }
 #endif
-    if (bind(fd, (struct sockaddr*) &cliaddr, sizeof(cliaddr)) < 0)
+
+    if (bind(fd, reinterpret_cast<sockaddr*>(&cliaddr), addrlen) == -1)
     {
-        LOG_WARNING("UDS: Binding to socket %s failed", temp);
+        LOG_WARNING("UDS: Binding to socket %s failed: %s", socket_name.data(), strerror(errno));
         close(fd);
         return ipcSocketSystemError;
     }
 
     handle->fd = fd;
-    strcpy(handle->socketName, temp);
+    std::strncpy(handle->socketName, temp, sizeof(handle->socketName) - 1);
+    handle->socketName[sizeof(handle->socketName) - 1] = '\0';
 
-    handle->abortFlag = abortFlag;
-    if (handle->abortFlag)
+    if (abortFlag)
     {
-        int flags = fcntl(fd, F_GETFL);
-        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+        int flags = fcntl(fd, F_GETFL, 0);
+        if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+        {
+            LOG_WARNING("UDS: setting non-blocking failed %s", strerror(errno));
+        }
     }
 
     return ipcSocketSuccess;
 }
 
-ipcSocketResult_t ipcSocketGetFd(struct IpcSocketHandle* handle, int* fd)
+ipcSocketResult_t ipcSocketGetFd(IpcSocketHandle* handle, int* fd)
 {
-    if (handle == NULL)
+    if (!handle)
     {
-        errno = EINVAL;
-        LOG_WARNING("ipcSocketSocketGetFd: pass NULL socket");
+        LOG_WARNING("ipcSocketGetFd: null socket handle");
         return ipcSocketInvalidArgument;
     }
-    if (fd)
-        *fd = handle->fd;
+    if (!fd)
+    {
+        LOG_WARNING("ipcSocketGetFd: null fd pointer");
+        return ipcSocketInvalidArgument;
+    }
+    *fd = handle->fd;
     return ipcSocketSuccess;
 }
 
 ipcSocketResult_t ipcSocketClose(IpcSocketHandle* handle)
 {
-    if (handle == NULL)
+    if (!handle)
     {
         return ipcSocketInternalError;
     }
-    if (handle->fd <= 0)
+    if (handle->fd == -1)
     {
         return ipcSocketSuccess;
     }
 #ifndef USE_ABSTRACT_SOCKET
     if (handle->socketName[0] != '\0')
     {
-        unlink(handle->socketName);
+        if (unlink(handle->socketName) == -1 && errno != ENOENT)
+        {
+            LOG_WARNING("UDS: Unlink failed for %s: %s", handle->socketName, strerror(errno));
+        }
     }
 #endif
-    close(handle->fd);
+    if (close(handle->fd) == -1)
+    {
+        LOG_WARNING("UDS: Close failed for fd %d: %s", handle->fd, strerror(errno));
+    }
+    handle->fd = -1;
 
     return ipcSocketSuccess;
 }
 
 ipcSocketResult_t ipcSocketRecvMsg(IpcSocketHandle* handle, void* hdr, int hdrLen, int* recvFd)
 {
-    struct msghdr msg = {0, 0, 0, 0, 0, 0, 0};
-    struct iovec iov[1];
+    if (!handle)
+    {
+        LOG_WARNING("ipcSocketRecvMsg: null handle");
+        return ipcSocketInternalError;
+    }
+
+    msghdr msg{};
+    iovec iov[1];
 
     union
     {
-        struct cmsghdr cm;
+        cmsghdr cm;
         char control[CMSG_SPACE(sizeof(int))];
     } control_un;
 
-    struct cmsghdr* cmptr;
     char dummy_buffer[1];
-    int ret;
 
     msg.msg_control = control_un.control;
     msg.msg_controllen = sizeof(control_un.control);
 
-    if (hdr == NULL)
+
+    if (!hdr)
     {
-        iov[0].iov_base = reinterpret_cast<void*>(dummy_buffer);
+        iov[0].iov_base = dummy_buffer;
         iov[0].iov_len = sizeof(dummy_buffer);
     }
     else
@@ -150,83 +190,93 @@ ipcSocketResult_t ipcSocketRecvMsg(IpcSocketHandle* handle, void* hdr, int hdrLe
     msg.msg_iov = iov;
     msg.msg_iovlen = 1;
 
+
+    int ret;
     while ((ret = recvmsg(handle->fd, &msg, 0)) <= 0)
     {
+        if (ret == 0)
+        {
+            LOG_DEBUG("UDS: Connection closed by peer");
+            return ipcSocketRemoteError;
+        }
         if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
         {
-            LOG_WARNING("UDS: Receiving data over socket failed");
+            LOG_WARNING("UDS: Receiving data over socket failed: %s", strerror(errno));
             return ipcSocketSystemError;
         }
-        if (handle->abortFlag && *handle->abortFlag)
+        if (handle->abortFlag && handle->abortFlag->load())
+        {
+            LOG_DEBUG("UDS: Aborting recv due to abort flag");
             return ipcSocketInternalError;
+        }
     }
 
-    if (recvFd != NULL)
+    if (recvFd)
     {
-        if (((cmptr = CMSG_FIRSTHDR(&msg)) != NULL) && (cmptr->cmsg_len == CMSG_LEN(sizeof(int))))
+        cmsghdr* cmptr = CMSG_FIRSTHDR(&msg);
+        if (cmptr && cmptr->cmsg_len == CMSG_LEN(sizeof(int)))
         {
-            if ((cmptr->cmsg_level != SOL_SOCKET) || (cmptr->cmsg_type != SCM_RIGHTS))
+            if (cmptr->cmsg_level != SOL_SOCKET || cmptr->cmsg_type != SCM_RIGHTS)
             {
-                errno = EBADMSG;
-                LOG_WARNING("UDS: Receiving data over socket %s failed", handle->socketName);
+                LOG_WARNING("UDS: Invalid control message received");
                 return ipcSocketSystemError;
             }
 
-            memmove(recvFd, CMSG_DATA(cmptr), sizeof(*recvFd));
+            std::memcpy(recvFd, CMSG_DATA(cmptr), sizeof(*recvFd));
         }
         else
         {
-            errno = ENOMSG;
-            LOG_WARNING("UDS: Receiving data over socket %s failed", handle->socketName);
+            LOG_WARNING("UDS: No file descriptor received");
             return ipcSocketSystemError;
         }
-    }
-    else
-    {
-        errno = EINVAL;
-        LOG_WARNING("UDS: File descriptor pointer cannot be NULL");
-        return ipcSocketInvalidArgument;
     }
 
     return ipcSocketSuccess;
 }
 
+
 ipcSocketResult_t ipcSocketRecvFd(IpcSocketHandle* handle, int* recvFd)
 {
-    return ipcSocketRecvMsg(handle, NULL, 0, recvFd);
+    return ipcSocketRecvMsg(handle, nullptr, 0, recvFd);
 }
 
 ipcSocketResult_t ipcSocketSendMsg(
     IpcSocketHandle* handle, void* hdr, int hdrLen, int const sendFd, int rank, uint64_t hash)
 {
-    struct msghdr msg = {0, 0, 0, 0, 0, 0, 0};
-    struct iovec iov[1];
-    char temp[IPC_SOCKNAME_LEN];
+    if (!handle)
+    {
+        LOG_WARNING("ipcSocketSendMsg: null handle");
+        return ipcSocketInternalError;
+    }
+
+    msghdr msg{};
+    iovec iov[1];
 
     union
     {
-        struct cmsghdr cm;
+        cmsghdr cm;
         char control[CMSG_SPACE(sizeof(int))];
     } control_un;
 
-    struct cmsghdr* cmptr;
     char dummy_buffer[1];
-    struct sockaddr_un cliaddr;
+    sockaddr_un cliaddr{};
 
-    bzero(&cliaddr, sizeof(cliaddr));
-    cliaddr.sun_family = AF_UNIX;
-
-    size_t len = snprintf(temp, IPC_SOCKNAME_LEN, IPC_SOCKNAME_STR, rank, hash);
-    if (len > (sizeof(cliaddr.sun_path) - 1))
+    const int len = std::snprintf(cliaddr.sun_path, sizeof(cliaddr.sun_path), IPC_SOCKNAME_STR, rank, hash);
+    if (len < 0 || len >= static_cast<int>(sizeof(cliaddr.sun_path)))
     {
-        errno = ENAMETOOLONG;
-        LOG_WARNING("UDS: Cannot connect to provided name for socket. Name too large");
+        LOG_WARNING("UDS: Socket name too long, rank %d, hash %lx", rank, hash);
         return ipcSocketInternalError;
     }
-    (void) strncpy(cliaddr.sun_path, temp, len);
+
+    cliaddr.sun_family = AF_UNIX;
+    std::string_view socket_name(cliaddr.sun_path, len);
 
 #ifdef USE_ABSTRACT_SOCKET
     cliaddr.sun_path[0] = '\0';
+    std::memcpy(cliaddr.sun_path + 1, socket_name.data(), len);
+    socklen_t addrlen = 1 + len;
+#else
+    socklen_t addrlen = SUN_LEN(&cliaddr);
 #endif
 
     if (sendFd != -1)
@@ -234,19 +284,19 @@ ipcSocketResult_t ipcSocketSendMsg(
         msg.msg_control = control_un.control;
         msg.msg_controllen = sizeof(control_un.control);
 
-        cmptr = CMSG_FIRSTHDR(&msg);
+        cmsghdr* cmptr = CMSG_FIRSTHDR(&msg);
         cmptr->cmsg_len = CMSG_LEN(sizeof(int));
         cmptr->cmsg_level = SOL_SOCKET;
         cmptr->cmsg_type = SCM_RIGHTS;
-        memmove(CMSG_DATA(cmptr), &sendFd, sizeof(sendFd));
+        std::memcpy(CMSG_DATA(cmptr), &sendFd, sizeof(sendFd));
     }
 
     msg.msg_name = reinterpret_cast<void*>(&cliaddr);
-    msg.msg_namelen = sizeof(struct sockaddr_un);
+    msg.msg_namelen = addrlen;
 
-    if (hdr == NULL)
+    if (!hdr)
     {
-        iov[0].iov_base = reinterpret_cast<void*>(dummy_buffer);
+        iov[0].iov_base = dummy_buffer;
         iov[0].iov_len = sizeof(dummy_buffer);
     }
     else
@@ -263,19 +313,24 @@ ipcSocketResult_t ipcSocketSendMsg(
     {
         if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
         {
-            LOG_WARNING("UDS: Sending data over socket %s failed", temp);
+            LOG_WARNING("UDS: Sending data over socket %s failed: %s", socket_name.data(), strerror(errno));
             return ipcSocketSystemError;
         }
-        if (handle->abortFlag && *handle->abortFlag)
+        if (handle->abortFlag && handle->abortFlag->load())
+        {
+            LOG_DEBUG("UDS: Aborting send due to abort flag");
             return ipcSocketInternalError;
+        }
     }
 
     return ipcSocketSuccess;
 }
 
+
 ipcSocketResult_t ipcSocketSendFd(IpcSocketHandle* handle, int const sendFd, int rank, uint64_t hash)
 {
-    return ipcSocketSendMsg(handle, NULL, 0, sendFd, rank, hash);
+    return ipcSocketSendMsg(handle, nullptr, 0, sendFd, rank, hash);
 }
+
 }
 #endif
